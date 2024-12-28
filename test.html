@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="cn">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  
+  <style>
+    @import url(./Source/Widgets/widgets.css);
+
+    html,
+    body,
+    #cesiumContainer {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="cesiumContainer"></div>
+  <script type="module">
+    window.CESIUM_BASE_URL = "./Source/";
+    import * as Cesium from "./Build/CesiumUnminified/index.js"
+
+    var tiandiMap = new Cesium.ProviderViewModel({
+     name: 'Tiditu',
+     iconUrl: './SampleData/fire.png',
+     tooltip: 'Tiditu image',
+     category: 'Cesium ion',
+     creationFunction: function() {
+         return new Cesium.WebMapTileServiceImageryProvider({
+             //调用影像服务 
+             url: "http://t1.tianditu.com/img_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=img&tileMatrixSet=w&" +
+                 "TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default&tk=" + tidituToken
+         })
+     }
+ })
+ //google map
+ var googleMap = new Cesium.ProviderViewModel({
+     name: 'Goolge Map',
+     iconUrl: './SampleData/fire.png',
+     tooltip: 'Google image',
+     category: 'Cesium ion',
+     creationFunction: function() {
+         return new Cesium.UrlTemplateImageryProvider({
+             //调用影像服务 
+             url: "http://mt1.google.cn/vt/lyrs=s&hl=zh-CN&x={x}&y={y}&z={z}"
+         })
+     }
+ })
+ Cesium.Ion.defaultAccessToken='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwYjZkZTViOC0xN2E5LTRlMDctOTcxOS04YjU1N2NjMjljOTkiLCJpZCI6MTM0NzcsInNjb3BlcyI6WyJhc3IiLCJnYyJdLCJpYXQiOjE1NjMzNTM5ODB9.RGY9YEPoZFxqKWq-mUb5Yu8QWnRBlnqsvpC-eEKxGDc';
+
+    var viewer = new Cesium.Viewer('cesiumContainer', {
+        animation: false,
+            baseLayerPicker: false,
+            fullscreenButton: false,
+            geocoder: false,
+            homeButton: false,
+            sceneModePicker: true,
+            selectionIndicator: false,
+            timeline: false,
+            navigationHelpButton: false,
+            infoBox: false,
+            navigationInstructionsInitiallyVisible: false,
+            // imageryProviderViewModels: [tiandiMap, googleMap]
+    })
+    viewer.scene.globe._surface.tileProvider._debug.wireframe = true;
+    viewer.scene.globe.fillHighlightColor = new Cesium.Color(1.0, 0.0, 0, 1);
+    // viewer.camera.constrainedAxis = Cesium.Cartesian3.UNIT_Y;
+    viewer.terrainProvider = Cesium.createWorldTerrain();
+    viewer.imageryLayers.removeAll();
+    // viewer.scene.camera.switchToOrthographicFrustum()
+    // viewer.scene.fog.enabled = false;
+    // viewer.imageryLayers.addImageryProvider(new Cesium.TileCoordinatesImageryProvider());
+
+    // 添加mapbox自定义地图实例-
+    var layer=new Cesium.MapboxStyleImageryProvider({
+        url:'https://api.mapbox.com/styles/v1',
+        username:'nowsilence',
+        styleId: 'cjyxrkx3g361d1cqozci0c6hy',
+        accessToken: 'pk.eyJ1Ijoibm93c2lsZW5jZSIsImEiOiJjanh2ZXFkZ2YwNDc4M2NvYzNwdWc2cGRiIn0.VbsFYhiH15bbdI9IW1-VbQ',
+        scaleFactor:true
+    });
+
+    const layer1 = new Cesium.WebMapServiceImageryProvider({ 
+                url: 'http://192.168.15.123:7090/rest/wms?VERSION=1.1.1', 
+                layers: 'cesium:taile', 
+                parameters: { 
+                    service : 'WMS', 
+                    format: 'image/png', 
+                    transparent: true, 
+                } 
+          }); 
+    viewer.imageryLayers.addImageryProvider(new Cesium.TileCoordinatesImageryProvider())
+    // viewer.imageryLayers.addImageryProvider(layer);
+    // viewer.imageryLayers.addImageryProvider(layer1);
+
+    // for (let i = 0; i < 33; i++) {
+    //     var l=new Cesium.MapboxStyleImageryProvider({
+    //     url:'https://api.mapbox.com/styles/v1',
+    //     username:'nowsilence',
+    //     styleId: 'cjyxrkx3g361d1cqozci0c6hy',
+    //     accessToken: 'pk.eyJ1Ijoibm93c2lsZW5jZSIsImEiOiJjanh2ZXFkZ2YwNDc4M2NvYzNwdWc2cGRiIn0.VbsFYhiH15bbdI9IW1-VbQ',
+    //     scaleFactor:true
+    // });
+    //       viewer.imageryLayers.addImageryProvider(l);
+
+    // }
+
+    let a = Cesium.Cartesian3.fromDegrees(116.445663,39.984186) 
+    let b = Cesium.Cartesian3.fromDegrees(116.611238,40.001875) 
+    let c = Cesium.Cartesian3.fromDegreesArray([116.445663,39.984186,0,0])
+    const cart = Cesium.Cartographic.fromDegrees(116.445663,39.984186, 0);
+    setTimeout(() => {
+        viewer.scene.globe.getHeight(cart)
+    }, 10000);
+    // var polylines = viewer.scene.primitives.add(new Cesium.PolylineCollection());
+
+    // var loopPolyline = polylines.add({
+    //     positions : Cesium.PolylinePipeline.generateCartesianArc({
+    //         positions : Cesium.Cartesian3.fromDegreesArray([-105.0, 30.0,
+    //                                                         -105.0, 25.0,
+    //                                                         -100.0, 22.0,
+    //                                                         -100.0, 28.0])
+    //     }),
+    //     width : 3.0,
+    //     // material : new Cesium.PolylineArrowMaterialProperty(Cesium.Color.PURPLE)
+
+    //     // loop : true
+    // });
+
+    // var purpleArrow = viewer.entities.add({
+    //     name : '空中紫色直箭头',
+    //     polyline : {
+    //         positions : Cesium.Cartesian3.fromDegreesArrayHeights([
+    //             0, 0, 5550,
+    //             40, 0, 5550,
+    //             // -124, 43, 500000,
+    //             40, 40, 5550
+    //         ]),
+    //         width : 10,
+    //         // 不符合椭球面的直线。
+    //         arcType : Cesium.ArcType.GEODESIC,
+    //         // material : new Cesium.PolylineArrowMaterialProperty(Cesium.Color.PURPLE)
+    //         material: new Cesium.PolylineDashMaterialProperty({
+    //             dashLength: 100,
+    //             dashPattern: parseInt('11011', 2),
+    //       color: Cesium.Color.CYAN,
+    //     }),
+    //     }
+    // });
+
+
+    // var redLine = viewer.entities.add({
+    //     name: "Red line on terrain",
+    //     position:a,
+    //     testName: 'ddd',
+    //     // polyline: {
+    //     //     positions: c,
+    //     //     show:true,
+    //     //     // pixelSize: 20,
+    //     //     width: 51,
+    //     //     material: Cesium.Color.RED,
+    //     //     // clampToGround: true,
+    //     // },
+    //     label:{
+    //         text:"测试"
+    //     }
+    // });
+
+    // var bluePlane = viewer.entities.add({
+    //   name: "Blue plane",
+    //   position: Cesium.Cartesian3.fromDegrees(-114.0, 40.0, 300000.0),
+    //   plane: {
+    //     show: true,
+        
+    //     plane: new Cesium.Plane(Cesium.Cartesian3.UNIT_X, 0.0),
+    //     dimensions: new Cesium.Cartesian2(400000.0, 300000.0), 
+    //     fill: true,
+    //     material: Cesium.Color.BLUE,
+    //     outline: false,
+    //     outlineColor: Cesium.Color.BLACK,
+    //     outlineWidth: 1.0,
+    //     shadows: Cesium.ShadowMode.DISABLED,
+    //   },
+    // });
+//     const rectangle = viewer.scene.primitives.add(
+//     new Cesium.Primitive({
+//       geometryInstances: new Cesium.GeometryInstance({
+//         geometry: new Cesium.RectangleGeometry({
+//           rectangle: Cesium.Rectangle.fromDegrees(
+//             -120.0,
+//             20.0,
+//             -60.0,
+//             40.0
+//           ),
+//           vertexFormat: Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT,
+//         }),
+//       }),
+//       appearance: new Cesium.EllipsoidSurfaceAppearance({
+//         aboveGround: false,
+//       }),
+//     })
+//   );
+
+        console.log(Cesium.Cartesian3.dot(new Cesium.Cartesian3(0.5, 2, 0), new Cesium.Cartesian3(1, 0, 0)));
+
+    // var entity = viewer.entities.add({
+    //   name: "cylinder",
+    //   position: Cesium.Cartesian3.fromDegrees(-105.0, 40.0, 200000.0),
+    //   cylinder: {
+    //     length: 400000.0, 
+    //     topRadius: 200000.0, 
+    //     bottomRadius: 200000.0, 
+    //     heightReference: Cesium.HeightReference.NONE,
+    //     fill: true,
+    //     material: Cesium.Color.GREEN.withAlpha(0.5),
+    //     outline: true,
+    //     outlineColor: Cesium.Color.DARK_GREEN,
+    //     outlineWidth: 1.0,
+    //     numberOfVerticalLines: 16, 
+    //     shadows: Cesium.ShadowMode.DISABLED,
+    //     slices: 128, 
+    //     clampToGround: true
+    //   },
+    // });
+
+    // var modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(
+    // Cesium.Cartesian3.fromDegrees(-75.62898254394531, 40.02804946899414, 200000.0));
+
+    // viewer.scene.primitives.add(
+    //   new Cesium.ClassificationPrimitive({
+    //     geometryInstances: new Cesium.GeometryInstance({
+    //       geometry: Cesium.BoxGeometry.fromDimensions({
+    //         vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+    //         dimensions: new Cesium.Cartesian3(400000.0, 300000.0, 1500000.0)
+    //       }),
+    //       modelMatrix: modelMatrix,
+    //       attributes: {
+    //         color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+    //           new Cesium.Color(1.0, 0.0, 0.0, 0.5)
+    //         ),
+    //         show: new Cesium.ShowGeometryInstanceAttribute(true),
+    //       },
+    //       id: "volume",
+    //     }),
+    //     classificationType: Cesium.ClassificationType.TERRAIN,
+    //   })
+    // );
+
+//     const positions = [];
+// const colors = [];
+// for (let j = 0; j <= 50; j += 5) {
+//     positions.push(
+//         Cesium.Cartesian3.fromDegrees(-124.0 + j, 40, 50000.0 * (j % 10))
+//     );
+//     colors.push(Cesium.Color.fromRandom({ alpha: 1.0 }));
+// }
+// //设置线段的位置和颜色，一一对应，arcType为ArcType.NONE
+// const perSegmentPolyline = new Cesium.GeometryInstance({
+//      geometry: new Cesium.SimplePolylineGeometry({
+//          positions: positions,
+//          colors: colors,
+//          arcType: Cesium.ArcType.NONE,
+//      }),
+//  });
+// //使用逐顶点着色绘制多段线
+// //对于逐顶点着色，将colorsPerVertex选项设置为true，并为colors选项提供长度等于位置数的颜色数组
+// const perVertexPolyline = new Cesium.GeometryInstance({
+// 	geometry: new Cesium.SimplePolylineGeometry({
+// 	    positions: Cesium.Cartesian3.fromDegreesArray([-100, 40, -80, 30]),
+// 	    colors: [Cesium.Color.RED, Cesium.Color.BLUE],
+// 	    colorsPerVertex: true,
+// 	}),
+// });
+// //添加多段线instances到primitives
+// viewer.scene.primitives.add(
+//     new Cesium.Primitive({
+//         geometryInstances: [perSegmentPolyline, perVertexPolyline],
+//         appearance: new Cesium.PerInstanceColorAppearance({
+//             flat: true,
+//             renderState: {
+//                 lineWidth: Math.min(2.0, viewer.scene.maximumAliasedLineWidth),
+//             },
+//         }),
+//     })
+// );
+
+    // const r = Cesium.OrientedBoundingBox.fromPoints([new Cesium.Cartesian3(-2177865.921106488, 4387848.421003733, 4070949.1142915394), new Cesium.Cartesian3(-2177844.4921231125, 4387805.247027799, 4071006.7241713805), new Cesium.Cartesian3(-2177888.7172238596, 4387807.158791821, 4070981.1766222217)]);
+    // const r = Cesium.OrientedBoundingBox.fromPoints([new Cesium.Cartesian3(-1000, -1000, 0), new Cesium.Cartesian3(1000, -1000, 0), new Cesium.Cartesian3(1000, 1000, 0), new Cesium.Cartesian3(-1000, 1000, 0),
+
+    // new Cesium.Cartesian3(-1000, -1000, 1000), new Cesium.Cartesian3(1000, -1000, 1000), new Cesium.Cartesian3(1000, 1000, 1000), new Cesium.Cartesian3(-1000, 1000, 1000)
+
+    window.viewer = viewer;
+    window.Cesium = Cesium;
+    // setTimeout(() => {
+        const center = Cesium.Cartesian3.fromDegrees(116.39,39.91, 199)
+        // 设置一个水平旋转方向的角度
+        const heading = Cesium.Math.toRadians(50)
+        // 设置一个垂直旋转视口的角度
+        
+        const pitch =  Cesium.Math.toRadians(-90)
+        // 设置相机距离目标点的高度
+        const range = 2500 
+        viewer.camera.lookAt(center,new Cesium.HeadingPitchRange(heading,pitch,range))
+        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY); // 取消lookAt
+    // }, 10000);
+
+    // function findParent(x, y, z) {
+    //     for (let i = 0; i < z; i++) {
+    //         const px = Math.floor(x / (2 >> (i + 1)));
+    //         const py = Math.floor(y / (2 >> (i + 1)));
+    //         const pz = z - (i + 1);
+    //         console.log(px, py, pz);
+
+    //         // findParent(px, py, pz)
+    //     }
+    // }
+  </script>
+</body>
+
+</html>
