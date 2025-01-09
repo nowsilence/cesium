@@ -368,8 +368,9 @@ QuadtreePrimitive.prototype.render = function (frameState) {
     tileProvider.beginUpdate(frameState);
 
     selectTilesForRendering(this, frameState);
+    // 并没有创建command，仅仅对瓦片进行了分类（按瓦片管理的纹理数量）
     createRenderCommandsForSelectedTiles(this, frameState);
-
+    // 真正创建command的是下面这行
     tileProvider.endUpdate(frameState);
   }
 

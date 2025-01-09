@@ -121,7 +121,7 @@ Object.defineProperties(PrimitiveCollection.prototype, {
 /**
  * Adds a primitive to the collection.
  *
- * @param {object} primitive The primitive to add.
+ * @param {object} primitive The primitive to add. 必须实现了update和destroy方法，例如Primitive,ClassificationPrimitive,GroundPrimitive,PolylineCollection，BillboardCollection,LabelCollection,PointPrimitiveCollection,ModelInstanceCollection
  * @param {number} [index] The index to add the layer at.  If omitted, the primitive will be added at the bottom of all existing primitives.
  * @returns {object} The primitive added to the collection.
  *
@@ -407,12 +407,14 @@ PrimitiveCollection.prototype.update = function (frameState) {
   if (!this.show) {
     return;
   }
-
+  // Viewer.render->CesiumWidget.render->scene.render->scene.updateAndExecuteCommands->scene.executeCommandsInViewport->scene.updateAndRenderPrimitives
+  // useDefaultRenderLoop(开启循环)↗
   const primitives = this._primitives;
   // Using primitives.length in the loop is a temporary workaround
   // to allow quadtree updates to add and remove primitives in
   // update().  This will be changed to manage added and removed lists.
   for (let i = 0; i < primitives.length; ++i) {
+    // 生成渲染命令，放入到frameState的commandList
     primitives[i].update(frameState);
   }
 };

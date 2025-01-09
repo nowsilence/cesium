@@ -948,6 +948,8 @@ Object.defineProperties(Scene.prototype, {
 
   /**
    * Gets the collection of ground primitives.
+   * GroundPolylinePrimitive、GroundPrimitive应该添加到groundPrimitives
+   * 但也可以添加到primitives中，但是性能不好，或者不正常的渲染
    * @memberof Scene.prototype
    *
    * @type {PrimitiveCollection}
@@ -3398,6 +3400,8 @@ function updateAndRenderPrimitives(scene) {
   updateShadowMaps(scene);
 
   if (scene._globe) {
+    // 地形数据渲染命令添加
+    // ？地形数据渲染命令为什么会在_primitives添加，待理解
     scene._globe.render(frameState);
   }
 }

@@ -1081,7 +1081,7 @@ CesiumMath.fastApproximateAtan = function (x) {
 
 /**
  * Computes a fast approximation of Atan2(x, y) for arbitrary input scalars.
- *
+ * 性能较高，精度没那么高
  * Range reduction math based on nvidia's cg reference implementation: http://developer.download.nvidia.com/cg/atan2.html
  *
  * @param {number} x An input number that isn't zero if y is zero.

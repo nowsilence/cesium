@@ -125,7 +125,7 @@ function GroundPrimitive(options) {
       const attributes = geometryInstancesArray[i].attributes;
       if (defined(attributes) && defined(attributes.color)) {
         appearance = new PerInstanceColorAppearance({
-          flat: true,
+          flat: true, // 不适用光照
         });
         break;
       }
@@ -785,6 +785,7 @@ GroundPrimitive.prototype.update = function (frameState) {
     if (useFragmentCulling) {
       // Determine whether to add spherical or planar extent attributes for computing texture coordinates.
       // This depends on the size of the GeometryInstances.
+      // 决定使用球面坐标还是平面坐标
       let attributes;
       let usePlanarExtents = true;
       for (i = 0; i < length; ++i) {

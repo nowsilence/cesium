@@ -169,7 +169,11 @@ function ClassificationPrimitive(options) {
   this._hasSphericalExtentsAttribute = false;
   this._hasPlanarExtentsAttributes = false;
   this._hasPerColorAttribute = false;
-
+  /**
+   * 当ClassificationPrimitive创建不是从GroundPrimitive中创建的（实例由用户创建），
+   * appearance只能使用PerInstanceColorAppearance
+   * 默认也是PerInstanceColorAppearance
+   */
   this.appearance = options.appearance;
 
   this._createBoundingVolumeFunction = options._createBoundingVolumeFunction;
@@ -344,6 +348,11 @@ function getStencilDepthRenderState(enableStencil, mask3DTiles) {
   const stencilFunction = mask3DTiles
     ? StencilFunction.EQUAL
     : StencilFunction.ALWAYS;
+    /**
+     * 背面被遮挡的部分-1，遮挡物为立方体内的地形或3dtile
+     * 正面被遮挡的部分+1，遮挡物为立方体外的地形或者3dtile，这部分和上面部分抵消，这部分是不渲染颜色的
+     * 颜色渲染的时候判断，模板值不为CESIUM_3D_TILE_MASK即渲染
+     */
   return {
     colorMask: {
       red: false,
@@ -1097,6 +1106,7 @@ ClassificationPrimitive.prototype.update = function (frameState) {
       }
       //>>includeStart('debug', pragmas.debug);
       else if (hasPerColorAttribute) {
+        // 一旦其中一个instance设置了颜色，则每个instance都必须设置颜色属性
         throw new DeveloperError(
           "All GeometryInstances must have color attributes to use per-instance color."
         );
@@ -1116,6 +1126,8 @@ ClassificationPrimitive.prototype.update = function (frameState) {
       !hasSphericalExtentsAttribute &&
       !hasPlanarExtentsAttributes
     ) {
+      // 通过new ClassificationPrimitive创建的对象每个instance设置的颜色必须一样，
+      // 若需要使用不同的颜色请使用GroundPrimitive
       throw new DeveloperError(
         "All GeometryInstances must have the same color attribute except via GroundPrimitives"
       );
@@ -1134,6 +1146,7 @@ ClassificationPrimitive.prototype.update = function (frameState) {
       !hasPerColorAttribute &&
       appearance instanceof PerInstanceColorAppearance
     ) {
+      // 如果appearance为PerInstanceColorAppearance那么每个instance必须设置颜色
       throw new DeveloperError(
         "PerInstanceColorAppearance requires color GeometryInstanceAttributes on all GeometryInstances"
       );
@@ -1143,6 +1156,7 @@ ClassificationPrimitive.prototype.update = function (frameState) {
       !hasSphericalExtentsAttribute &&
       !hasPlanarExtentsAttributes
     ) {
+      // 如果不是从GroundPrimitive实例化则不支持材质
       throw new DeveloperError(
         "Materials on ClassificationPrimitives are not supported except via GroundPrimitives"
       );

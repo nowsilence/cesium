@@ -748,6 +748,9 @@ ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes = function (
 };
 
 const spherePointScratch = new Cartesian3();
+/**
+ * 经纬度转球面坐标，范围-π~π
+ */
 function latLongToSpherical(latitude, longitude, ellipsoid, result) {
   const cartographic = cartographicScratch;
   cartographic.latitude = latitude;
@@ -765,7 +768,8 @@ function latLongToSpherical(latitude, longitude, ellipsoid, result) {
     spherePoint.x * spherePoint.x + spherePoint.y * spherePoint.y
   );
 
-  // Use fastApproximateAtan2 for alignment with shader
+  // Use fastApproximateAtan2 for alignment with shader 
+  // 与shader里的atan2对齐，性能较高，精度没那么高，但对于渲染够了，人眼区分不了
   const sphereLatitude = CesiumMath.fastApproximateAtan2(magXY, spherePoint.z);
   const sphereLongitude = CesiumMath.fastApproximateAtan2(
     spherePoint.x,
@@ -913,7 +917,7 @@ function shouldUseSpherical(rectangle) {
 /**
  * Computes whether the given rectangle is wide enough that texture coordinates
  * over its area should be computed using spherical extents instead of distance to planes.
- *
+ * 是否使用球面坐标，大于1度的话要使用球面坐标
  * @param {Rectangle} rectangle A rectangle
  * @private
  */
