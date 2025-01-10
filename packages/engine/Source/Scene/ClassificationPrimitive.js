@@ -24,6 +24,12 @@ import StencilFunction from "./StencilFunction.js";
 import StencilOperation from "./StencilOperation.js";
 
 /**
+ * 几何体着色
+ * 仅支持PerInstanceColorAppearance且每个instance的必须设置颜色且必须相同，不支持材质
+ * a volume enclosing geometry 几何体
+ * 使用场景除了可以贴地形，还可以贴3DTile，比如标记每个楼层（GroundPrimitive做不到）
+ * 阴影体是用户生成，所以有可能贴不上地形，主要取决于用户设置最低点和最高点
+ * 也可以设置非几何体的Geometry，但是渲染的时候会有问题
  * A classification primitive represents a volume enclosing geometry in the {@link Scene} to be highlighted.
  * <p>
  * A primitive combines geometry instances with an {@link Appearance} that describes the full shading, including

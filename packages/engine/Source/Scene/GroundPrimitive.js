@@ -25,6 +25,10 @@ const GroundPrimitiveUniformMap = {
 
 /**
  * A ground primitive represents geometry draped over terrain or 3D Tiles in the {@link Scene}.
+ * 主要是用来贴地形，如果用来贴3DTile可能包不住，自动生成的体只是地形的最高点最低点，3DTile可能远远高于地形
+ * 生成阴影体的时候不会使用Geometry提供的extrudedHeight
+ * 相比于ClassificationPrimitive，GroundPrimitive会使用FragmentCulling，能剔除不需要渲染的部分，提供性能
+ * ClassificationPrimitive最高最低点为用户定义，有可能贴不上地线
  * <p>
  * A primitive combines geometry instances with an {@link Appearance} that describes the full shading, including
  * {@link Material} and {@link RenderState}.  Roughly, the geometry instance defines the structure and placement,
@@ -370,6 +374,11 @@ Object.defineProperties(GroundPrimitive.prototype, {
  */
 GroundPrimitive.isSupported = ClassificationPrimitive.isSupported;
 
+/**
+ * 由于地球是圆的，不这样弄的话生成的体可能保不住区域内的所有地表，即两点之间的连线会在地表一下
+ * @param {*} primitive 
+ * @returns 
+ */
 function getComputeMaximumHeightFunction(primitive) {
   return function (granularity, ellipsoid) {
     const r = ellipsoid.maximumRadius;

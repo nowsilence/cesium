@@ -366,7 +366,8 @@ function Scene(options) {
   /**
    * The vertical exaggeration of the scene.
    * When set to 1.0, no exaggeration is applied.
-   *
+   * 以前名称为terrainExaggeration
+   * 在GroundPrimitive中有用到，生成阴影体时候缩放最低最高值
    * @type {number}
    * @default 1.0
    */

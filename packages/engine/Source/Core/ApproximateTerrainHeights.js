@@ -54,6 +54,10 @@ ApproximateTerrainHeights.initialize = function () {
 };
 
 /**
+ * 先查找rectangle所在的最高级别瓦片，找到找个瓦片的最大最小值
+ * 计算rectangle中点的高程a，取上一步找出的最小值和-a中的最小值结果为c
+ * 再取c和_defaultMinTerrainHeight的最大值
+ * 最大值只能是瓦片的最大高程或者是_defaultMaxTerrainHeight
  * Computes the minimum and maximum terrain heights for a given rectangle
  * @param {Rectangle} rectangle The bounding rectangle
  * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid
@@ -72,7 +76,7 @@ ApproximateTerrainHeights.getMinimumMaximumHeights = function (
   }
   //>>includeEnd('debug');
   ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-
+  // 包含rectangle的最高级别瓦片
   const xyLevel = getTileXYLevel(rectangle);
 
   // Get the terrain min/max for that tile
@@ -86,7 +90,7 @@ ApproximateTerrainHeights.getMinimumMaximumHeights = function (
       maxTerrainHeight = heights[1];
     }
 
-    // Compute min by taking the center of the NE->SW diagonal and finding distance to the surface
+    // Compute min by taking the center of the NE->SW diagonal（对角线） and finding distance to the surface
     ellipsoid.cartographicToCartesian(
       Rectangle.northeast(rectangle, scratchDiagonalCartographic),
       scratchDiagonalCartesianNE
