@@ -357,7 +357,9 @@ function getStencilDepthRenderState(enableStencil, mask3DTiles) {
     /**
      * 背面被遮挡的部分-1，遮挡物为立方体内的地形或3dtile
      * 正面被遮挡的部分+1，遮挡物为立方体外的地形或者3dtile，这部分和上面部分抵消，这部分是不渲染颜色的
-     * 颜色渲染的时候判断，模板值不为CESIUM_3D_TILE_MASK即渲染
+     * 地表以上是完全不渲染的，因为深度测试通过了。
+     * 地表下背面被前面遮挡的部分刚好一个+1一个-1抵消为0
+     * 颜色渲染的时候判断，模板值不为0即渲染，参见getColorRenderState
      */
   return {
     colorMask: { // 禁止颜色写入
