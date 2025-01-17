@@ -388,7 +388,7 @@ function getStencilDepthRenderState(mask3DTiles) {
       reference: StencilConstants.CESIUM_3D_TILE_MASK,
       mask: StencilConstants.CESIUM_3D_TILE_MASK,
     },
-    stencilMask: StencilConstants.CLASSIFICATION_MASK,
+    stencilMask: StencilConstants.CLASSIFICATION_MASK, // 设置模板缓冲区的写入掩码 如：0xFF（默认允许写入所有位）0xF（允许写入低四位）
     depthTest: {
       enabled: true,
       func: DepthFunction.LESS_OR_EQUAL,

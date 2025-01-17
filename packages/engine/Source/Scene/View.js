@@ -231,7 +231,10 @@ function insertIntoBin(view, scene, command, commandNear, commandFar) {
 
 const scratchCullingVolume = new CullingVolume();
 const scratchNearFarInterval = new Interval();
-
+/**
+ * 创建潜在可见集
+ * @param {*} scene 
+ */
 View.prototype.createPotentiallyVisibleSet = function (scene) {
   const frameState = scene.frameState;
   const camera = frameState.camera;

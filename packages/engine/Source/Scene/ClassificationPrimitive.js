@@ -353,14 +353,14 @@ ClassificationPrimitive.isSupported = function (scene) {
 function getStencilDepthRenderState(enableStencil, mask3DTiles) {
   const stencilFunction = mask3DTiles
     ? StencilFunction.EQUAL
-    : StencilFunction.ALWAYS;
+    : StencilFunction.ALWAYS; // 
     /**
      * 背面被遮挡的部分-1，遮挡物为立方体内的地形或3dtile
      * 正面被遮挡的部分+1，遮挡物为立方体外的地形或者3dtile，这部分和上面部分抵消，这部分是不渲染颜色的
      * 颜色渲染的时候判断，模板值不为CESIUM_3D_TILE_MASK即渲染
      */
   return {
-    colorMask: {
+    colorMask: { // 禁止颜色写入
       red: false,
       green: false,
       blue: false,
@@ -383,7 +383,7 @@ function getStencilDepthRenderState(enableStencil, mask3DTiles) {
       reference: StencilConstants.CESIUM_3D_TILE_MASK,
       mask: StencilConstants.CESIUM_3D_TILE_MASK,
     },
-    stencilMask: StencilConstants.CLASSIFICATION_MASK,
+    stencilMask: StencilConstants.CLASSIFICATION_MASK, // 指定哪些位可以被写入，0x0f低四位
     depthTest: {
       enabled: true,
       func: DepthFunction.LESS_OR_EQUAL,

@@ -274,6 +274,7 @@ GlobeDepth.prototype.update = function (
 
 GlobeDepth.prototype.prepareColorTextures = function (context, blitStencil) {
   if (!this.picking && this._numSamples > 1) {
+    // 将多采样渲染缓冲区（包括颜色、深度，模板）复制到颜色缓冲区
     this._outputFramebuffer.prepareTextures(context, blitStencil);
   }
 };
@@ -281,6 +282,7 @@ GlobeDepth.prototype.prepareColorTextures = function (context, blitStencil) {
 GlobeDepth.prototype.executeCopyDepth = function (context, passState) {
   if (defined(this._copyDepthCommand)) {
     this.prepareColorTextures(context);
+    // 拷贝到_copyDepthFramebuffer
     this._copyDepthCommand.execute(context, passState);
     context.uniformState.globeDepthTexture = this._copyDepthFramebuffer.getColorTexture();
   }
@@ -316,22 +318,27 @@ GlobeDepth.prototype.executeUpdateDepth = function (
         this._tempCopyDepthFramebuffer.destroy();
         this._tempCopyDepthFramebuffer.update(context, width, height);
 
-        const colorTexture = this._copyDepthFramebuffer.getColorTexture();
+        const colorTexture = this._copyDepthFramebuffer.getColorTexture(); // 地形的深度信息
         this._updateDepthFramebuffer.setColorTexture(colorTexture, 0);
-        this._updateDepthFramebuffer.setDepthStencilTexture(depthTextureToCopy);
+        this._updateDepthFramebuffer.setDepthStencilTexture(depthTextureToCopy); // 只拷贝3dtile所在的深度信息，故要设置深度模板纹理，这里用的是模板而不是深度信息
         this._updateDepthFramebuffer.update(context, width, height);
 
         updateCopyCommands(this, context, width, height, passState);
       }
-      this._tempCopyDepthTexture = depthTextureToCopy;
-      this._tempCopyDepthCommand.execute(context, passState);
+
+      this._tempCopyDepthTexture = depthTextureToCopy; // 当前渲染缓冲区的深度信息
+      // 将depthTextureToCopy拷贝到_tempCopyDepthFramebuffer内
+      this._tempCopyDepthCommand.execute(context, passState); // 拷贝新的深度信息到tempCopy
+      // 再讲_tempCopyDepthFramebuffer的深度纹理拷贝_copyDepthCommand的buffer上，行321
+      // 参考 参考executeCopyDepth，context.uniformState.globeDepthTexture已经绑定到了 this._copyDepthFramebuffer.getColorTexture();
       this._updateDepthCommand.execute(context, passState);
     }
     return;
   }
 
-  // Fast path - the depth texture can be copied normally.
+  // Fast path - the depth texture can be copied normally.拷贝到_copyDepthCommand的buffer内
   if (defined(this._copyDepthCommand)) {
+    // 参考executeCopyDepth，context.uniformState.globeDepthTexture已经绑定到了 this._copyDepthFramebuffer.getColorTexture();
     this._copyDepthCommand.execute(context, passState);
   }
 };

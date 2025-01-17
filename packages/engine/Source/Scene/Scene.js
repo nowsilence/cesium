@@ -2432,14 +2432,15 @@ function executeCommands(scene, passState) {
 
     clearDepth.execute(context, passState);
 
-    if (context.stencilBuffer) {
+    if (context.stencilBuffer) { // 是否支持8位以上
       clearStencil.execute(context, passState);
     }
-
+    // 渲染地形
     uniformState.updatePass(Pass.GLOBE);
     let commands = frustumCommands.commands[Pass.GLOBE];
     let length = frustumCommands.indices[Pass.GLOBE];
-
+    // 使用的是深度缓冲区Buffer，即view.globeDepth.framebuffer;
+    /*******************view.globeDepth.framebuffer*********************/
     if (globeTranslucent) {
       globeTranslucencyState.executeGlobeCommands(
         frustumCommands,
@@ -2456,6 +2457,7 @@ function executeCommands(scene, passState) {
 
     const globeDepth = view.globeDepth;
     if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
+      // 拷贝并赋值给context.uniformState.globeDepthTexture 
       globeDepth.executeCopyDepth(context, passState);
     }
 
@@ -2486,7 +2488,7 @@ function executeCommands(scene, passState) {
         depthPlane.execute(context, passState);
       }
     }
-
+    // // Draw terrain  3dtile classification
     if (
       !environmentState.useInvertClassification ||
       picking ||
@@ -2494,7 +2496,7 @@ function executeCommands(scene, passState) {
     ) {
       // Common/fastest path. Draw 3D Tiles and classification normally.
 
-      // Draw 3D Tiles
+      // Draw 3D Tiles 渲染3DTile的时候是开启了模板测试的，写入缓冲区的是StencilConstants.CESIUM_3D_TILE_MASK
       uniformState.updatePass(Pass.CESIUM_3D_TILE);
       commands = frustumCommands.commands[Pass.CESIUM_3D_TILE];
       length = frustumCommands.indices[Pass.CESIUM_3D_TILE];
@@ -2506,8 +2508,9 @@ function executeCommands(scene, passState) {
         if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
           // When clearGlobeDepth is true, executeUpdateDepth needs
           // a globe depth texture with resolved stencil bits.
+          // 将深度模板信息复制到颜色纹理
           globeDepth.prepareColorTextures(context, clearGlobeDepth);
-          globeDepth.executeUpdateDepth(
+          globeDepth.executeUpdateDepth( // 合并3dtile和地形的深度信息
             context,
             passState,
             clearGlobeDepth,
@@ -2560,7 +2563,7 @@ function executeCommands(scene, passState) {
       // NOTE: Step six when translucent invert color occurs after the TRANSLUCENT pass
       //
       scene._invertClassification.clear(context, passState);
-
+      /*************_invertClassification._fbo.framebuffer****************/
       const opaqueClassificationFramebuffer = passState.framebuffer;
       passState.framebuffer = scene._invertClassification._fbo.framebuffer;
 
@@ -2593,8 +2596,8 @@ function executeCommands(scene, passState) {
       for (j = 0; j < length; ++j) {
         executeCommand(commands[j], scene, context, passState);
       }
-
-      passState.framebuffer = opaqueClassificationFramebuffer;
+      /*****************opaqueClassificationFramebuffer******************/
+      passState.framebuffer = opaqueClassificationFramebuffer; // 恢复到之前的缓冲区
 
       // Fullscreen pass to copy classified fragments
       scene._invertClassification.executeClassified(context, passState);
@@ -2700,7 +2703,8 @@ function executeCommands(scene, passState) {
     if (picking || !usePostProcessSelected) {
       continue;
     }
-
+    /***************IdFramebuffer************/
+    // 渲染到IdFramebuffer，后续会有后处理环节
     const originalFramebuffer = passState.framebuffer;
     passState.framebuffer = view.sceneFramebuffer.getIdFramebuffer();
 
@@ -3158,19 +3162,19 @@ function executeCommandsInViewport(
   const renderTranslucentDepthForPick =
     environmentState.renderTranslucentDepthForPick;
 
-  if (!firstViewport) {
+  if (!firstViewport) { // 是否为第一次渲染
     scene.frameState.commandList.length = 0;
   }
-
+  // 填充commandList
   updateAndRenderPrimitives(scene);
-
+  // 整理、分类commandList
   view.createPotentiallyVisibleSet(scene);
 
   if (firstViewport) {
     if (defined(backgroundColor)) {
       updateAndClearFramebuffers(scene, passState, backgroundColor);
     }
-    executeComputeCommands(scene);
+    executeComputeCommands(scene); // 先执行计算shader
     if (!renderTranslucentDepthForPick) {
       executeShadowMapCastCommands(scene);
     }
@@ -3437,7 +3441,7 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
     scene._sunBloom = false;
   }
 
-  // Clear the pass state framebuffer.
+  // Clear the pass state framebuffer.看了下_clearColorCommand的framebuffer没有赋值，应该是清空主缓冲区
   const clear = scene._clearColorCommand;
   Color.clone(clearColor, clear.color);
   clear.execute(context, passState);

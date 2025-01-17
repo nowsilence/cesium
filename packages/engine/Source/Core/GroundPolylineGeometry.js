@@ -402,15 +402,18 @@ function computeVertexMiterNormal(
   const up = direction(vertexTop, vertexBottom, vertexUpScratch);
 
   // Compute vectors pointing towards neighboring points but tangent to this point on the ellipsoid
+  // vertexBottom指向previousBottom的球面切向量
   const toPrevious = tangentDirection(
     previousBottom,
     vertexBottom,
     up,
     toPreviousScratch
   );
+  // vertexBottom指向nextBottom的球面切向量
   const toNext = tangentDirection(nextBottom, vertexBottom, up, toNextScratch);
 
   // Check if tangents are almost opposite - if so, no need to miter.
+  // 若方向几乎是相反的，则返回垂直于线方向的右侧向量
   if (
     CesiumMath.equalsEpsilon(
       Cartesian3.dot(toPrevious, toNext),
@@ -428,6 +431,7 @@ function computeVertexMiterNormal(
   result = Cartesian3.normalize(result, result);
 
   // Flip the normal if it isn't pointing roughly bound right (aka if forward is pointing more "backwards")
+  // 保证miter向量始终在线方向的右侧
   const forward = Cartesian3.cross(up, result, forwardScratch);
   if (Cartesian3.dot(toNext, forward) < cosine90) {
     result = Cartesian3.negate(result, result);
