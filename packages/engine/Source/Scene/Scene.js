@@ -548,6 +548,7 @@ function Scene(options) {
   });
 
   /**
+   *  false， 3D Tiles正常渲染， true 已分类的3DTile正常渲染，未分类的3DTile 使用指定颜色渲染
    * When <code>false</code>, 3D Tiles will render normally. When <code>true</code>, classified 3D Tile geometry will render normally and
    * unclassified 3D Tile geometry will render with the color multiplied by {@link Scene#invertClassificationColor}.
    * @type {boolean}
@@ -2457,7 +2458,7 @@ function executeCommands(scene, passState) {
 
     const globeDepth = view.globeDepth;
     if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
-      // 拷贝并赋值给context.uniformState.globeDepthTexture 
+      // 拷贝并赋值给context.uniformState.globeDepthTexture
       globeDepth.executeCopyDepth(context, passState);
     }
 
@@ -2488,7 +2489,7 @@ function executeCommands(scene, passState) {
         depthPlane.execute(context, passState);
       }
     }
-    // // Draw terrain  3dtile classification
+    // // Draw terrain  3dtile classification invertClassification 只针对3DTile
     if (
       !environmentState.useInvertClassification ||
       picking ||
@@ -2530,6 +2531,7 @@ function executeCommands(scene, passState) {
         }
       }
     } else {
+      // invert classification 渲染Vector3DTilePrimitive和ClassificationPrimitive覆盖的部分地表物体
       // When the invert classification color is opaque:
       //    Main FBO (FBO1):                   Main_Color   + Main_DepthStencil
       //    Invert classification FBO (FBO2) : Invert_Color + Main_DepthStencil
@@ -2562,10 +2564,10 @@ function executeCommands(scene, passState) {
       //
       // NOTE: Step six when translucent invert color occurs after the TRANSLUCENT pass
       //
-      scene._invertClassification.clear(context, passState);
+      scene._invertClassification.clear(context, passState); // 1
       /*************_invertClassification._fbo.framebuffer****************/
       const opaqueClassificationFramebuffer = passState.framebuffer;
-      passState.framebuffer = scene._invertClassification._fbo.framebuffer;
+      passState.framebuffer = scene._invertClassification._fbo.framebuffer; // 2
 
       // Draw normally
       uniformState.updatePass(Pass.CESIUM_3D_TILE);
@@ -2585,8 +2587,8 @@ function executeCommands(scene, passState) {
         );
       }
 
-      // Set stencil
-      uniformState.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW);
+      // Set stencil 
+      uniformState.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW); 
       commands =
         frustumCommands.commands[
           Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW
@@ -2599,8 +2601,8 @@ function executeCommands(scene, passState) {
       /*****************opaqueClassificationFramebuffer******************/
       passState.framebuffer = opaqueClassificationFramebuffer; // 恢复到之前的缓冲区
 
-      // Fullscreen pass to copy classified fragments
-      scene._invertClassification.executeClassified(context, passState);
+      // Fullscreen pass to copy classified fragments 不等于0，即Vector3DTilePrimitive覆盖部分以外的地方进行着色成不透明或者半透明
+      scene._invertClassification.executeClassified(context, passState);// 3
       if (frameState.invertClassificationColor.alpha === 1.0) {
         // Fullscreen pass to copy unclassified fragments when alpha == 1.0
         scene._invertClassification.executeUnclassified(context, passState);
@@ -2611,7 +2613,7 @@ function executeCommands(scene, passState) {
         clearClassificationStencil.execute(context, passState);
       }
 
-      // Draw style over classification.
+      // Draw style over classification. 高亮地表物体
       uniformState.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
       commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION];
       length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION];
@@ -2689,8 +2691,8 @@ function executeCommands(scene, passState) {
 
     if (
       context.depthTexture &&
-      scene.useDepthPicking &&
-      (environmentState.useGlobeDepthFramebuffer ||
+      scene.useDepthPicking && // 默认为true
+      (environmentState.useGlobeDepthFramebuffer || // 只要浏览器环境支持深度深度纹理（即context.depthTexture为true），useGlobeDepthFramebuffer就为true
         renderTranslucentDepthForPick)
     ) {
       // PERFORMANCE_IDEA: Use MRT to avoid the extra copy.

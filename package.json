@@ -51,7 +51,8 @@
   ],
   "dependencies": {
     "@cesium/engine": "^9.0.0",
-    "@cesium/widgets": "^6.0.0"
+    "@cesium/widgets": "^6.0.0",
+    "gulp": "^4.0.2"
   },
   "devDependencies": {
     "@playwright/test": "^1.41.1",
@@ -159,5 +160,6 @@
   "workspaces": [
     "packages/engine",
     "packages/widgets"
-  ]
+  ],
+  "__npminstall_done": false
 }

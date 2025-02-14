@@ -1359,7 +1359,7 @@ function setSunAndMoonDirections(uniformState, frameState) {
  * @param {object} camera The camera to synchronize with.
  */
 UniformState.prototype.updateCamera = function (camera) {
-  setView(this, camera.viewMatrix);
+  setView(this, camera.viewMatrix); // pos * viewMatrix 将世界坐标转化成相机下的视图坐标
   setInverseView(this, camera.inverseViewMatrix);
   setCamera(this, camera);
 
@@ -1664,7 +1664,7 @@ function cleanViewProjection(uniformState) {
     Matrix4.multiply(
       uniformState._projection,
       uniformState._view,
-      uniformState._viewProjection
+      uniformState._viewProjection // 将视图坐标（相机坐标系）转化成投影坐标（裁剪坐标）
     );
   }
 }
