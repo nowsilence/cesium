@@ -34,7 +34,7 @@ function SpatialNode(level, x, y, z, parent, shape, voxelDimensions) {
   this.z = z;
 
   /**
-   * @type {Cartesian3}
+   * @type {Cartesian3} xyz方向上有多少体素点
    */
   this.dimensions = Cartesian3.clone(voxelDimensions);
   /**
@@ -84,7 +84,7 @@ SpatialNode.prototype.computeBoundingVolumes = function (shape) {
   );
   const maximumScale = 2.0 * Cartesian3.maximumComponent(halfScale);
   this.approximateVoxelSize =
-    maximumScale / Cartesian3.minimumComponent(this.dimensions);
+    maximumScale / Cartesian3.minimumComponent(this.dimensions); // 每个体素的大小
 };
 
 /**

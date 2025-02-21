@@ -976,7 +976,7 @@ const scratchRotationAndLocalScale = new Matrix3();
 const scratchTransformPositionWorldToLocal = new Matrix4();
 const scratchTransformPositionLocalToWorld = new Matrix4();
 const scratchTransformPositionLocalToProjection = new Matrix4();
-// 将[-1, 1]转换成[0, 1]
+// 将[-1, 1]转换成[0, 1]（不一定是0-1范围，因为给定的值可能不在-1~1范围内）
 const transformPositionLocalToUv = Matrix4.fromRotationTranslation(
   Matrix3.fromUniformScale(0.5, new Matrix3()),
   new Cartesian3(0.5, 0.5, 0.5),
@@ -1454,8 +1454,9 @@ function updateShapeAndTransforms(primitive, shape, provider) {
     transformPositionWorldToLocal,
     primitive._transformDirectionWorldToLocal
   );
+  // 计算旋转和局部缩放组合矩阵的逆的转置，作为从局部法线到世界法线的变换矩阵
   primitive._transformNormalLocalToWorld = Matrix3.inverseTranspose(
-    rotationAndLocalScale,
+    rotationAndLocalScale, 
     primitive._transformNormalLocalToWorld
   );
 
@@ -2025,7 +2026,7 @@ function DefaultVoxelProvider() {
   this.ready = true;
   this.shape = VoxelShapeType.BOX;
   // const voxelCount = dimensions.x * dimensions.y * dimensions.z; 每个tile体素的数量
-  this.dimensions = new Cartesian3(1, 1, 1);
+  this.dimensions = new Cartesian3(1, 1, 1); // 一个小Tile内，xyz三个方向上有几个体素
   this.names = ["data"]; // names 和 types长度要一一对应
   this.types = [MetadataType.SCALAR]; // types的数量决定了纹理的数量，types里的值决定纹理通道的数量
   this.componentTypes = [MetadataComponentType.FLOAT32];
