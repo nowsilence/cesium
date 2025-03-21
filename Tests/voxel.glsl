@@ -315,7 +315,8 @@ OctreeNodeData getOctreeNodeData(in vec2 octreeUv) {
 }
 
 OctreeNodeData getOctreeChildData(in int parentOctreeIndex, in ivec3 childCoord) {
-    int childIndex = childCoord.z * 4 + childCoord.y * 2 + childCoord.x;
+    int childIndex = childCoord.z * 4 + childCoord.y * 2 + childCoord.x; // 节点在父节点下的编号
+    // parentOctreeIndex 位置肯定为9的倍数
     int octreeCoordX = intMod(parentOctreeIndex, u_octreeInternalNodeTilesPerRow) * 9 + 1 + childIndex;
     int octreeCoordY = parentOctreeIndex / u_octreeInternalNodeTilesPerRow;
     vec2 octreeUv = u_octreeInternalNodeTexelSizeUv * vec2(float(octreeCoordX) + 0.5, float(octreeCoordY) + 0.5);
@@ -397,12 +398,12 @@ OctreeNodeData traverseOctreeDownwards(in vec3 shapePosition, inout TraversalDat
 
         
         ivec4 octreeCoords = traversalData.octreeCoords;
-        traversalData.octreeCoords = ivec4(octreeCoords.xyz * 2 + ivec3(childCoord), octreeCoords.w + 1);
+        traversalData.octreeCoords = ivec4(octreeCoords.xyz * 2 + ivec3(childCoord), octreeCoords.w + 1); // 瓦片编号
 
         childData = getOctreeChildData(traversalData.parentOctreeIndex, ivec3(childCoord));
 
         if (childData.flag != OCTREE_FLAG_INTERNAL) {
-            
+              
             break;
         }
 

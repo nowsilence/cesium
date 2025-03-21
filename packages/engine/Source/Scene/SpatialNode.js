@@ -10,7 +10,7 @@ import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
 /**
  * @alias SpatialNode
  * @constructor
- *
+ * 表示某一个空间范围，keyframeNodes，表示时间序列中的关键帧，表示不同时间点的体素数据
  * @param {number} level
  * @param {number} x
  * @param {number} y
@@ -170,7 +170,7 @@ function findKeyframeIndex(keyframe, keyframeNodes) {
 
 /**
  * Computes the most suitable keyframes for rendering, balancing between temporal and visual quality.
- *
+ * 计算最适合渲染的关键帧，平衡时间和视觉质量
  * @param {number} keyframeLocation
  */
 SpatialNode.prototype.computeSurroundingRenderableKeyframeNodes = function (

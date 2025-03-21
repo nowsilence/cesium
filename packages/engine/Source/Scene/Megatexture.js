@@ -293,7 +293,8 @@ Megatexture.prototype.add = function (data) {
   // remove head of empty list
   const node = this.emptyList;
   this.emptyList = this.emptyList.nextNode;
-  if (defined(this.emptyList)) { // 若为this.nodes最后一个，nextNode为undefined
+  if (defined(this.emptyList)) {
+    // 标记为第一个空node
     this.emptyList.previousNode = undefined;
   }
 

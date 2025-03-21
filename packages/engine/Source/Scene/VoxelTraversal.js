@@ -60,7 +60,7 @@ function VoxelTraversal(
     const type = types[i];
     const componentCount = MetadataType.getComponentCount(type);
     const componentType = componentTypes[i];
-
+    // 每一个属性创建一个大纹理
     this.megatextures[i] = new Megatexture(
       context,
       dimensions,
@@ -153,7 +153,7 @@ function VoxelTraversal(
     0
   );
 
-  const internalNodeTexelCount = 9;
+  const internalNodeTexelCount = 9; // 9为一组数，第一个为某一节点的父节点编号，后面跟着8个子节点的编号
   const internalNodeTextureDimensionX = 2048;
   const internalNodeTilesPerRow = Math.floor(
     internalNodeTextureDimensionX / internalNodeTexelCount
@@ -874,20 +874,21 @@ function generateOctree(that, sampleCount, levelBlendFactor) {
         (GpuOctreeFlag.INTERNAL << 16) | childOctreeIndex;
       internalNodeOctreeData[childEntryIndex] = parentOctreeIndex;
       internalNodeCount++;
-
+        // 子找父， list[val * 9]
+        // 父找子， list[val * 9 + 1]
       // Recurse over children
       parentOctreeIndex = childOctreeIndex;
       parentEntryIndex = parentOctreeIndex * 9 + 1;
       for (let cc = 0; cc < 8; cc++) {
         const child = node.children[cc];
-        childOctreeIndex = internalNodeCount;
+        childOctreeIndex = internalNodeCount; // 节点编号，深度优先
         childEntryIndex = childOctreeIndex * 9 + 0;
         buildOctree(
           child,
-          childOctreeIndex,
-          childEntryIndex,
-          parentOctreeIndex,
-          parentEntryIndex + cc
+          childOctreeIndex, // 1
+          childEntryIndex, // 9
+          parentOctreeIndex, // 10
+          parentEntryIndex + cc // 10
         );
       }
     } else {
@@ -933,7 +934,7 @@ function generateOctree(that, sampleCount, levelBlendFactor) {
 
   const rootNode = that.rootNode;
   rootNode.computeSurroundingRenderableKeyframeNodes(keyframeLocation);
-  if (rootNode.isRenderable(frameNumber)) {
+  if (rootNode.isRenderable(frameNumber)) { // 会在loadAndUnload找到在视野范围且需要渲染并赋值frameNumber
     buildOctree(rootNode, 0, 0, 0, 0);
   }
 
