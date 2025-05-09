@@ -17,7 +17,7 @@ if (!FeatureDetection.isInternetExplorer()) {
 
 /**
  * An appearance for {@link PolylineGeometry} that supports shading with materials.
- *
+ * 支持PolylineGeometry设置材质渲染，不支持数据选择
  * @alias PolylineMaterialAppearance
  * @constructor
  *

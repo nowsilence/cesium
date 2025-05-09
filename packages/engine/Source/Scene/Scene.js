@@ -3639,6 +3639,11 @@ function callAfterRenderFunctions(scene) {
   functions.length = 0;
 }
 
+/**
+ * 获取相机位置地形的高程或者是3DTile的高程
+ * @param {*} scene 
+ * @returns 
+ */
 function getGlobeHeight(scene) {
   if (scene.mode === SceneMode.MORPHING) {
     return;

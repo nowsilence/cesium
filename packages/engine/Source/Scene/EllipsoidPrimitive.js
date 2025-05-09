@@ -31,7 +31,7 @@ const attributeLocations = {
  * <p>
  * This is only supported in 3D.  The ellipsoid is not shown in 2D or Columbus view.
  * </p>
- *
+ * 是一个可渲染对象，可以添加到PrimitiveCollection中
  * @alias EllipsoidPrimitive
  * @constructor
  *

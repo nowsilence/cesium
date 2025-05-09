@@ -95,7 +95,7 @@ void main()
     // Get the current distance
     float distance = getDistance(v_textureCoordinates);
 
-#if (__VERSION__ == 300 || defined(GL_OES_standard_derivatives))
+#if (__VERSION__ == 300 || defined(GL_OES_standard_derivatives)) // derivatives导数
     float smoothing = fwidth(distance);
     // Get an offset that is approximately half the distance to the neighbor pixels
     // 0.354 is approximately half of 1/sqrt(2)

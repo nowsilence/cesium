@@ -18,7 +18,8 @@ if (!FeatureDetection.isInternetExplorer()) {
  * {@link PolylineGeometry} or {@link GroundPolylineGeometry}.
  * This allows several geometry instances, each with a different color, to
  * be drawn with the same {@link Primitive}.
- *
+ * 用于一个 PolylineGeometry实例设置一个颜色，不支持设置material，不支持光照、不支持虚线
+ * 不支持点选
  * @alias PolylineColorAppearance
  * @constructor
  *
@@ -59,7 +60,8 @@ function PolylineColorAppearance(options) {
   /**
    * This property is part of the {@link Appearance} interface, but is not
    * used by {@link PolylineColorAppearance} since a fully custom fragment shader is used.
-   *
+   * 这个属性是{@link Appearance}接口的一部分，但是没有被{@link PolylineColorAppearance}使用，
+   * 因为它使用了一个完全自定义的片段着色器。
    * @type Material
    *
    * @default undefined

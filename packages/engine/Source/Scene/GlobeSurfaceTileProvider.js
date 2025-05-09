@@ -375,7 +375,7 @@ GlobeSurfaceTileProvider.prototype.initialize = function (frameState) {
 /**
  * Called at the beginning of the update cycle for each render frame, before {@link QuadtreeTileProvider#showTileThisFrame}
  * or any other functions.
- *
+ * 清空各纹理数对应的瓦片统计，更新裁剪面信息，其他标志位初始化
  * @param {FrameState} frameState The frame state.
  */
 GlobeSurfaceTileProvider.prototype.beginUpdate = function (frameState) {

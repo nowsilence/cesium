@@ -81,7 +81,7 @@ bool intersectSphere(vec3 origin, vec3 dir, float slice,
     }
     point = origin + t * dir;
 
-    if(slice >= 0.0) {
+    if(slice >= 0.0) { // 让点落在后半球垂直于z轴的平面上
         point.z = (slice / 2.0) - 0.5;
         if(length(point) > 0.5) {
             return false;

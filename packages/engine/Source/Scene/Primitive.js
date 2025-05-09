@@ -59,7 +59,7 @@ import ShadowMode from "./ShadowMode.js";
  * show geometry that will be created on a web worker by using the descriptions of the geometry. The third example
  * shows how to create the geometry on the main thread by explicitly calling the <code>createGeometry</code> method.
  * </p>
- *
+ * 通过Primitive构建的默认allowPicking为true，增加选择功能，为false的话，把pickId置为undefined，如果command的pickId为undefined,Scene.updateDerivedCommands中就不会创建pick命令
  * @alias Primitive
  * @constructor
  *
@@ -489,6 +489,11 @@ Object.defineProperties(Primitive.prototype, {
   },
 });
 
+/**
+ * 返回每个示例都有的属性，且属性类型一样
+ * @param {*} instances 
+ * @returns 
+ */
 function getCommonPerInstanceAttributeNames(instances) {
   const length = instances.length;
 
@@ -567,7 +572,7 @@ function createBatchTable(primitive, context) {
   let i;
   let name;
   let attribute;
-
+  
   for (i = 0; i < length; ++i) {
     name = names[i];
     attribute = instanceAttributes[name];
@@ -1334,7 +1339,7 @@ function loadSynchronous(primitive, frameState) {
 
     let createdGeometry;
     if (defined(geometry.attributes) && defined(geometry.primitiveType)) {
-      createdGeometry = cloneGeometry(geometry);
+      createdGeometry = cloneGeometry(geometry); // 判断是不是Geometry的实例
     } else {
       createdGeometry = geometry.constructor.createGeometry(geometry);
     }

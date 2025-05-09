@@ -272,8 +272,8 @@ QuadtreePrimitive.prototype.forEachRenderedTile = function (tileFunction) {
 /**
  * Calls the callback when a new tile is rendered that contains the given cartographic. The only parameter
  * is the cartesian position on the tile.
- *
- * @param {Cartographic} cartographic The cartographic position.
+ * 在scene.render之前，scene.initializeFrame->scene.updateHeight
+ * @param {Cartographic} cartographic The cartographic position. 貌似为相机位置的地形高程
  * @param {Function} callback The function to be called when a new tile is loaded containing the updated cartographic.
  * @returns {Function} The function to remove this callback from the quadtree.
  */
@@ -365,10 +365,11 @@ QuadtreePrimitive.prototype.render = function (frameState) {
   const tileProvider = this._tileProvider;
 
   if (passes.render) {
+    // 清空各纹理数对应的瓦片统计，更新裁剪面信息，其他标志位初始化
     tileProvider.beginUpdate(frameState);
 
     selectTilesForRendering(this, frameState);
-    // 并没有创建command，仅仅对瓦片进行了分类（按瓦片管理的纹理数量）
+    // 并没有创建command，仅仅对瓦片进行了分类统计（按瓦片管理的纹理数量）
     createRenderCommandsForSelectedTiles(this, frameState);
     // 真正创建command的是下面这行
     tileProvider.endUpdate(frameState);
@@ -1431,7 +1432,7 @@ function updateHeights(primitive, frameState) {
     let timeSliceMax = false;
     for (i = primitive._lastTileIndex; i < customDataLength; ++i) {
       const data = customData[i];
-
+      // 小分辨率到大分辨率的映射的操作，叫做上采样(UpSample)
       // No need to run this code when the tile is upsampled, because the height will be the same as its parent.
       const terrainData = tile.data.terrainData;
       const upsampledGeometryFromParent =
@@ -1487,6 +1488,7 @@ function updateHeights(primitive, frameState) {
             );
           }
         } else {
+          // 在二维地图的时候x轴朝外，可理解为高度，z轴指北，y轴指东
           Cartographic.clone(data.positionCartographic, scratchCartographic);
 
           // minimum height for the terrain set, need to get this information from the terrain provider

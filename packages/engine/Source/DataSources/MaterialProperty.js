@@ -79,7 +79,7 @@ MaterialProperty.prototype.getValue = DeveloperError.throwInstantiationError;
 MaterialProperty.prototype.equals = DeveloperError.throwInstantiationError;
 
 /**
- * @private
+ * @private 根据MaterialProperty子类的type生成Material对象
  */
 MaterialProperty.getValue = function (time, materialProperty, material) {
   let type;

@@ -39,7 +39,7 @@ class Node {
     }
 }
 
-if (true) {
+if (false) {
 
     let internalNodeCount = 0;
     const internalNodeOctreeData = [];
