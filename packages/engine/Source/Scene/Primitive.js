@@ -78,6 +78,7 @@ import ShadowMode from "./ShadowMode.js";
  * @param {boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
  * @param {boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
  * @param {ShadowMode} [options.shadows=ShadowMode.DISABLED] Determines whether this primitive casts or receives shadows from light sources.
+ * @param {boolean} [options.rtcCenter] 相对原点，只有在scene.scene3DOnly为true，geometryInstances只能为一个实例，如果是数组，长度也只能为1
  *
  * @example
  * // 1. Draw a translucent ellipse on the surface with a checkerboard pattern
@@ -765,16 +766,16 @@ Primitive._modifyShaderPosition = function (
           `${functionName}\n` +
           `{\n` +
           `    vec4 p;\n` +
-          `    if (czm_morphTime == 1.0)\n` +
+          `    if (czm_morphTime == 1.0)\n` + // 在Scene3D场景下为 1
           `    {\n` +
           `        p = czm_translateRelativeToEye(${name}3DHigh, ${name}3DLow);\n` +
           `    }\n` +
-          `    else if (czm_morphTime == 0.0)\n` +
+          `    else if (czm_morphTime == 0.0)\n` + // 在MORPHING场景下为0-1且不包含0和1
           `    {\n` +
           `        p = czm_translateRelativeToEye(${name}2DHigh.zxy, ${name}2DLow.zxy);\n` +
           `    }\n` +
           `    else\n` +
-          `    {\n` +
+          `    {\n` + // 其余场景下为 0
           `        p = czm_columbusViewMorph(\n` +
           `                czm_translateRelativeToEye(${name}2DHigh.zxy, ${name}2DLow.zxy),\n` +
           `                czm_translateRelativeToEye(${name}3DHigh, ${name}3DLow),\n` +

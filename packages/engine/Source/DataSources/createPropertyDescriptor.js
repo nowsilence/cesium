@@ -23,6 +23,7 @@ function createProperty(
       }
 
       const hasValue = value !== undefined;
+      // value若为定义getValue方法则用回调创建属性
       if (
         hasValue &&
         (!defined(value) || !defined(value.getValue)) &&
