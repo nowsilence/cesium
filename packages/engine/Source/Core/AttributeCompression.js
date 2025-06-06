@@ -21,7 +21,7 @@ const AttributeCompression = {};
 
 /**
  * Encodes a normalized vector into 2 SNORM values in the range of [0-rangeMax] following the 'oct' encoding.
- *
+ * Oct 编码（Oct Encoding）** 是一种用于紧凑表示三维单位向量的高效方法，压缩单位向量到2D
  * Oct encoding is a compact representation of unit length vectors.
  * The 'oct' encoding is described in "A Survey of Efficient Representations of Independent Unit Vectors",
  * Cigolle et al 2014: {@link http://jcgt.org/published/0003/02/01/}

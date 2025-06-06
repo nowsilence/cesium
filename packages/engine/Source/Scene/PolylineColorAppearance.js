@@ -18,7 +18,8 @@ if (!FeatureDetection.isInternetExplorer()) {
  * {@link PolylineGeometry} or {@link GroundPolylineGeometry}.
  * This allows several geometry instances, each with a different color, to
  * be drawn with the same {@link Primitive}.
- * 用于一个 PolylineGeometry实例设置一个颜色，不支持设置material，不支持光照、不支持虚线
+ * 用于一个 PolylineGeometry实例设置一个颜色，默认不支持设置material，不支持光照、不支持虚线
+ * 可以手动设置fragmentShaderSource，自定义材质
  * 不支持点选
  * @alias PolylineColorAppearance
  * @constructor

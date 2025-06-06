@@ -153,7 +153,7 @@ GeometryPipeline.toWireframe = function (geometry) {
  * Creates a new {@link Geometry} with <code>LINES</code> representing the provided
  * attribute (<code>attributeName</code>) for the provided geometry.  This is used to
  * visualize vector attributes like normals, tangents, and bitangents.
- *
+ * 默认是把geometry中的法线生成线段，线段的长为length，估计是测试用的
  * @param {Geometry} geometry The <code>Geometry</code> instance with the attribute.
  * @param {string} [attributeName='normal'] The name of the attribute.
  * @param {number} [length=10000.0] The length of each line segment in meters.  This can be negative to point the vector in the opposite direction.
@@ -226,7 +226,7 @@ GeometryPipeline.createLineSegmentsForVectors = function (
 /**
  * Creates an object that maps attribute names to unique locations (indices)
  * for matching vertex attributes and shader programs.
- *
+ * 给每个属性安排location位置，保证使用的location位置是连续的
  * @param {Geometry} geometry The geometry, which is not modified, to create the object for.
  * @returns {object} An object with attribute name / index pairs.
  *
@@ -244,7 +244,10 @@ GeometryPipeline.createAttributeLocations = function (geometry) {
     throw new DeveloperError("geometry is required.");
   }
   //>>includeEnd('debug')
-
+  /**
+   * 在 WebGL 中，顶点着色器的属性 0（attribute 0）通常被视为 “主属性”，用于存储顶点位置数据
+   * 当属性 0 被禁用（gl.disableVertexAttribArray(0)）时，某些 WebGL 实现会触发额外的内部处理，导致性能下降
+   */
   // There can be a WebGL performance hit when attribute 0 is disabled, so
   // assign attribute locations to well-known attributes.
   const semantics = [
@@ -301,7 +304,7 @@ GeometryPipeline.createAttributeLocations = function (geometry) {
 
 /**
  * Reorders a geometry's attributes and <code>indices</code> to achieve better performance from the GPU's pre-vertex-shader cache.
- *
+ * 通过重新排序顶点数据来优化渲染性能，减少GPU顶点缓存的未命中情况
  * @param {Geometry} geometry The geometry to modify.
  * @returns {Geometry} The modified <code>geometry</code> argument, with its attributes and indices reordered for the GPU's pre-vertex-shader cache.
  *
@@ -478,12 +481,12 @@ function copyVertex(destinationAttributes, sourceAttributes, index) {
 
 /**
  * Splits a geometry into multiple geometries, if necessary, to ensure that indices in the
- * <code>indices</code> fit into unsigned shorts.  This is used to meet the WebGL requirements
- * when unsigned int indices are not supported.
+ * <code>indices</code> fit into unsigned shorts（16位）.  This is used to meet the WebGL requirements
+ * when unsigned int（32位） indices are not supported.
  * <p>
  * If the geometry does not have any <code>indices</code>, this function has no effect.
  * </p>
- *
+ * 如果WebGL 环境不支持无符号整型（32位）索引，需要分割索引
  * @param {Geometry} geometry The geometry to be split into multiple geometries.
  * @returns {Geometry[]} An array of geometries, each with indices that fit into unsigned shorts.
  *
@@ -599,7 +602,7 @@ const scratchProjectTo2DCartographic = new Cartographic();
  * <p>
  * If the geometry does not have a <code>position</code>, this function has no effect.
  * </p>
- *
+ * 将ecef坐标投影到projection定义的投影平面坐标
  * @param {Geometry} geometry The geometry to modify.
  * @param {string} attributeName The name of the attribute.
  * @param {string} attributeName3D The name of the attribute in 3D.
@@ -712,7 +715,7 @@ const encodedResult = {
  * <p>
  * This is commonly used to create high-precision position vertex attributes.
  * </p>
- *
+ * 将浮点数类型的attribute分割成high、low两个属性，以提高精度
  * @param {Geometry} geometry The geometry to modify.
  * @param {string} attributeName The name of the attribute.
  * @param {string} attributeHighName The name of the attribute for the encoded high bits.
@@ -791,7 +794,7 @@ GeometryPipeline.encodeAttribute = function (
 let scratchCartesian3 = new Cartesian3();
 
 function transformPoint(matrix, attribute) {
-  if (defined(attribute)) {
+  if (defined(attribute)) { // 将attribute里的坐标值进行矩阵变换
     const values = attribute.values;
     const length = values.length;
     for (let i = 0; i < length; i += 3) {
@@ -826,7 +829,7 @@ const normalMatrix = new Matrix3();
  * the instance's <code>modelMatrix</code> to {@link Matrix4.IDENTITY} and transforms the
  * following attributes if they are present: <code>position</code>, <code>normal</code>,
  * <code>tangent</code>, and <code>bitangent</code>.
- *
+ * 坐标通过自身的modelMatrix转换为世界坐标，modelMatrix则置为IDENTITY
  * @param {GeometryInstance} instance The geometry instance to modify.
  * @returns {GeometryInstance} The modified <code>instance</code> argument, with its attributes transforms to world coordinates.
  *
@@ -1150,7 +1153,7 @@ const v2 = new Cartesian3();
  * Computes per-vertex normals for a geometry containing <code>TRIANGLES</code> by averaging the normals of
  * all triangles incident to the vertex.  The result is a new <code>normal</code> attribute added to the geometry.
  * This assumes a counter-clockwise winding order.
- *
+ * 计算法线，共顶点所有三角面的法线平均值
  * @param {Geometry} geometry The geometry to modify.
  * @returns {Geometry} The modified <code>geometry</code> argument with the computed <code>normal</code> attribute.
  *

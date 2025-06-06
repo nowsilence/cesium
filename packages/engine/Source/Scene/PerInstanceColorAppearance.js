@@ -10,7 +10,8 @@ import Appearance from "./Appearance.js";
  * An appearance for {@link GeometryInstance} instances with color attributes.
  * This allows several geometry instances, each with a different color, to
  * be drawn with the same {@link Primitive} as shown in the second example below.
- *
+ * 用于几何体渲染。为三角形图元设计的，可以渲染SimplePolylineGeometry，但只能为flat
+ * 不支持设置材质，flat没有法线，非Flat用的是默认材质
  * @alias PerInstanceColorAppearance
  * @constructor
  *

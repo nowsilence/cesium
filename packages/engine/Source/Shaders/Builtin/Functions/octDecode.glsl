@@ -2,7 +2,8 @@
   * Decodes a unit-length vector in 'oct' encoding to a normalized 3-component Cartesian vector.
   * The 'oct' encoding is described in "A Survey of Efficient Representations of Independent Unit Vectors",
   * Cigolle et al 2014: http://jcgt.org/published/0003/02/01/
-  *
+  * “oct” 编码是一种将三维单位向量压缩为二维坐标的方法，全称可能为 “Octahedral Encoding”（八面体编码）。
+  * 其核心思想是将三维单位向量投影到八面体的六个面上（x±, y±, z±），用二维坐标（u, v）表示，从而实现向量的高效存储和传输。
   * @name czm_octDecode
   * @param {vec2} encoded The oct-encoded, unit-length vector
   * @param {float} range The maximum value of the SNORM range. The encoded vector is stored in log2(rangeMax+1) bits.

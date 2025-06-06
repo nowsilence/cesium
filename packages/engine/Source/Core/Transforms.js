@@ -1004,23 +1004,11 @@ Transforms.rotationMatrixFromPositionVelocity = function (
 };
 
 const swizzleMatrix = new Matrix4(
-  0.0,
-  0.0,
-  1.0,
-  0.0,
-  1.0,
-  0.0,
-  0.0,
-  0.0,
-  0.0,
-  1.0,
-  0.0,
-  0.0,
-  0.0,
-  0.0,
-  0.0,
-  1.0
-);
+  0.0, 0.0, 1.0, 0.0,
+  1.0, 0.0, 0.0, 0.0,
+  0.0, 1.0, 0.0, 0.0,
+  0.0, 0.0, 0.0, 1.0
+);// 由x,y,z转换为z,x,y
 
 const scratchCartographic = new Cartographic();
 const scratchCartesian3Projection = new Cartesian3();
