@@ -24,7 +24,11 @@ import PolylineVisualizer from "./PolylineVisualizer.js";
  * Visualizes a collection of {@link DataSource} instances.
  * @alias DataSourceDisplay
  * @constructor
- *
+ * DataSourceDisplay有个默认的dataSource(CustomDataSource),持有一组dataSource(dataSourceCollection),
+ * 每个一个dataSource都有一组Visualizers, 
+ * BillboardVisualizer/LabelVisualizer/PointVisualizer对应着dataSource里的cluster，
+ * GeometryVisualizer/PathVisualizer/PolylineVisualizer对应着一个updater
+ * 
  * @param {object} options Object with the following properties:
  * @param {Scene} options.scene The scene in which to display the data.
  * @param {DataSourceCollection} options.dataSourceCollection The data sources to display.

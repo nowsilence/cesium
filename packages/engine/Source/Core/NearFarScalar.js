@@ -17,12 +17,14 @@ import DeveloperError from "./DeveloperError.js";
 function NearFarScalar(near, nearValue, far, farValue) {
   /**
    * The lower bound of the camera range.
+   * 到相机的最小值距离
    * @type {number}
    * @default 0.0
    */
   this.near = defaultValue(near, 0.0);
   /**
    * The value at the lower bound of the camera range.
+   * 到相机最小距离时，取值的大小（例如点的大小）
    * @type {number}
    * @default 0.0
    */

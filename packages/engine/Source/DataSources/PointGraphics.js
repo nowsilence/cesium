@@ -10,14 +10,14 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * Initialization options for the PointGraphics constructor
  *
  * @property {Property | boolean} [show=true] A boolean Property specifying the visibility of the point.
- * @property {Property | number} [pixelSize=1] A numeric Property specifying the size in pixels.
- * @property {Property | HeightReference} [heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
+ * @property {Property | number} [pixelSize=1] 显示大小 单位像素 A numeric Property specifying the size in pixels.
+ * @property {Property | HeightReference} [heightReference=HeightReference.NONE] 高程参考 默认是绝对坐标， A Property specifying what the height is relative to.
  * @property {Property | Color} [color=Color.WHITE] A Property specifying the {@link Color} of the point.
- * @property {Property | Color} [outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
- * @property {Property | number} [outlineWidth=0] A numeric Property specifying the the outline width in pixels.
- * @property {Property | NearFarScalar} [scaleByDistance] A {@link NearFarScalar} Property used to scale the point based on distance.
- * @property {Property | NearFarScalar} [translucencyByDistance] A {@link NearFarScalar} Property used to set translucency based on distance from the camera.
- * @property {Property | DistanceDisplayCondition} [distanceDisplayCondition] A Property specifying at what distance from the camera that this point will be displayed.
+ * @property {Property | Color} [outlineColor=Color.BLACK] 边框颜色 A Property specifying the {@link Color} of the outline.
+ * @property {Property | number} [outlineWidth=0] 边框宽度 A numeric Property specifying the the outline width in pixels.
+ * @property {Property | NearFarScalar} [scaleByDistance] 根据距离相机范围控制点显示的大小 A {@link NearFarScalar} Property used to scale the point based on distance.
+ * @property {Property | NearFarScalar} [translucencyByDistance] 根据距离相机范围控制点显示的透明度 A {@link NearFarScalar} Property used to set translucency based on distance from the camera.
+ * @property {Property | DistanceDisplayCondition} [distanceDisplayCondition] 根据距离相机范围控制是否显示 A Property specifying at what distance from the camera that this point will be displayed.
  * @property {Property | number} [disableDepthTestDistance] A Property specifying the distance from the camera at which to disable the depth test to.
  */
 
