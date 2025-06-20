@@ -2,7 +2,7 @@ import defined from "./defined.js";
 
 /**
  * An {@link InterpolationAlgorithm} for performing Lagrange interpolation.
- *
+ * 拉格朗日插值算法
  * @namespace LagrangePolynomialApproximation
  */
 const LagrangePolynomialApproximation = {

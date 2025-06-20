@@ -273,6 +273,7 @@ QuadtreePrimitive.prototype.forEachRenderedTile = function (tileFunction) {
  * Calls the callback when a new tile is rendered that contains the given cartographic. The only parameter
  * is the cartesian position on the tile.
  * 在scene.render之前，scene.initializeFrame->scene.updateHeight
+ * 当有新的瓦片被渲染且包含给定的cartographic，则调用回调
  * @param {Cartographic} cartographic The cartographic position. 貌似为相机位置的地形高程
  * @param {Function} callback The function to be called when a new tile is loaded containing the updated cartographic.
  * @returns {Function} The function to remove this callback from the quadtree.
@@ -295,6 +296,7 @@ QuadtreePrimitive.prototype.updateHeight = function (cartographic, callback) {
         break;
       }
     }
+    // 稍后在渲染循环中的selectTilesForRender中，从相应的tile中移除tile的回调
     primitive._removeHeightCallbacks.push(object);
     if (object.callback) {
       object.callback = undefined;

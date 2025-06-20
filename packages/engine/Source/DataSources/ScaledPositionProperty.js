@@ -6,6 +6,7 @@ import ReferenceFrame from "../Core/ReferenceFrame.js";
 import Property from "./Property.js";
 
 /**
+ * 获取球面坐标点
  * This is a temporary class for scaling position properties to the WGS84 surface.
  * It will go away or be refactored to support data with arbitrary height references.
  * @private

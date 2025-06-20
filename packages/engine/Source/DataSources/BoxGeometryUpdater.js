@@ -55,7 +55,7 @@ function BoxGeometryUpdater(entity, scene) {
   this._onEntityPropertyChanged(entity, "box", entity.box, undefined);
 }
 
-if (defined(Object.create)) {
+if (defined(Object.create)) { // ES5 (2009年) 引入的标准方法
   BoxGeometryUpdater.prototype = Object.create(GeometryUpdater.prototype);
   BoxGeometryUpdater.prototype.constructor = BoxGeometryUpdater;
 }

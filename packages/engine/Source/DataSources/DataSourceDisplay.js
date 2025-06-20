@@ -288,6 +288,8 @@ DataSourceDisplay.prototype.destroy = function () {
 
 /**
  * Updates the display to the provided time.
+ * 
+ * 先于scene.render调用
  *
  * @param {JulianDate} time The simulation time.
  * @returns {boolean} True if all data sources are ready to be displayed, false otherwise.

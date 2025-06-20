@@ -576,7 +576,10 @@ SampledProperty.prototype.setInterpolationOptions = function (options) {
  *
  * @param {JulianDate} time The sample time.
  * @param {Packable} value The value at the provided time.
- * @param {Packable[]} [derivatives] The array of derivatives at the provided time.
+ * @param {Packable[]} [derivatives] The array of derivatives at the provided time. 长度由numberOfDerivatives决定，numberOfDerivatives × 3（3 为三维空间分量）
+ * derivatives[0]：一阶导数（速度，单位：米 / 秒）
+ * derivatives[1]：二阶导数（加速度，单位：米 / 秒 ²）
+ * 
  */
 SampledProperty.prototype.addSample = function (time, value, derivatives) {
   const innerDerivativeTypes = this._innerDerivativeTypes;

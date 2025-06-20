@@ -666,10 +666,15 @@ function Scene(options) {
   );
   this._lastRenderTime = undefined;
   this._frameRateMonitor = undefined;
-
+  /**
+   * 有请求返回的时候调用requestRender
+   */
   this._removeRequestListenerCallback = RequestScheduler.requestCompletedEvent.addEventListener(
     requestRenderAfterFrame(this)
   );
+  /**
+   * 有子线程的任务返回的时候调用requestRender
+   */
   this._removeTaskProcessorListenerCallback = TaskProcessor.taskCompletedEvent.addEventListener(
     requestRenderAfterFrame(this)
   );
@@ -751,11 +756,13 @@ function updateGlobeListeners(scene, globe) {
 
   const removeGlobeCallbacks = [];
   if (defined(globe)) {
+    // imagery有更新的时候requestRender
     removeGlobeCallbacks.push(
       globe.imageryLayersUpdatedEvent.addEventListener(
         requestRenderAfterFrame(scene)
       )
     );
+    // 地形有更新的时候requestRender
     removeGlobeCallbacks.push(
       globe.terrainProviderChanged.addEventListener(
         requestRenderAfterFrame(scene)
@@ -3680,6 +3687,7 @@ Scene.prototype.getHeight = function (cartographic, heightReference) {
   let maxHeight = Number.NEGATIVE_INFINITY;
 
   if (!ignore3dTiles) {
+    // 获取3dtile上的高程
     const length = this.primitives.length;
     for (let i = 0; i < length; ++i) {
       const primitive = this.primitives.get(i);
@@ -3698,6 +3706,7 @@ Scene.prototype.getHeight = function (cartographic, heightReference) {
     }
   }
 
+  // 获取地形上的高程
   const globe = this._globe;
   if (!ignoreTerrain && defined(globe) && globe.show) {
     const result = globe.getHeight(cartographic);

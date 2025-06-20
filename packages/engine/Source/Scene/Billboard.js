@@ -1156,7 +1156,7 @@ Billboard._updateClamping = function (collection, owner) {
       }
     }
   }
-
+  // 监听高度变化
   owner._removeCallbackFunc = scene.updateHeight(
     position,
     updateFunction,

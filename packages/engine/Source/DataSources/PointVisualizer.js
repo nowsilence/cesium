@@ -141,7 +141,7 @@ PointVisualizer.prototype.update = function (time) {
         returnPrimitive(item, entity, cluster);
         billboard = undefined;
       }
-
+      // 在entityCluster创建pointPrimitive，对应的PointPrimitiveCollection是在EntityCulster构建的
       pointPrimitive = cluster.getPoint(entity);
       pointPrimitive.id = entity;
       item.pointPrimitive = pointPrimitive;
@@ -371,6 +371,13 @@ PointVisualizer.prototype.destroy = function () {
   return destroyObject(this);
 };
 
+/**
+ * 当持有的entityCollection数据发生变化时调用
+ * @param {*} entityCollection 
+ * @param {*} added 
+ * @param {*} removed 
+ * @param {*} changed 
+ */
 PointVisualizer.prototype._onCollectionChanged = function (
   entityCollection,
   added,
@@ -381,6 +388,11 @@ PointVisualizer.prototype._onCollectionChanged = function (
   let entity;
   const items = this._items;
   const cluster = this._cluster;
+
+  /**
+   * 这个地方只是创建EntityData，
+   * 会在update函数里填充pointPrimitive或者billboard
+   */
 
   for (i = added.length - 1; i > -1; i--) {
     entity = added[i];

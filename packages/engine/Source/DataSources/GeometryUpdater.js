@@ -413,11 +413,11 @@ GeometryUpdater.prototype._onEntityPropertyChanged = function (
   propertyName,
   newValue,
   oldValue
-) {
+) { // 这个回调在updaterset里面有监听
   if (this._observedPropertyNames.indexOf(propertyName) === -1) {
     return;
   }
-
+  // 这个geometry的命名很迷惑人，其实就是各种*Graphics
   const geometry = this._entity[this._geometryPropertyName];
 
   if (!defined(geometry)) {

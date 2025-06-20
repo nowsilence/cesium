@@ -3,7 +3,7 @@ import DeveloperError from "./DeveloperError.js";
 
 /**
  * An {@link InterpolationAlgorithm} for performing linear interpolation.
- *
+ * 线性差值算法
  * @namespace LinearApproximation
  */
 const LinearApproximation = {

@@ -16,7 +16,7 @@ import SampledProperty from "./SampledProperty.js";
  * @constructor
  *
  * @param {ReferenceFrame} [referenceFrame=ReferenceFrame.FIXED] The reference frame in which the position is defined.
- * @param {number} [numberOfDerivatives=0] The number of derivatives that accompany each position; i.e. velocity, acceleration, etc...
+ * @param {number} [numberOfDerivatives=0] 导数 The number of derivatives that accompany each position; i.e. velocity, acceleration, etc...
  */
 function SampledPositionProperty(referenceFrame, numberOfDerivatives) {
   numberOfDerivatives = defaultValue(numberOfDerivatives, 0);
@@ -81,7 +81,13 @@ Object.defineProperties(SampledPositionProperty.prototype, {
   /**
    * Gets the degree of interpolation to perform when retrieving a value. Call <code>setInterpolationOptions</code> to set this.
    * @memberof SampledPositionProperty.prototype
-   *
+   * 这个参数决定了在计算插值结果时，会使用多少个相邻样本点来拟合曲线。
+   * 控制参与插值的样本点数：degree + 1 个最近的样本点会被用于计算每个插值位置。
+   *  Degree	参与点数	特点
+   *    1	    2 个	线性插值，生成直线段，无平滑效果。
+   *    3	    4 个	常用的低阶插值，能处理基本曲线，计算快。
+   *    5	    6 个	默认值，平衡精度与性能，适合大多数场景。
+   *    7+	    8 + 个	适合高度复杂的曲线，但可能出现龙格现象（边缘震荡）。
    * @type {number}
    * @default 1
    * @readonly
