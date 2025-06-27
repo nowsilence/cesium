@@ -687,7 +687,7 @@ Transforms.preloadIcrfFixed = function (timeInterval) {
  * Reference Frame (GCRF/ICRF) inertial frame axes to the Earth-Fixed frame axes (ITRF)
  * at a given time.  This function may return undefined if the data necessary to
  * do the transformation is not yet loaded.
- *
+ * 国际天球参考框架
  * @param {JulianDate} date The time at which to compute the rotation matrix.
  * @param {Matrix3} [result] The object onto which to store the result.  If this parameter is
  *                  not specified, a new instance is created and returned.

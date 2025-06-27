@@ -9,6 +9,7 @@ function heightReferenceOnEntityPropertyChanged(
   newValue,
   oldValue
 ) {
+  // 调用父类方法
   GeometryUpdater.prototype._onEntityPropertyChanged.call(
     this,
     entity,

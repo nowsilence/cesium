@@ -4,7 +4,7 @@ import DeveloperError from "./DeveloperError.js";
 /**
  * A collection of key-value pairs that is stored as a hash for easy
  * lookup but also provides an array for fast iteration.
- * 
+ * 暂且称之为关联数组
  * AssociativeArray：键必须是字符串（或可以唯一标识的 ID），且通常用于管理 Cesium 内部对象的引用（如 Entity 的 id）。
  * Map：键可以是任意类型（包括对象、函数等），灵活性更高，但在某些场景下可能带来额外的内存或性能开销。
  * 

@@ -530,7 +530,11 @@ GeometryVisualizer.prototype._onCollectionChanged = function (
   const addedObjects = this._addedObjects;
   const removedObjects = this._removedObjects;
   const changedObjects = this._changedObjects;
-
+  /**
+   * 每个entity都会走到这里，对应一个GeometryUpdaterSet，
+   * 在GeometryUpdaterSet内部会给entity创建一系列updater，
+   * 每个updater都会监听自己的geometryPropertyName，如果没有则不会创建geometry，
+   */
   let i;
   let id;
   let entity;
