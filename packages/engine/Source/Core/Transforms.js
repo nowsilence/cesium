@@ -743,7 +743,12 @@ const rotation2Scratch = new Matrix3();
  * to the International Celestial Reference Frame (GCRF/ICRF) inertial frame axes
  * at a given time.  This function may return undefined if the data necessary to
  * do the transformation is not yet loaded.
- *
+ * 惯性坐标系
+ * 参考系默认以 地球质心 为原点，坐标轴方向相对于 J2000 惯性坐标系 固定。
+ * 这种设定适用于卫星轨道、深空探测等需要忽略地球自转的场景。
+ * 
+ * Cesium 的惯性参考系默认基于 J2000 惯性坐标系（也称为 ICRF，
+ * Cesium 的 INERTIAL 参考系默认以 地球质心 为原点，坐标轴方向相对于 J2000 平赤道和平春分点 固定（即不随地球自转旋转）。
  * @param {JulianDate} date The time at which to compute the rotation matrix.
  * @param {Matrix3} [result] The object onto which to store the result.  If this parameter is
  *                  not specified, a new instance is created and returned.

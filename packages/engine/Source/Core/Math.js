@@ -990,7 +990,7 @@ CesiumMath.asinClamped = function (value) {
 
 /**
  * Finds the chord length between two points given the circle's radius and the angle between the points.
- *
+ * 计算弦长，
  * @param {number} angle The angle between the two points.
  * @param {number} radius The radius of the circle.
  * @returns {number} The chord length.

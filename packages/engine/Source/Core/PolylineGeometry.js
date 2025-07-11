@@ -493,7 +493,7 @@ PolylineGeometry.createGeometry = function (polylineGeometry) {
       expandAndWidth[expandAndWidthIndex++] = direction * width;
 
       if (vertexFormat.st) {
-        st[stIndex++] = j / (positionsLength - 1);
+        st[stIndex++] = j / (positionsLength - 1); // glow/arrow里面用到了
         st[stIndex++] = Math.max(expandAndWidth[expandAndWidthIndex - 2], 0.0);
       }
 
