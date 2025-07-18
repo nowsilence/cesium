@@ -96,6 +96,7 @@ void main()
     gl_Position = czm_viewportOrthographic * positionWC * show;
 
     v_st.s = texCoord;
+    // 因为线宽是在屏幕空间，所以不能进行透视插值
     v_st.t = czm_writeNonPerspective(clamp(expandDir, 0.0, 1.0), gl_Position.w);
 
     v_width = width;

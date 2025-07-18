@@ -343,7 +343,9 @@ VertexArrayFacade.prototype.commit = function (indexBuffer) {
   if (recreateVA || !defined(this.va)) {
     destroyVA(this);
     const va = (this.va = []);
-
+    // 传入的indexBuffer是Uint16,分块渲染，多块共享相对点云
+    // 解决 “大数据量导致的 GPU 带宽 / 顶点处理瓶颈”（点云）；
+    // 即使使用Uint32索引，也可能因数据传输量过大导致显存带宽瓶颈
     const chunkSize = CesiumMath.SIXTY_FOUR_KILOBYTES - 4; // The 65535 index is reserved for primitive restart. Reserve the last 4 indices so that billboard quads are not broken up.
     const numberOfVertexArrays =
       defined(indexBuffer) && !this._instanced

@@ -129,6 +129,9 @@ GroundGeometryUpdater.prototype._onEntityPropertyChanged = function (
       this._computeCenter.bind(this),
       !this._dynamic
     );
+    /**
+     * CorridorGeometryUpdater/EllipseGeometryUpdater/PolygonGeometryUpdater/RectangleGeometryUpdater
+     */
     this._terrainOffsetProperty = new TerrainOffsetProperty(
       this._scene,
       centerPosition,

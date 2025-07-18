@@ -569,7 +569,7 @@ function createBatchTable(primitive, context) {
 
   const firstInstance = instances[0];
   let instanceAttributes = firstInstance.attributes;
-
+ 
   let i;
   let name;
   let attribute;

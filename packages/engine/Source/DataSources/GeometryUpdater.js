@@ -428,7 +428,7 @@ GeometryUpdater.prototype._onEntityPropertyChanged = function (
     }
     return;
   }
-
+  // 未设置fill默认为true
   const fillProperty = geometry.fill;
   const fillEnabled =
     defined(fillProperty) && fillProperty.isConstant

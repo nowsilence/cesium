@@ -44,7 +44,7 @@ const ShadowMode = {
 ShadowMode.NUMBER_OF_SHADOW_MODES = 4;
 
 /**
- * @private
+ * @private 是否投影
  */
 ShadowMode.castShadows = function (shadowMode) {
   return (
@@ -53,7 +53,7 @@ ShadowMode.castShadows = function (shadowMode) {
 };
 
 /**
- * @private
+ * @private 是否接受投影
  */
 ShadowMode.receiveShadows = function (shadowMode) {
   return (

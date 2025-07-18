@@ -1907,7 +1907,9 @@ BillboardCollection.prototype.update = function (frameState) {
           billboard
         );
       }
-
+      // indexBuffer类型是Uint16，所以渲染是有上限的
+      // 可以分块，可能觉得没有必要，最大Billboard数量 = 65535 / 4 ≈ 16,383 个
+      // 可以渲染一万六千个
       // Different billboard collections share the same index buffer.
       this._vaf.commit(getIndexBuffer(context));
     }

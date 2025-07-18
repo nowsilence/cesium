@@ -107,7 +107,7 @@ Object.defineProperties(TerrainOffsetProperty.prototype, {
 });
 
 /**
- * @private
+ * @private 更新当前位置地形或者3dtile的高程
  */
 TerrainOffsetProperty.prototype._updateClamping = function () {
   if (defined(this._removeCallbackFunc)) {

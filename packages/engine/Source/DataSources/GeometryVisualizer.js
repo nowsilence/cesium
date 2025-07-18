@@ -67,6 +67,7 @@ function GeometryVisualizer(
 
   let i;
   for (i = 0; i < numberOfShadowModes; ++i) {
+    // 实际是三个参数，但是传入4个参数，实际没有用到，不知道为什么要这样写
     this._outlineBatches[i] = new StaticOutlineGeometryBatch(
       primitives,
       scene,
@@ -446,6 +447,9 @@ GeometryVisualizer.prototype._insertUpdaterIntoBatch = function (
     shadows = updater.shadowsProperty.getValue(time);
   }
 
+ /**
+  * 是否使用阴影由shadowsProperty（是否设置了阴影）和是否设置terrainOffsetProperty（离地高度）决定
+  */
   const numberOfShadowModes = ShadowMode.NUMBER_OF_SHADOW_MODES;
   if (updater.outlineEnabled) {
     if (defined(updater.terrainOffsetProperty)) {

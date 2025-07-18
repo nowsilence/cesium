@@ -184,7 +184,7 @@ CesiumMath.SOLAR_RADIUS = 6.955e8;
 CesiumMath.LUNAR_RADIUS = 1737400.0;
 
 /**
- * 64 * 1024
+ * 64 * 1024 Uint16
  * @type {number}
  * @constant
  */
