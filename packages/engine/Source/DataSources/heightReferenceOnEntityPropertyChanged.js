@@ -9,7 +9,7 @@ function heightReferenceOnEntityPropertyChanged(
   newValue,
   oldValue
 ) {
-  // 调用父类方法
+  // 调用父类方法 只有box/Cylinder/Ellipsoid
   GeometryUpdater.prototype._onEntityPropertyChanged.call(
     this,
     entity,

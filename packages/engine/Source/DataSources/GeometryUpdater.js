@@ -479,6 +479,15 @@ GeometryUpdater.prototype._onEntityPropertyChanged = function (
 
   this._fillEnabled = fillEnabled;
 
+  /**
+   * groundGeometryUpdaer:
+   * (
+    this._fillEnabled &&
+    !defined(geometry.height) &&
+    !defined(geometry.extrudedHeight) &&
+    GroundPrimitive.isSupported(this._scene)
+  ); 表示是否为贴地
+   */
   const onTerrain =
     this._isOnTerrain(entity, geometry) &&
     (this._supportsMaterialsforEntitiesOnTerrain ||

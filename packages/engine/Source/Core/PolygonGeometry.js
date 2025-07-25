@@ -587,7 +587,7 @@ function createGeometryFromPositionsExtruded(
  * @param {number} [options.stRotation=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
  * @param {number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
- * @param {boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instead of using options.height to determine the height.
+ * @param {boolean} [options.perPositionHeight=false] 若为true则使用positions中的z值，false则忽略z值，使用height统一高程。Use the height of options.positions for each position instead of using options.height to determine the height.
  * @param {boolean} [options.closeTop=true] When false, leaves off the top of an extruded polygon open.
  * @param {boolean} [options.closeBottom=true] When false, leaves off the bottom of an extruded polygon open.
  * @param {ArcType} [options.arcType=ArcType.GEODESIC] The type of line the polygon edges must follow. Valid options are {@link ArcType.GEODESIC} and {@link ArcType.RHUMB}.

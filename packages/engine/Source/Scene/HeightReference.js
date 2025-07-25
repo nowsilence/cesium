@@ -5,7 +5,7 @@
  */
 const HeightReference = {
   /**
-   * The position is absolute.
+   * The position is absolute. 高度值相对于椭球体表面（WGS84 椭球）。
    * @type {number}
    * @constant
    */
@@ -13,6 +13,7 @@ const HeightReference = {
 
   /**
    * The position is clamped to the terrain and 3D Tiles.
+   * 高度值被忽略，实体贴附于地形或地表模型表面。
    * @type {number}
    * @constant
    */
@@ -20,6 +21,7 @@ const HeightReference = {
 
   /**
    * The position height is the height above the terrain and 3D Tiles.
+   * 高度值相对于地形或地表模型表面的垂直偏移量（正方向向上）
    * @type {number}
    * @constant
    */

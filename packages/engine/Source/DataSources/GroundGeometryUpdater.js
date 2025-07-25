@@ -76,7 +76,7 @@ GroundGeometryUpdater.prototype._isOnTerrain = function (entity, geometry) {
 
 GroundGeometryUpdater.prototype._getIsClosed = function (options) {
   const height = options.height;
-  const extrudedHeight = options.extrudedHeight;
+  const extrudedHeight = options.extrudedHeight; // extrudedHeight是相对于托球面的，所以height和extrudedHeight相等的话就没有拉伸
   return height === 0 || (defined(extrudedHeight) && extrudedHeight !== height);
 };
 
@@ -99,7 +99,7 @@ GroundGeometryUpdater.prototype._onEntityPropertyChanged = function (
   if (this._observedPropertyNames.indexOf(propertyName) === -1) {
     return;
   }
-
+  // 这个地方比较迷惑人，变量名是geometry，其实是各种**Graphic
   const geometry = this._entity[this._geometryPropertyName];
   if (!defined(geometry)) {
     return;
@@ -213,6 +213,7 @@ GroundGeometryUpdater.computeGeometryOffsetAttribute = function (
   extrudedHeight,
   extrudedHeightReference
 ) {
+    
   if (!defined(height) || !defined(heightReference)) {
     heightReference = HeightReference.NONE;
   }
@@ -226,6 +227,13 @@ GroundGeometryUpdater.computeGeometryOffsetAttribute = function (
   if (extrudedHeightReference === HeightReference.RELATIVE_TO_GROUND) {
     n++;
   }
+
+  /**
+   * 1、同时设置height、heightReference
+   * 2、同时设置了extrudedHeight、extrudedHeightReference
+   * 
+   * 若条件1、2只满足了一项则为TOP，否则为ALL
+   */
   if (n === 2) {
     return GeometryOffsetAttribute.ALL;
   }

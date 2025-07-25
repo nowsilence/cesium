@@ -1,4 +1,8 @@
 {
+    /**
+     *  演示offset的使用方法。
+     */
+
     let rectangle = Cesium.Rectangle.fromDegrees(-100.0, 30.0, -99.0, 31.0);
     let center1 = Cesium.Rectangle.center(rectangle);
     center1 = ellipsoid.cartographicToCartesian(center1);
@@ -11,16 +15,16 @@
     const i1 = new Cesium.GeometryInstance({
         geometry: new Cesium.RectangleGeometry({
             rectangle: rectangle,
-            extrudedHeight: 30000.0,
-            height: 10000.0,
+            extrudedHeight: 30000.0, // 矩形面的拔高
+            height: 10000.0, // 矩形面的高程
             vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-            offsetAttribute: Cesium.GeometryOffsetAttribute.TOP,
+            offsetAttribute: Cesium.GeometryOffsetAttribute.TOP, // 偏移基准面，构建geometry的时候设置
         }),
         attributes: {
-        color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-            new Cesium.Color(1.0, 0.0, 0.0, 0.5),
-        ),
-        offset: Cesium.OffsetGeometryInstanceAttribute.fromCartesian3(offset),
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+                new Cesium.Color(1.0, 0.0, 0.0, 0.5),
+            ),
+            offset: Cesium.OffsetGeometryInstanceAttribute.fromCartesian3(offset), // 偏移量
         },
     });
 
@@ -37,12 +41,12 @@
             offsetAttribute: Cesium.GeometryOffsetAttribute.TOP,
         }),
         attributes: {
-        color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-            new Cesium.Color(0.0, 1.0, 0.0, 0.5),
-        ),
-        offset: Cesium.OffsetGeometryInstanceAttribute.fromCartesian3(
-            Cesium.Cartesian3.ZERO,
-        ),
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+                new Cesium.Color(0.0, 1.0, 0.0, 0.5),
+            ),
+            offset: Cesium.OffsetGeometryInstanceAttribute.fromCartesian3(
+                Cesium.Cartesian3.ZERO,
+            ),
         },
     });
 
