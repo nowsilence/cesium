@@ -52,7 +52,7 @@ function GeometryVisualizer(
   this._addedObjects = new AssociativeArray();
   this._removedObjects = new AssociativeArray();
   this._changedObjects = new AssociativeArray();
-
+  // open和close区分开渲染，主要是为了 背景面是否剔除 功能是否开启
   const numberOfShadowModes = ShadowMode.NUMBER_OF_SHADOW_MODES;
   this._outlineBatches = new Array(numberOfShadowModes * 2);
   this._closedColorBatches = new Array(numberOfShadowModes * 2);
@@ -493,7 +493,7 @@ GeometryVisualizer.prototype._insertUpdaterIntoBatch = function (
         // If unsupported, updater will not be on terrain.
         this._groundMaterialBatches[classificationType].add(time, updater);
       }
-    } else if (updater.isClosed) { // 是否闭合，用于背景面是否剔除
+    } else if (updater.isClosed) { // 是否闭合，用背景面是否剔除
       if (updater.fillMaterialProperty instanceof ColorMaterialProperty) {
         if (defined(updater.terrainOffsetProperty)) {
           this._closedColorBatches[numberOfShadowModes + shadows].add(

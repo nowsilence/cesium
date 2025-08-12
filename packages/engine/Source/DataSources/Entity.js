@@ -696,6 +696,7 @@ Entity.prototype.computeModelMatrix = function (time, result) {
 };
 
 /**
+ * 如果heightReferenceProperty是津贴地面，高程取的是heightOffset，否则高程取的是this.poition的高程+heightOffset
  * @private
  */
 Entity.prototype.computeModelMatrixForHeightReference = function (

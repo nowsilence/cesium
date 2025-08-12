@@ -101,6 +101,8 @@ function DataSourceDisplay(options) {
   let removeDefaultDataSourceListener;
   let removeDataSourceCollectionListener;
   if (!primitivesAdded) {
+    // 如果没有添加自己的datasource，当往viewer.entities中add的时候，会调用addPrimitives
+    // 目的应该没有entity的时候就不往scene.primitives添加对象
     const that = this;
     const addPrimitives = function () {
       scene.primitives.add(primitives);

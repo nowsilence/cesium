@@ -168,11 +168,11 @@ GroundGeometryUpdater.getGeometryHeight = function (height, heightReference) {
     }
     return;
   }
-
+  // 如果不是贴在地形上，则原值返回
   if (!isHeightReferenceClamp(heightReference)) {
     return height;
   }
-
+  // 如果贴在地形上，高度置为0
   return 0.0;
 };
 
@@ -192,6 +192,7 @@ GroundGeometryUpdater.getGeometryExtrudedHeight = function (
     }
     return;
   }
+  // 如果不是贴在地形上
   if (!isHeightReferenceClamp(extrudedHeightReference)) {
     return extrudedHeight;
   }
@@ -230,7 +231,7 @@ GroundGeometryUpdater.computeGeometryOffsetAttribute = function (
 
   /**
    * 1、同时设置height、heightReference
-   * 2、同时设置了extrudedHeight、extrudedHeightReference
+   * 2、设置了extrudedHeight，且extrudedHeightReference为HeightReference.RELATIVE_TO_GROUND
    * 
    * 若条件1、2只满足了一项则为TOP，否则为ALL
    */

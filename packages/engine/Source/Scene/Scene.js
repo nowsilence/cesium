@@ -3665,13 +3665,15 @@ function getGlobeHeight(scene) {
  * Gets the height of the loaded surface at the cartographic position.
  * @param {Cartographic} cartographic The cartographic position.
  * @param {HeightReference} [heightReference=CLAMP_TO_GROUND] Based on the height reference value, determines whether to ignore heights from 3D Tiles or terrain.
- * @private
+ * @private 
  */
 Scene.prototype.getHeight = function (cartographic, heightReference) {
   if (!defined(cartographic)) {
     return undefined;
   }
-
+  /**
+   * 看这个代码的意思是：heightReference为CLAMP_TO_GROUND或者RELATIVE_TO_GROUND或者NONE效果是等效的
+   */
   const ignore3dTiles =
     heightReference === HeightReference.CLAMP_TO_TERRAIN ||
     heightReference === HeightReference.RELATIVE_TO_TERRAIN;
