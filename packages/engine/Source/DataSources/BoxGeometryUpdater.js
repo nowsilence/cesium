@@ -130,6 +130,13 @@ BoxGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
     attributes.color = ColorGeometryInstanceAttribute.fromColor(currentColor);
   }
   if (defined(this._options.offsetAttribute)) {
+    // 跟面的计算方式不一样
+    // offsetAttribute = GroundGeometryUpdater.computeGeometryOffsetAttribute(
+    //       heightValue,
+    //       heightReferenceValue,
+    //       extrudedHeightValue,
+    //       extrudedHeightReferenceValue,
+    //     );
     attributes.offset = OffsetGeometryInstanceAttribute.fromCartesian3(
       Property.getValueOrDefault(
         this._terrainOffsetProperty,

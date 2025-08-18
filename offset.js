@@ -23,14 +23,17 @@
     // entity
     viewer.entities.add({
         name: "Blue box",
-        position: Cesium.Cartesian3.fromDegrees(-114.0, 40.0, 300000.0),
+        position: Cesium.Cartesian3.fromDegrees(115.005, 39.005, 0),
         box: {
-            dimensions: new Cesium.Cartesian3(400000.0, 300000.0, 500000.0),
+            dimensions: new Cesium.Cartesian3(40.0, 30.0, 1.0),
             material: Cesium.Color.BLUE,
-            height: 1000,
-            heightReference: Cesium.HeightReference.ALL
+            // height: 1000, // 虽然有参考高程，但是没有height这个字段，高程控制需要通过position来控制
+            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND, // 若为NONE，使用position的位置，若为RELATIVE,则用postion+地形高度，若为CLAMP则重置为地形的高度
         },
     });
+
+    // 如果设置heightReference为RELATIVE_TO_GROUND，按道理来说高程无效，box中心点会在中心点位置地形的高程处
+    // 如果设置scene.scene3DOnly= true，box渲染的位置会偏移，不知道为什么,采用下面的方式也是一样的
 
 
     // BoxGeometry

@@ -708,7 +708,10 @@ Entity.prototype.computeModelMatrix = function (time, result) {
 };
 
 /**
- * 如果heightReferenceProperty是津贴地面，高程取的是heightOffset，否则高程取的是this.poition的高程+heightOffset
+ * 若heightReferenceProperty为NONE，modelMatrix用的是position
+ * 若为CLAMP_**，则为椭球表面点+heightOffset
+ * 若为RELATIVE_**，则为实际点的高程+heightOffset
+ * （CLAMP、RELATIVE），高程取的是heightOffset，否则高程取的是this.poition的高程+heightOffset
  * @private
  */
 Entity.prototype.computeModelMatrixForHeightReference = function (
