@@ -3,7 +3,6 @@ import buildModuleUrl from "../Core/buildModuleUrl.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
 import Color from "../Core/Color.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -28,6 +27,7 @@ import ImageryLayerCollection from "./ImageryLayerCollection.js";
 import QuadtreePrimitive from "./QuadtreePrimitive.js";
 import SceneMode from "./SceneMode.js";
 import ShadowMode from "./ShadowMode.js";
+import CesiumMath from "../Core/Math.js";
 
 /**
  * The globe rendered in the scene, including its terrain ({@link Globe#terrainProvider})
@@ -36,11 +36,11 @@ import ShadowMode from "./ShadowMode.js";
  * @alias Globe
  * @constructor
  *
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] Determines the size and shape of the
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] Determines the size and shape of the
  * globe.
  */
 function Globe(ellipsoid) {
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+  ellipsoid = ellipsoid ?? Ellipsoid.default;
   const terrainProvider = new EllipsoidTerrainProvider({
     ellipsoid: ellipsoid,
   });
@@ -68,7 +68,7 @@ function Globe(ellipsoid) {
     ellipsoid.maximumRadius / 1000.0,
     0.0,
     ellipsoid.maximumRadius / 5.0,
-    1.0
+    1.0,
   );
 
   this._translucency = new GlobeTranslucency();
@@ -191,9 +191,9 @@ function Globe(ellipsoid) {
    * Enable the ground atmosphere, which is drawn over the globe when viewed from a distance between <code>lightingFadeInDistance</code> and <code>lightingFadeOutDistance</code>.
    *
    * @type {boolean}
-   * @default true
+   * @default true when using the WGS84 ellipsoid, false otherwise
    */
-  this.showGroundAtmosphere = true;
+  this.showGroundAtmosphere = Ellipsoid.WGS84.equals(ellipsoid);
 
   /**
    * The intensity of the light that is used for computing the ground atmosphere color.
@@ -250,18 +250,19 @@ function Globe(ellipsoid) {
    * when <code>enableLighting</code> or <code>showGroundAtmosphere</code> is <code>true</code>.
    *
    * @type {number}
-   * @default 10000000.0
+   * @default 1/2 * pi * ellipsoid.minimumRadius
    */
-  this.lightingFadeOutDistance = 1.0e7;
+  this.lightingFadeOutDistance =
+    CesiumMath.PI_OVER_TWO * ellipsoid.minimumRadius;
 
   /**
    * The distance where lighting resumes. This only takes effect
    * when <code>enableLighting</code> or <code>showGroundAtmosphere</code> is <code>true</code>.
    *
    * @type {number}
-   * @default 20000000.0
+   * @default pi * ellipsoid.minimumRadius
    */
-  this.lightingFadeInDistance = 2.0e7;
+  this.lightingFadeInDistance = CesiumMath.PI * ellipsoid.minimumRadius;
 
   /**
    * The distance where the darkness of night from the ground atmosphere fades out to a lit ground atmosphere.
@@ -269,9 +270,9 @@ function Globe(ellipsoid) {
    * <code>dynamicAtmosphereLighting</code> are <code>true</code>.
    *
    * @type {number}
-   * @default 10000000.0
+   * @default 1/2 * pi * ellipsoid.minimumRadius
    */
-  this.nightFadeOutDistance = 1.0e7;
+  this.nightFadeOutDistance = CesiumMath.PI_OVER_TWO * ellipsoid.minimumRadius;
 
   /**
    * The distance where the darkness of night from the ground atmosphere fades in to an unlit ground atmosphere.
@@ -279,9 +280,10 @@ function Globe(ellipsoid) {
    * <code>dynamicAtmosphereLighting</code> are <code>true</code>.
    *
    * @type {number}
-   * @default 50000000.0
+   * @default 5/2 * pi * ellipsoid.minimumRadius
    */
-  this.nightFadeInDistance = 5.0e7;
+  this.nightFadeInDistance =
+    5.0 * CesiumMath.PI_OVER_TWO * ellipsoid.minimumRadius;
 
   /**
    * True if an animated wave effect should be shown in areas of the globe
@@ -450,6 +452,20 @@ Object.defineProperties(Globe.prototype, {
     },
   },
   /**
+   * A property specifying a {@link ClippingPolygonCollection} used to selectively disable rendering inside or outside a list of polygons.
+   *
+   * @memberof Globe.prototype
+   * @type {ClippingPolygonCollection}
+   */
+  clippingPolygons: {
+    get: function () {
+      return this._surface.tileProvider.clippingPolygons;
+    },
+    set: function (value) {
+      this._surface.tileProvider.clippingPolygons = value;
+    },
+  },
+  /**
    * A property specifying a {@link Rectangle} used to limit globe rendering to a cartographic area.
    * Defaults to the maximum extent of cartographic coordinates.
    *
@@ -595,13 +611,13 @@ Object.defineProperties(Globe.prototype, {
       //>>includeStart('debug', pragmas.debug);
       if (defined(value) && value.far < value.near) {
         throw new DeveloperError(
-          "far distance must be greater than near distance."
+          "far distance must be greater than near distance.",
         );
       }
       //>>includeEnd('debug');
       this._undergroundColorAlphaByDistance = NearFarScalar.clone(
         value,
-        this._undergroundColorAlphaByDistance
+        this._undergroundColorAlphaByDistance,
       );
     },
   },
@@ -656,11 +672,11 @@ function createComparePickTileFunction(rayOrigin) {
   return function (a, b) {
     const aDist = BoundingSphere.distanceSquaredTo(
       a.pickBoundingSphere,
-      rayOrigin
+      rayOrigin,
     );
     const bDist = BoundingSphere.distanceSquaredTo(
       b.pickBoundingSphere,
-      rayOrigin
+      rayOrigin,
     );
 
     return aDist - bDist;
@@ -688,7 +704,7 @@ Globe.prototype.pickWorldCoordinates = function (
   ray,
   scene,
   cullBackFaces,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(ray)) {
@@ -699,7 +715,7 @@ Globe.prototype.pickWorldCoordinates = function (
   }
   //>>includeEnd('debug');
 
-  cullBackFaces = defaultValue(cullBackFaces, true);
+  cullBackFaces = cullBackFaces ?? true;
 
   const mode = scene.mode;
   const projection = scene.mapProjection;
@@ -723,23 +739,24 @@ Globe.prototype.pickWorldCoordinates = function (
 
     let boundingVolume = surfaceTile.pickBoundingSphere;
     if (mode !== SceneMode.SCENE3D) {
-      surfaceTile.pickBoundingSphere = boundingVolume = BoundingSphere.fromRectangleWithHeights2D(
-        tile.rectangle,
-        projection,
-        surfaceTile.tileBoundingRegion.minimumHeight,
-        surfaceTile.tileBoundingRegion.maximumHeight,
-        boundingVolume
-      );
+      surfaceTile.pickBoundingSphere = boundingVolume =
+        BoundingSphere.fromRectangleWithHeights2D(
+          tile.rectangle,
+          projection,
+          surfaceTile.tileBoundingRegion.minimumHeight,
+          surfaceTile.tileBoundingRegion.maximumHeight,
+          boundingVolume,
+        );
       Cartesian3.fromElements(
         boundingVolume.center.z,
         boundingVolume.center.x,
         boundingVolume.center.y,
-        boundingVolume.center
+        boundingVolume.center,
       );
     } else if (defined(surfaceTile.renderedMesh)) {
       BoundingSphere.clone(
         surfaceTile.tileBoundingRegion.boundingSphere,
-        boundingVolume
+        boundingVolume,
       );
     } else {
       // So wait how did we render this thing then? It shouldn't be possible to get here.
@@ -749,7 +766,7 @@ Globe.prototype.pickWorldCoordinates = function (
     const boundingSphereIntersection = IntersectionTests.raySphere(
       ray,
       boundingVolume,
-      scratchSphereIntersectionResult
+      scratchSphereIntersectionResult,
     );
     if (defined(boundingSphereIntersection)) {
       sphereIntersections.push(surfaceTile);
@@ -766,7 +783,7 @@ Globe.prototype.pickWorldCoordinates = function (
       scene.mode,
       scene.mapProjection,
       cullBackFaces,
-      result
+      result,
     );
     if (defined(intersection)) {
       break;
@@ -795,7 +812,7 @@ Globe.prototype.pick = function (ray, scene, result) {
   if (defined(result) && scene.mode !== SceneMode.SCENE3D) {
     result = Cartesian3.fromElements(result.y, result.z, result.x, result);
     const carto = scene.mapProjection.unproject(result, cartoScratch);
-    result = scene.globe.ellipsoid.cartographicToCartesian(carto, result);
+    result = this._ellipsoid.cartographicToCartesian(carto, result);
   }
 
   return result;
@@ -888,13 +905,13 @@ Globe.prototype.getHeight = function (cartographic) {
     cartographic.latitude,
     0.0,
     ellipsoid,
-    scratchGetHeightCartesian
+    scratchGetHeightCartesian,
   );
 
   const ray = scratchGetHeightRay;
   const surfaceNormal = ellipsoid.geodeticSurfaceNormal(
     cartesian,
-    ray.direction
+    ray.direction,
   );
 
   // Try to find the intersection point between the surface normal and z-axis.
@@ -902,7 +919,7 @@ Globe.prototype.getHeight = function (cartographic) {
   const rayOrigin = ellipsoid.getSurfaceNormalIntersectionWithZAxis(
     cartesian,
     11500.0,
-    ray.origin
+    ray.origin,
   );
 
   // Theoretically, not with Earth datums, the intersection point can be outside the ellipsoid
@@ -913,13 +930,13 @@ Globe.prototype.getHeight = function (cartographic) {
     if (defined(tile.data.tileBoundingRegion)) {
       minimumHeight = tile.data.tileBoundingRegion.minimumHeight;
     }
-    const magnitude = Math.min(defaultValue(minimumHeight, 0.0), -11500.0);
+    const magnitude = Math.min(minimumHeight ?? 0.0, -11500.0);
 
     // multiply by the *positive* value of the magnitude
     const vectorToMinimumPoint = Cartesian3.multiplyByScalar(
       surfaceNormal,
       Math.abs(magnitude) + 1,
-      scratchGetHeightIntersection
+      scratchGetHeightIntersection,
     );
     Cartesian3.subtract(cartesian, vectorToMinimumPoint, ray.origin);
   }
@@ -929,7 +946,7 @@ Globe.prototype.getHeight = function (cartographic) {
     undefined,
     projection,
     false,
-    scratchGetHeightIntersection
+    scratchGetHeightIntersection,
   );
   if (!defined(intersection)) {
     return undefined;
@@ -937,7 +954,7 @@ Globe.prototype.getHeight = function (cartographic) {
 
   return ellipsoid.cartesianToCartographic(
     intersection,
-    scratchGetHeightCartographic
+    scratchGetHeightCartographic,
   ).height;
 };
 
@@ -962,7 +979,6 @@ Globe.prototype.beginFrame = function (frameState) {
   const tileProvider = surface.tileProvider;
   const terrainProvider = this.terrainProvider;
   const hasWaterMask =
-    this.showWaterEffect &&
     defined(terrainProvider) &&
     terrainProvider.hasWaterMask &&
     terrainProvider.hasWaterMask;
@@ -1017,15 +1033,19 @@ Globe.prototype.beginFrame = function (frameState) {
     tileProvider.zoomedOutOceanSpecularIntensity =
       mode === SceneMode.SCENE3D ? this._zoomedOutOceanSpecularIntensity : 0.0;
     tileProvider.hasWaterMask = hasWaterMask;
+    tileProvider.showWaterEffect = this.showWaterEffect;
     tileProvider.oceanNormalMap = this._oceanNormalMap;
     tileProvider.enableLighting = this.enableLighting;
     tileProvider.dynamicAtmosphereLighting = this.dynamicAtmosphereLighting;
-    tileProvider.dynamicAtmosphereLightingFromSun = this.dynamicAtmosphereLightingFromSun;
+    tileProvider.dynamicAtmosphereLightingFromSun =
+      this.dynamicAtmosphereLightingFromSun;
     tileProvider.showGroundAtmosphere = this.showGroundAtmosphere;
     tileProvider.atmosphereLightIntensity = this.atmosphereLightIntensity;
-    tileProvider.atmosphereRayleighCoefficient = this.atmosphereRayleighCoefficient;
+    tileProvider.atmosphereRayleighCoefficient =
+      this.atmosphereRayleighCoefficient;
     tileProvider.atmosphereMieCoefficient = this.atmosphereMieCoefficient;
-    tileProvider.atmosphereRayleighScaleHeight = this.atmosphereRayleighScaleHeight;
+    tileProvider.atmosphereRayleighScaleHeight =
+      this.atmosphereRayleighScaleHeight;
     tileProvider.atmosphereMieScaleHeight = this.atmosphereMieScaleHeight;
     tileProvider.atmosphereMieAnisotropy = this.atmosphereMieAnisotropy;
     tileProvider.shadows = this.shadows;
@@ -1037,7 +1057,8 @@ Globe.prototype.beginFrame = function (frameState) {
     tileProvider.backFaceCulling = this.backFaceCulling;
     tileProvider.vertexShadowDarkness = this.vertexShadowDarkness;
     tileProvider.undergroundColor = this._undergroundColor;
-    tileProvider.undergroundColorAlphaByDistance = this._undergroundColorAlphaByDistance;
+    tileProvider.undergroundColorAlphaByDistance =
+      this._undergroundColorAlphaByDistance;
     tileProvider.lambertDiffuseMultiplier = this.lambertDiffuseMultiplier;
 
     surface.beginFrame(frameState);

@@ -1,5 +1,5 @@
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import BufferLoader from "./BufferLoader.js";
@@ -10,6 +10,7 @@ import GltfIndexBufferLoader from "./GltfIndexBufferLoader.js";
 import GltfJsonLoader from "./GltfJsonLoader.js";
 import GltfTextureLoader from "./GltfTextureLoader.js";
 import GltfVertexBufferLoader from "./GltfVertexBufferLoader.js";
+import GltfSpzLoader from "./GltfSpzLoader.js";
 import MetadataSchemaLoader from "./MetadataSchemaLoader.js";
 import ResourceCacheKey from "./ResourceCacheKey.js";
 import ResourceCacheStatistics from "./ResourceCacheStatistics.js";
@@ -89,7 +90,7 @@ ResourceCache.add = function (resourceLoader) {
 
   if (defined(ResourceCache.cacheEntries[cacheKey])) {
     throw new DeveloperError(
-      `Resource with this cacheKey is already in the cache: ${cacheKey}`
+      `Resource with this cacheKey is already in the cache: ${cacheKey}`,
     );
   }
   //>>includeEnd('debug');
@@ -145,14 +146,13 @@ ResourceCache.unload = function (resourceLoader) {
  * @private
  */
 ResourceCache.getSchemaLoader = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const schema = options.schema;
-  const resource = options.resource;
+  options = options ?? Frozen.EMPTY_OBJECT;
+  const { schema, resource } = options;
 
   //>>includeStart('debug', pragmas.debug);
   if (defined(schema) === defined(resource)) {
     throw new DeveloperError(
-      "One of options.schema and options.resource must be defined."
+      "One of options.schema and options.resource must be defined.",
     );
   }
   //>>includeEnd('debug');
@@ -188,10 +188,8 @@ ResourceCache.getSchemaLoader = function (options) {
  * @private
  */
 ResourceCache.getEmbeddedBufferLoader = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const parentResource = options.parentResource;
-  const bufferId = options.bufferId;
-  const typedArray = options.typedArray;
+  options = options ?? Frozen.EMPTY_OBJECT;
+  const { parentResource, bufferId, typedArray } = options;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.parentResource", parentResource);
@@ -230,8 +228,8 @@ ResourceCache.getEmbeddedBufferLoader = function (options) {
  * @private
  */
 ResourceCache.getExternalBufferLoader = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const resource = options.resource;
+  options = options ?? Frozen.EMPTY_OBJECT;
+  const { resource } = options;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.resource", resource);
@@ -267,11 +265,8 @@ ResourceCache.getExternalBufferLoader = function (options) {
  * @private
  */
 ResourceCache.getGltfJsonLoader = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const gltfResource = options.gltfResource;
-  const baseResource = options.baseResource;
-  const typedArray = options.typedArray;
-  const gltfJson = options.gltfJson;
+  options = options ?? Frozen.EMPTY_OBJECT;
+  const { gltfResource, baseResource, typedArray, gltfJson } = options;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltfResource", gltfResource);
@@ -312,11 +307,8 @@ ResourceCache.getGltfJsonLoader = function (options) {
  * @private
  */
 ResourceCache.getBufferViewLoader = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const gltf = options.gltf;
-  const bufferViewId = options.bufferViewId;
-  const gltfResource = options.gltfResource;
-  const baseResource = options.baseResource;
+  options = options ?? Frozen.EMPTY_OBJECT;
+  const { gltf, bufferViewId, gltfResource, baseResource } = options;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
@@ -354,6 +346,7 @@ ResourceCache.getBufferViewLoader = function (options) {
  *
  * @param {object} options Object with the following properties:
  * @param {object} options.gltf The glTF JSON.
+ * @param {object} options.primitive The primitive containing the Draco extension.
  * @param {object} options.draco The Draco extension object.
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
@@ -362,14 +355,12 @@ ResourceCache.getBufferViewLoader = function (options) {
  * @private
  */
 ResourceCache.getDracoLoader = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const gltf = options.gltf;
-  const draco = options.draco;
-  const gltfResource = options.gltfResource;
-  const baseResource = options.baseResource;
+  options = options ?? Frozen.EMPTY_OBJECT;
+  const { gltf, primitive, draco, gltfResource, baseResource } = options;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
+  Check.typeOf.object("options.primitive", primitive);
   Check.typeOf.object("options.draco", draco);
   Check.typeOf.object("options.gltfResource", gltfResource);
   Check.typeOf.object("options.baseResource", baseResource);
@@ -390,6 +381,7 @@ ResourceCache.getDracoLoader = function (options) {
   dracoLoader = new GltfDracoLoader({
     resourceCache: ResourceCache,
     gltf: gltf,
+    primitive: primitive,
     draco: draco,
     gltfResource: gltfResource,
     baseResource: baseResource,
@@ -397,6 +389,57 @@ ResourceCache.getDracoLoader = function (options) {
   });
 
   return ResourceCache.add(dracoLoader);
+};
+
+/**
+ * Gets an existing SPZ loader from the cache, or creates a new loader if one does not already exist.
+ * This loader is used to decode SPZ (Splat Point Cloud) data in glTF.
+ * 
+ * @param {object} options Object with the following properties:
+ * @param {object} options.gltf The glTF JSON.
+ * @param {object} options.primitive The primitive containing the SPZ extension.
+ * @param {object} options.spz The SPZ extension object.
+ * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
+ * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
+ *
+ * @return {GltfSpzLoader} The cached SPZ loader.
+ @private
+ * */
+ResourceCache.getSpzLoader = function (options) {
+  options = options ?? Frozen.EMPTY_OBJECT;
+  const { gltf, primitive, spz, gltfResource, baseResource } = options;
+
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.gltf", gltf);
+  Check.typeOf.object("options.primitive", primitive);
+  Check.typeOf.object("options.spz", spz);
+  Check.typeOf.object("options.gltfResource", gltfResource);
+  Check.typeOf.object("options.baseResource", baseResource);
+  //>>includeEnd('debug');
+
+  const cacheKey = ResourceCacheKey.getSpzCacheKey({
+    gltf: gltf,
+    primitive: primitive,
+    gltfResource: gltfResource,
+    baseResource: baseResource,
+  });
+
+  let spzLoader = ResourceCache.get(cacheKey);
+  if (defined(spzLoader)) {
+    return spzLoader;
+  }
+
+  spzLoader = new GltfSpzLoader({
+    resourceCache: ResourceCache,
+    gltf: gltf,
+    primitive: primitive,
+    spz: spz,
+    gltfResource: gltfResource,
+    baseResource: baseResource,
+    cacheKey: cacheKey,
+  });
+
+  return ResourceCache.add(spzLoader);
 };
 
 /**
@@ -408,6 +451,7 @@ ResourceCache.getDracoLoader = function (options) {
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {FrameState} options.frameState The frame state.
  * @param {number} [options.bufferViewId] The bufferView ID corresponding to the vertex buffer.
+ * @param {object} [options.primitive] The primitive containing the Draco extension.
  * @param {object} [options.draco] The Draco extension object.
  * @param {string} [options.attributeSemantic] The attribute semantic, e.g. POSITION or NORMAL.
  * @param {number} [options.accessorId] The accessor ID.
@@ -423,19 +467,23 @@ ResourceCache.getDracoLoader = function (options) {
  * @private
  */
 ResourceCache.getVertexBufferLoader = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const gltf = options.gltf;
-  const gltfResource = options.gltfResource;
-  const baseResource = options.baseResource;
-  const frameState = options.frameState;
-  const bufferViewId = options.bufferViewId;
-  const draco = options.draco;
-  const attributeSemantic = options.attributeSemantic;
-  const accessorId = options.accessorId;
-  const asynchronous = defaultValue(options.asynchronous, true);
-  const dequantize = defaultValue(options.dequantize, false);
-  const loadBuffer = defaultValue(options.loadBuffer, false);
-  const loadTypedArray = defaultValue(options.loadTypedArray, false);
+  options = options ?? Frozen.EMPTY_OBJECT;
+  const {
+    gltf,
+    gltfResource,
+    baseResource,
+    frameState,
+    bufferViewId,
+    primitive,
+    draco,
+    spz,
+    attributeSemantic,
+    accessorId,
+    asynchronous = true,
+    dequantize = false,
+    loadBuffer = false,
+    loadTypedArray = false,
+  } = options;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
@@ -444,30 +492,38 @@ ResourceCache.getVertexBufferLoader = function (options) {
   Check.typeOf.object("options.frameState", frameState);
   if (!loadBuffer && !loadTypedArray) {
     throw new DeveloperError(
-      "At least one of loadBuffer and loadTypedArray must be true."
+      "At least one of loadBuffer and loadTypedArray must be true.",
     );
   }
 
   const hasBufferViewId = defined(bufferViewId);
+  const hasPrimitive = defined(primitive);
   const hasDraco = hasDracoCompression(draco, attributeSemantic);
   const hasAttributeSemantic = defined(attributeSemantic);
   const hasAccessorId = defined(accessorId);
+  const hasSpz = defined(spz);
 
-  if (hasBufferViewId === hasDraco) {
+  if (hasBufferViewId === (hasDraco !== hasSpz)) {
     throw new DeveloperError(
-      "One of options.bufferViewId and options.draco must be defined."
+      "One of options.bufferViewId, options.draco, or options.spz must be defined.",
     );
   }
 
   if (hasDraco && !hasAttributeSemantic) {
     throw new DeveloperError(
-      "When options.draco is defined options.attributeSemantic must also be defined."
+      "When options.draco is defined options.attributeSemantic must also be defined.",
     );
   }
 
   if (hasDraco && !hasAccessorId) {
     throw new DeveloperError(
-      "When options.draco is defined options.haAccessorId must also be defined."
+      "When options.draco is defined options.hasAccessorId must also be defined.",
+    );
+  }
+
+  if (hasDraco && !hasPrimitive) {
+    throw new DeveloperError(
+      "When options.draco is defined options.primitive must also be defined.",
     );
   }
 
@@ -476,6 +532,7 @@ ResourceCache.getVertexBufferLoader = function (options) {
     Check.typeOf.string("options.attributeSemantic", attributeSemantic);
     Check.typeOf.number("options.accessorId", accessorId);
   }
+
   //>>includeEnd('debug');
 
   const cacheKey = ResourceCacheKey.getVertexBufferCacheKey({
@@ -485,6 +542,7 @@ ResourceCache.getVertexBufferLoader = function (options) {
     frameState: frameState,
     bufferViewId: bufferViewId,
     draco: draco,
+    spz: spz,
     attributeSemantic: attributeSemantic,
     dequantize: dequantize,
     loadBuffer: loadBuffer,
@@ -502,7 +560,9 @@ ResourceCache.getVertexBufferLoader = function (options) {
     gltfResource: gltfResource,
     baseResource: baseResource,
     bufferViewId: bufferViewId,
+    primitive: primitive,
     draco: draco,
+    spz: spz,
     attributeSemantic: attributeSemantic,
     accessorId: accessorId,
     cacheKey: cacheKey,
@@ -532,6 +592,7 @@ function hasDracoCompression(draco, semantic) {
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {FrameState} options.frameState The frame state.
+ * @param {object} [options.primitive] The primitive containing the Draco extension.
  * @param {object} [options.draco] The Draco extension object.
  * @param {boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
  * @param {boolean} [options.loadBuffer=false] Load index buffer as a GPU index buffer.
@@ -540,16 +601,19 @@ function hasDracoCompression(draco, semantic) {
  * @private
  */
 ResourceCache.getIndexBufferLoader = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const gltf = options.gltf;
-  const accessorId = options.accessorId;
-  const gltfResource = options.gltfResource;
-  const baseResource = options.baseResource;
-  const frameState = options.frameState;
-  const draco = options.draco;
-  const asynchronous = defaultValue(options.asynchronous, true);
-  const loadBuffer = defaultValue(options.loadBuffer, false);
-  const loadTypedArray = defaultValue(options.loadTypedArray, false);
+  options = options ?? Frozen.EMPTY_OBJECT;
+  const {
+    gltf,
+    accessorId,
+    gltfResource,
+    baseResource,
+    frameState,
+    primitive,
+    draco,
+    asynchronous = true,
+    loadBuffer = false,
+    loadTypedArray = false,
+  } = options;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
@@ -559,7 +623,7 @@ ResourceCache.getIndexBufferLoader = function (options) {
   Check.typeOf.object("options.frameState", frameState);
   if (!loadBuffer && !loadTypedArray) {
     throw new DeveloperError(
-      "At least one of loadBuffer and loadTypedArray must be true."
+      "At least one of loadBuffer and loadTypedArray must be true.",
     );
   }
   //>>includeEnd('debug');
@@ -586,6 +650,7 @@ ResourceCache.getIndexBufferLoader = function (options) {
     accessorId: accessorId,
     gltfResource: gltfResource,
     baseResource: baseResource,
+    primitive: primitive,
     draco: draco,
     cacheKey: cacheKey,
     asynchronous: asynchronous,
@@ -609,11 +674,8 @@ ResourceCache.getIndexBufferLoader = function (options) {
  * @private
  */
 ResourceCache.getImageLoader = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const gltf = options.gltf;
-  const imageId = options.imageId;
-  const gltfResource = options.gltfResource;
-  const baseResource = options.baseResource;
+  options = options ?? Frozen.EMPTY_OBJECT;
+  const { gltf, imageId, gltfResource, baseResource } = options;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
@@ -662,14 +724,16 @@ ResourceCache.getImageLoader = function (options) {
  * @private
  */
 ResourceCache.getTextureLoader = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const gltf = options.gltf;
-  const textureInfo = options.textureInfo;
-  const gltfResource = options.gltfResource;
-  const baseResource = options.baseResource;
-  const supportedImageFormats = options.supportedImageFormats;
-  const frameState = options.frameState;
-  const asynchronous = defaultValue(options.asynchronous, true);
+  options = options ?? Frozen.EMPTY_OBJECT;
+  const {
+    gltf,
+    textureInfo,
+    gltfResource,
+    baseResource,
+    supportedImageFormats,
+    frameState,
+    asynchronous = true,
+  } = options;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);

@@ -20,8 +20,9 @@ const Pass = {
   CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW: 6,
   OPAQUE: 7,
   TRANSLUCENT: 8,
-  VOXELS: 9, // 专门用于处理体素数据或体积数据的渲染。体素数据通常用于表示三维体积（如医学影像、地质数据等），而 Pass.VOXELS 负责将这些数据渲染到场景中。
-  OVERLAY: 10,
-  NUMBER_OF_PASSES: 11,
+  VOXELS: 9,// 专门用于处理体素数据或体积数据的渲染。体素数据通常用于表示三维体积（如医学影像、地质数据等），而 Pass.VOXELS 负责将这些数据渲染到场景中。
+  GAUSSIAN_SPLATS: 10,
+  OVERLAY: 11,
+  NUMBER_OF_PASSES: 12,
 };
 export default Object.freeze(Pass);

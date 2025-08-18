@@ -1,6 +1,5 @@
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
@@ -47,7 +46,7 @@ function QuadtreePrimitive(options) {
   }
   if (defined(options.tileProvider.quadtree)) {
     throw new DeveloperError(
-      "A QuadtreeTileProvider can only be used with a single QuadtreePrimitive"
+      "A QuadtreeTileProvider can only be used with a single QuadtreePrimitive",
     );
   }
   //>>includeEnd('debug');
@@ -108,10 +107,7 @@ function QuadtreePrimitive(options) {
    * @type {number}
    * @default 2
    */
-  this.maximumScreenSpaceError = defaultValue(
-    options.maximumScreenSpaceError,
-    2
-  );
+  this.maximumScreenSpaceError = options.maximumScreenSpaceError ?? 2;
 
   /**
    * Gets or sets the maximum number of tiles that will be retained in the tile cache.
@@ -121,7 +117,7 @@ function QuadtreePrimitive(options) {
    * @type {number}
    * @default 100
    */
-  this.tileCacheSize = defaultValue(options.tileCacheSize, 100);
+  this.tileCacheSize = options.tileCacheSize ?? 100;
 
   /**
    * Gets or sets the number of loading descendant tiles that is considered "too many".
@@ -399,7 +395,7 @@ function updateTileLoadProgress(primitive, frameState) {
   ) {
     const raiseEvent = Event.prototype.raiseEvent.bind(
       primitive._tileLoadProgressEvent,
-      currentLoadQueueLength
+      currentLoadQueueLength,
     );
     frameState.afterRender.push(() => {
       raiseEvent();
@@ -424,7 +420,7 @@ function updateTileLoadProgress(primitive, frameState) {
       debug.maxDepthVisited !== debug.lastMaxDepthVisited
     ) {
       console.log(
-        `Visited ${debug.tilesVisited}, Rendered: ${debug.tilesRendered}, Culled: ${debug.tilesCulled}, Max Depth Rendered: ${debug.maxDepth}, Max Depth Visited: ${debug.maxDepthVisited}, Waiting for children: ${debug.tilesWaitingForChildren}`
+        `Visited ${debug.tilesVisited}, Rendered: ${debug.tilesRendered}, Culled: ${debug.tilesCulled}, Max Depth Rendered: ${debug.maxDepth}, Max Depth Visited: ${debug.maxDepthVisited}, Waiting for children: ${debug.tilesWaitingForChildren}`,
       );
 
       debug.lastTilesVisited = debug.tilesVisited;
@@ -527,9 +523,8 @@ function selectTilesForRendering(primitive, frameState) {
     const tilingScheme = tileProvider.tilingScheme;
     if (defined(tilingScheme)) {
       const tilingScheme = tileProvider.tilingScheme;
-      primitive._levelZeroTiles = QuadtreeTile.createLevelZeroTiles(
-        tilingScheme
-      );
+      primitive._levelZeroTiles =
+        QuadtreeTile.createLevelZeroTiles(tilingScheme);
       const numberOfRootTiles = primitive._levelZeroTiles.length;
       if (rootTraversalDetails.length < numberOfRootTiles) {
         rootTraversalDetails = new Array(numberOfRootTiles);
@@ -577,12 +572,13 @@ function selectTilesForRendering(primitive, frameState) {
   primitive._cameraPositionCartographic = camera.positionCartographic;
   const cameraFrameOrigin = Matrix4.getTranslation(
     camera.transform,
-    cameraOriginScratch
+    cameraOriginScratch,
   );
-  primitive._cameraReferenceFrameOriginCartographic = primitive.tileProvider.tilingScheme.ellipsoid.cartesianToCartographic(
-    cameraFrameOrigin,
-    primitive._cameraReferenceFrameOriginCartographic
-  );
+  primitive._cameraReferenceFrameOriginCartographic =
+    primitive.tileProvider.tilingScheme.ellipsoid.cartesianToCartographic(
+      cameraFrameOrigin,
+      primitive._cameraReferenceFrameOriginCartographic,
+    );
 
   // Traverse in depth-first, near-to-far order.
   for (i = 0, len = levelZeroTiles.length; i < len; ++i) {
@@ -599,7 +595,7 @@ function selectTilesForRendering(primitive, frameState) {
         frameState,
         occluders,
         false,
-        rootTraversalDetails[i]
+        rootTraversalDetails[i],
       );
     }
   }
@@ -615,7 +611,7 @@ function queueTileLoad(primitive, queue, tile, frameState) {
   if (primitive.tileProvider.computeTileLoadPriority !== undefined) {
     tile._loadPriority = primitive.tileProvider.computeTileLoadPriority(
       tile,
-      frameState
+      frameState,
     );
   }
   queue.push(tile);
@@ -717,7 +713,7 @@ function visitTile(
   frameState,
   tile,
   ancestorMeetsSse,
-  traversalDetails
+  traversalDetails,
 ) {
   const debug = primitive._debug;
 
@@ -791,7 +787,7 @@ function visitTile(
           primitive,
           primitive._tileLoadQueueMedium,
           tile,
-          frameState
+          frameState,
         );
       }
       addTileToRenderList(primitive, tile);
@@ -842,7 +838,7 @@ function visitTile(
         primitive,
         primitive._tileLoadQueueMedium,
         tile,
-        frameState
+        frameState,
       );
 
       // Make sure we don't unload the children and forget they're upsampled.
@@ -886,7 +882,7 @@ function visitTile(
       northeastChild,
       frameState,
       ancestorMeetsSse,
-      traversalDetails
+      traversalDetails,
     );
 
     // If no descendant tiles were added to the render list by the function above, it means they were all
@@ -916,7 +912,7 @@ function visitTile(
             workTile !== tile
           ) {
             workTile._lastSelectionResult = TileSelectionResult.kick(
-              workTile._lastSelectionResult
+              workTile._lastSelectionResult,
             );
             workTile = workTile.parent;
           }
@@ -946,7 +942,7 @@ function visitTile(
             primitive,
             primitive._tileLoadQueueMedium,
             tile,
-            frameState
+            frameState,
           );
           traversalDetails.notYetRenderableCount = tile.renderable ? 0 : 1;
           queuedForLoad = true;
@@ -995,7 +991,7 @@ function visitVisibleChildrenNearToFar(
   northeast,
   frameState,
   ancestorMeetsSse,
-  traversalDetails
+  traversalDetails,
 ) {
   const cameraPosition = frameState.camera.positionCartographic;
   const tileProvider = primitive._tileProvider;
@@ -1017,7 +1013,7 @@ function visitVisibleChildrenNearToFar(
         frameState,
         occluders,
         ancestorMeetsSse,
-        southwestDetails
+        southwestDetails,
       );
       visitIfVisible(
         primitive,
@@ -1026,7 +1022,7 @@ function visitVisibleChildrenNearToFar(
         frameState,
         occluders,
         ancestorMeetsSse,
-        southeastDetails
+        southeastDetails,
       );
       visitIfVisible(
         primitive,
@@ -1035,7 +1031,7 @@ function visitVisibleChildrenNearToFar(
         frameState,
         occluders,
         ancestorMeetsSse,
-        northwestDetails
+        northwestDetails,
       );
       visitIfVisible(
         primitive,
@@ -1044,7 +1040,7 @@ function visitVisibleChildrenNearToFar(
         frameState,
         occluders,
         ancestorMeetsSse,
-        northeastDetails
+        northeastDetails,
       );
     } else {
       // Camera in northwest quadrant
@@ -1055,7 +1051,7 @@ function visitVisibleChildrenNearToFar(
         frameState,
         occluders,
         ancestorMeetsSse,
-        northwestDetails
+        northwestDetails,
       );
       visitIfVisible(
         primitive,
@@ -1064,7 +1060,7 @@ function visitVisibleChildrenNearToFar(
         frameState,
         occluders,
         ancestorMeetsSse,
-        southwestDetails
+        southwestDetails,
       );
       visitIfVisible(
         primitive,
@@ -1073,7 +1069,7 @@ function visitVisibleChildrenNearToFar(
         frameState,
         occluders,
         ancestorMeetsSse,
-        northeastDetails
+        northeastDetails,
       );
       visitIfVisible(
         primitive,
@@ -1082,7 +1078,7 @@ function visitVisibleChildrenNearToFar(
         frameState,
         occluders,
         ancestorMeetsSse,
-        southeastDetails
+        southeastDetails,
       );
     }
   } else if (cameraPosition.latitude < southwest.rectangle.north) {
@@ -1094,7 +1090,7 @@ function visitVisibleChildrenNearToFar(
       frameState,
       occluders,
       ancestorMeetsSse,
-      southeastDetails
+      southeastDetails,
     );
     visitIfVisible(
       primitive,
@@ -1103,7 +1099,7 @@ function visitVisibleChildrenNearToFar(
       frameState,
       occluders,
       ancestorMeetsSse,
-      southwestDetails
+      southwestDetails,
     );
     visitIfVisible(
       primitive,
@@ -1112,7 +1108,7 @@ function visitVisibleChildrenNearToFar(
       frameState,
       occluders,
       ancestorMeetsSse,
-      northeastDetails
+      northeastDetails,
     );
     visitIfVisible(
       primitive,
@@ -1121,7 +1117,7 @@ function visitVisibleChildrenNearToFar(
       frameState,
       occluders,
       ancestorMeetsSse,
-      northwestDetails
+      northwestDetails,
     );
   } else {
     // Camera in northeast quadrant
@@ -1132,7 +1128,7 @@ function visitVisibleChildrenNearToFar(
       frameState,
       occluders,
       ancestorMeetsSse,
-      northeastDetails
+      northeastDetails,
     );
     visitIfVisible(
       primitive,
@@ -1141,7 +1137,7 @@ function visitVisibleChildrenNearToFar(
       frameState,
       occluders,
       ancestorMeetsSse,
-      northwestDetails
+      northwestDetails,
     );
     visitIfVisible(
       primitive,
@@ -1150,7 +1146,7 @@ function visitVisibleChildrenNearToFar(
       frameState,
       occluders,
       ancestorMeetsSse,
-      southeastDetails
+      southeastDetails,
     );
     visitIfVisible(
       primitive,
@@ -1159,7 +1155,7 @@ function visitVisibleChildrenNearToFar(
       frameState,
       occluders,
       ancestorMeetsSse,
-      southwestDetails
+      southwestDetails,
     );
   }
 
@@ -1174,7 +1170,7 @@ function containsNeededPosition(primitive, tile) {
     (defined(primitive._cameraReferenceFrameOriginCartographic) &&
       Rectangle.contains(
         rectangle,
-        primitive._cameraReferenceFrameOriginCartographic
+        primitive._cameraReferenceFrameOriginCartographic,
       ))
   );
 }
@@ -1186,7 +1182,7 @@ function visitIfVisible(
   frameState,
   occluders,
   ancestorMeetsSse,
-  traversalDetails
+  traversalDetails,
 ) {
   if (
     tileProvider.computeTileVisibility(tile, frameState, occluders) !==
@@ -1197,7 +1193,7 @@ function visitIfVisible(
       frameState,
       tile,
       ancestorMeetsSse,
-      traversalDetails
+      traversalDetails,
     );
   }
 
@@ -1217,7 +1213,7 @@ function visitIfVisible(
         primitive,
         primitive._tileLoadQueueMedium,
         tile,
-        frameState
+        frameState,
       );
     }
 
@@ -1255,9 +1251,8 @@ function screenSpaceError(primitive, frameState, tile) {
     return screenSpaceError2D(primitive, frameState, tile);
   }
 
-  const maxGeometricError = primitive._tileProvider.getLevelMaximumGeometricError(
-    tile.level
-  );
+  const maxGeometricError =
+    primitive._tileProvider.getLevelMaximumGeometricError(tile.level);
 
   const distance = tile._distance;
   const height = frameState.context.drawingBufferHeight;
@@ -1287,9 +1282,8 @@ function screenSpaceError2D(primitive, frameState, tile) {
   const width = context.drawingBufferWidth;
   const height = context.drawingBufferHeight;
 
-  const maxGeometricError = primitive._tileProvider.getLevelMaximumGeometricError(
-    tile.level
-  );
+  const maxGeometricError =
+    primitive._tileProvider.getLevelMaximumGeometricError(tile.level);
   const pixelSize =
     Math.max(frustum.top - frustum.bottom, frustum.right - frustum.left) /
     Math.max(width, height);
@@ -1336,7 +1330,7 @@ function processTileLoadQueue(primitive, frameState) {
     tileProvider,
     endTime,
     tileLoadQueueHigh,
-    false
+    false,
   );
   didSomeLoading = processSinglePriorityLoadQueue(
     primitive,
@@ -1344,7 +1338,7 @@ function processTileLoadQueue(primitive, frameState) {
     tileProvider,
     endTime,
     tileLoadQueueMedium,
-    didSomeLoading
+    didSomeLoading,
   );
   processSinglePriorityLoadQueue(
     primitive,
@@ -1352,7 +1346,7 @@ function processTileLoadQueue(primitive, frameState) {
     tileProvider,
     endTime,
     tileLoadQueueLow,
-    didSomeLoading
+    didSomeLoading,
   );
 }
 
@@ -1366,7 +1360,7 @@ function processSinglePriorityLoadQueue(
   tileProvider,
   endTime,
   loadQueue,
-  didSomeLoading
+  didSomeLoading,
 ) {
   if (tileProvider.computeTileLoadPriority !== undefined) {
     loadQueue.sort(sortByLoadPriority);
@@ -1424,6 +1418,8 @@ function updateHeights(primitive, frameState) {
       ) {
         tryNextFrame.push(tile);
       }
+      // Ensure stale position cache is cleared
+      tile.clearPositionCache();
       tilesToUpdateHeights.shift();
       primitive._lastTileIndex = 0;
       continue;
@@ -1441,81 +1437,104 @@ function updateHeights(primitive, frameState) {
         defined(terrainData) && terrainData.wasCreatedByUpsampling();
 
       if (tile.level > data.level && !upsampledGeometryFromParent) {
-        if (!defined(data.positionOnEllipsoidSurface)) {
-          // cartesian has to be on the ellipsoid surface for `ellipsoid.geodeticSurfaceNormal`
-          data.positionOnEllipsoidSurface = Cartesian3.fromRadians(
-            data.positionCartographic.longitude,
-            data.positionCartographic.latitude,
-            0.0,
-            ellipsoid
-          );
-        }
-
-        if (mode === SceneMode.SCENE3D) {
-          const surfaceNormal = ellipsoid.geodeticSurfaceNormal(
-            data.positionOnEllipsoidSurface,
-            scratchRay.direction
-          );
-
-          // compute origin point
-
-          // Try to find the intersection point between the surface normal and z-axis.
-          // minimum height (-11500.0) for the terrain set, need to get this information from the terrain provider
-          const rayOrigin = ellipsoid.getSurfaceNormalIntersectionWithZAxis(
-            data.positionOnEllipsoidSurface,
-            11500.0,
-            scratchRay.origin
-          );
-
-          // Theoretically, not with Earth datums, the intersection point can be outside the ellipsoid
-          if (!defined(rayOrigin)) {
-            // intersection point is outside the ellipsoid, try other value
-            // minimum height (-11500.0) for the terrain set, need to get this information from the terrain provider
-            let minimumHeight = 0.0;
-            if (defined(tile.data.tileBoundingRegion)) {
-              minimumHeight = tile.data.tileBoundingRegion.minimumHeight;
-            }
-            const magnitude = Math.min(minimumHeight, -11500.0);
-
-            // multiply by the *positive* value of the magnitude
-            const vectorToMinimumPoint = Cartesian3.multiplyByScalar(
-              surfaceNormal,
-              Math.abs(magnitude) + 1,
-              scratchPosition
-            );
-            Cartesian3.subtract(
-              data.positionOnEllipsoidSurface,
-              vectorToMinimumPoint,
-              scratchRay.origin
+        let position;
+        // find cached entry
+        const cachedData = tile.getPositionCacheEntry(
+          data.positionCartographic,
+          primitive.maximumScreenSpaceError,
+        );
+        if (defined(cachedData)) {
+          // cache hit
+          position = cachedData;
+        } else {
+          if (!defined(data.positionOnEllipsoidSurface)) {
+            // cartesian has to be on the ellipsoid surface for `ellipsoid.geodeticSurfaceNormal`
+            data.positionOnEllipsoidSurface = Cartesian3.fromRadians(
+              data.positionCartographic.longitude,
+              data.positionCartographic.latitude,
+              0.0,
+              ellipsoid,
             );
           }
-        } else {
-          // 在二维地图的时候x轴朝外，可理解为高度，z轴指北，y轴指东
-          Cartographic.clone(data.positionCartographic, scratchCartographic);
 
-          // minimum height for the terrain set, need to get this information from the terrain provider
-          scratchCartographic.height = -11500.0;
-          projection.project(scratchCartographic, scratchPosition);
-          Cartesian3.fromElements(
-            scratchPosition.z,
-            scratchPosition.x,
-            scratchPosition.y,
-            scratchPosition
+          if (mode === SceneMode.SCENE3D) {
+            const surfaceNormal = ellipsoid.geodeticSurfaceNormal(
+              data.positionOnEllipsoidSurface,
+              scratchRay.direction,
+            );
+
+            // compute origin point
+
+            // Try to find the intersection point between the surface normal and z-axis.
+            // minimum height (-11500.0) for the terrain set, need to get this information from the terrain provider
+            const rayOrigin = ellipsoid.getSurfaceNormalIntersectionWithZAxis(
+              data.positionOnEllipsoidSurface,
+              11500.0,
+              scratchRay.origin,
+            );
+
+            // Theoretically, not with Earth datums, the intersection point can be outside the ellipsoid
+            if (!defined(rayOrigin)) {
+              // intersection point is outside the ellipsoid, try other value
+              // minimum height (-11500.0) for the terrain set, need to get this information from the terrain provider
+              let minimumHeight = 0.0;
+              if (defined(tile.data.tileBoundingRegion)) {
+                minimumHeight = tile.data.tileBoundingRegion.minimumHeight;
+              }
+              const magnitude = Math.min(minimumHeight, -11500.0);
+
+              // multiply by the *positive* value of the magnitude
+              const vectorToMinimumPoint = Cartesian3.multiplyByScalar(
+                surfaceNormal,
+                Math.abs(magnitude) + 1,
+                scratchPosition,
+              );
+              Cartesian3.subtract(
+                data.positionOnEllipsoidSurface,
+                vectorToMinimumPoint,
+                scratchRay.origin,
+              );
+            }
+          } else {
+            Cartographic.clone(data.positionCartographic, scratchCartographic); // 在二维地图的时候x轴朝外，可理解为高度，z轴指北，y轴指东
+
+            // minimum height for the terrain set, need to get this information from the terrain provider
+            scratchCartographic.height = -11500.0;
+            projection.project(scratchCartographic, scratchPosition);
+            Cartesian3.fromElements(
+              scratchPosition.z,
+              scratchPosition.x,
+              scratchPosition.y,
+              scratchPosition,
+            );
+            Cartesian3.clone(scratchPosition, scratchRay.origin);
+            Cartesian3.clone(Cartesian3.UNIT_X, scratchRay.direction);
+          }
+
+          position = tile.data.pick(
+            scratchRay,
+            mode,
+            projection,
+            false,
+            scratchPosition,
           );
-          Cartesian3.clone(scratchPosition, scratchRay.origin);
-          Cartesian3.clone(Cartesian3.UNIT_X, scratchRay.direction);
-        }
 
-        const position = tile.data.pick(
-          scratchRay,
-          mode,
-          projection,
-          false,
-          scratchPosition
-        );
+          if (defined(position)) {
+            // Store the computed position in the cache for future reuse
+            tile.setPositionCacheEntry(
+              data.positionCartographic,
+              primitive.maximumScreenSpaceError,
+              position,
+            );
+          }
+        }
         if (defined(position)) {
           if (defined(data.callback)) {
-            data.callback(position);
+            const positionCarto = ellipsoid.cartesianToCartographic(
+              position,
+              scratchCartographic,
+            );
+            data.callback(positionCarto);
           }
           data.level = tile.level;
         }

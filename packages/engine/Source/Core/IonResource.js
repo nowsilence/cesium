@@ -1,7 +1,7 @@
 import Uri from "urijs";
 import Check from "./Check.js";
 import Credit from "./Credit.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import Ion from "./Ion.js";
 import Resource from "./Resource.js";
@@ -48,7 +48,7 @@ function IonResource(endpoint, endpointResource) {
   } else {
     //External imagery assets have additional configuration that can't be represented as a Resource
     throw new RuntimeError(
-      "Ion.createResource does not support external imagery assets; use IonImageryProvider instead."
+      "Ion.createResource does not support external imagery assets; use IonImageryProvider instead.",
     );
   }
 
@@ -106,7 +106,7 @@ if (defined(Object.create)) {
 IonResource.fromAssetId = function (assetId, options) {
   const endpointResource = IonResource._createEndpointResource(
     assetId,
-    options
+    options,
   );
 
   return endpointResource.fetchJson().then(function (endpoint) {
@@ -136,7 +136,7 @@ Object.defineProperties(IonResource.prototype, {
 
       this._credits = IonResource.getCreditsFromEndpoint(
         this._ionEndpoint,
-        this._ionEndpointResource
+        this._ionEndpointResource,
       );
 
       return this._credits;
@@ -148,7 +148,7 @@ Object.defineProperties(IonResource.prototype, {
 IonResource.getCreditsFromEndpoint = function (endpoint, endpointResource) {
   const credits = endpoint.attributions.map(Credit.getIonCredit);
   const defaultTokenCredit = Ion.getDefaultTokenCredit(
-    endpointResource.queryParameters.access_token
+    endpointResource.queryParameters.access_token,
   );
   if (defined(defaultTokenCredit)) {
     credits.push(Credit.clone(defaultTokenCredit));
@@ -159,12 +159,12 @@ IonResource.getCreditsFromEndpoint = function (endpoint, endpointResource) {
 /** @inheritdoc */
 IonResource.prototype.clone = function (result) {
   // We always want to use the root's information because it's the most up-to-date
-  const ionRoot = defaultValue(this._ionRoot, this);
+  const ionRoot = this._ionRoot ?? this;
 
   if (!defined(result)) {
     result = new IonResource(
       ionRoot._ionEndpoint,
-      ionRoot._ionEndpointResource
+      ionRoot._ionEndpointResource,
     );
   }
 
@@ -199,15 +199,8 @@ IonResource.prototype._makeRequest = function (options) {
     return Resource.prototype._makeRequest.call(this, options);
   }
 
-  if (!defined(options.headers)) {
-    options.headers = {};
-  }
+  addClientHeaders(options);
   options.headers.Authorization = `Bearer ${this._ionEndpoint.accessToken}`;
-  options.headers["X-Cesium-Client"] = "CesiumJS";
-  /* global CESIUM_VERSION */
-  if (typeof CESIUM_VERSION !== "undefined") {
-    options.headers["X-Cesium-Client-Version"] = CESIUM_VERSION;
-  }
 
   return Resource.prototype._makeRequest.call(this, options);
 };
@@ -220,9 +213,9 @@ IonResource._createEndpointResource = function (assetId, options) {
   Check.defined("assetId", assetId);
   //>>includeEnd('debug');
 
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  let server = defaultValue(options.server, Ion.defaultServer);
-  const accessToken = defaultValue(options.accessToken, Ion.defaultAccessToken);
+  options = options ?? Frozen.EMPTY_OBJECT;
+  let server = options.server ?? Ion.defaultServer;
+  const accessToken = options.accessToken ?? Ion.defaultAccessToken;
   server = Resource.createIfNeeded(server);
 
   const resourceOptions = {
@@ -233,11 +226,24 @@ IonResource._createEndpointResource = function (assetId, options) {
     resourceOptions.queryParameters = { access_token: accessToken };
   }
 
+  addClientHeaders(resourceOptions);
+
   return server.getDerivedResource(resourceOptions);
 };
 
+function addClientHeaders(options) {
+  if (!defined(options.headers)) {
+    options.headers = {};
+  }
+  options.headers["X-Cesium-Client"] = "CesiumJS";
+  /* global CESIUM_VERSION */
+  if (typeof CESIUM_VERSION !== "undefined") {
+    options.headers["X-Cesium-Client-Version"] = CESIUM_VERSION;
+  }
+}
+
 function retryCallback(that, error) {
-  const ionRoot = defaultValue(that._ionRoot, that);
+  const ionRoot = that._ionRoot ?? that;
   const endpointResource = ionRoot._ionEndpointResource;
 
   // Image is not available in worker threads, so this avoids

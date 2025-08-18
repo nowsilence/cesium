@@ -7,7 +7,7 @@ function heightReferenceOnEntityPropertyChanged(
   entity,
   propertyName,
   newValue,
-  oldValue
+  oldValue,
 ) {
   // 调用父类方法 只有box/Cylinder/Ellipsoid
   GeometryUpdater.prototype._onEntityPropertyChanged.call(
@@ -15,7 +15,7 @@ function heightReferenceOnEntityPropertyChanged(
     entity,
     propertyName,
     newValue,
-    oldValue
+    oldValue,
   );
   if (this._observedPropertyNames.indexOf(propertyName) === -1) {
     return;
@@ -37,12 +37,12 @@ function heightReferenceOnEntityPropertyChanged(
   if (defined(heightReferenceProperty)) {
     const centerPosition = new CallbackProperty(
       this._computeCenter.bind(this),
-      !this._dynamic
+      !this._dynamic,
     );
     this._terrainOffsetProperty = new TerrainOffsetProperty(
       this._scene,
       centerPosition,
-      heightReferenceProperty
+      heightReferenceProperty,
     );
   }
 }

@@ -6,7 +6,6 @@ import Cartesian3 from "./Cartesian3.js";
 import Cartesian4 from "./Cartesian4.js";
 import Cartographic from "./Cartographic.js";
 import ComponentDatatype from "./ComponentDatatype.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import EncodedCartesian3 from "./EncodedCartesian3.js";
@@ -72,7 +71,7 @@ function triangleStripToLines(triangles) {
         index,
         triangles[i - 1],
         triangles[i],
-        triangles[i - 2]
+        triangles[i - 2],
       );
     }
 
@@ -138,7 +137,7 @@ GeometryPipeline.toWireframe = function (geometry) {
       //>>includeStart('debug', pragmas.debug);
       default:
         throw new DeveloperError(
-          "geometry.primitiveType must be TRIANGLES, TRIANGLE_STRIP, or TRIANGLE_FAN."
+          "geometry.primitiveType must be TRIANGLES, TRIANGLE_STRIP, or TRIANGLE_FAN.",
         );
       //>>includeEnd('debug');
     }
@@ -167,9 +166,9 @@ GeometryPipeline.toWireframe = function (geometry) {
 GeometryPipeline.createLineSegmentsForVectors = function (
   geometry,
   attributeName,
-  length
+  length,
 ) {
-  attributeName = defaultValue(attributeName, "normal");
+  attributeName = attributeName ?? "normal";
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(geometry)) {
@@ -180,12 +179,12 @@ GeometryPipeline.createLineSegmentsForVectors = function (
   }
   if (!defined(geometry.attributes[attributeName])) {
     throw new DeveloperError(
-      `geometry.attributes must have an attribute with the same name as the attributeName parameter, ${attributeName}.`
+      `geometry.attributes must have an attribute with the same name as the attributeName parameter, ${attributeName}.`,
     );
   }
   //>>includeEnd('debug');
 
-  length = defaultValue(length, 10000.0);
+  length = length ?? 10000.0;
 
   const positions = geometry.attributes.position.values;
   const vectors = geometry.attributes[attributeName].values;
@@ -371,7 +370,7 @@ GeometryPipeline.reorderForPreVertexCache = function (geometry) {
         const numComponents = attribute.componentsPerAttribute;
         const elementsOut = ComponentDatatype.createTypedArray(
           attribute.componentDatatype,
-          nextIndex * numComponents
+          nextIndex * numComponents,
         );
         while (intoElementsIn < numVertices) {
           const temp = indexCrossReferenceOldToNew[intoElementsIn];
@@ -412,7 +411,7 @@ GeometryPipeline.reorderForPreVertexCache = function (geometry) {
  */
 GeometryPipeline.reorderForPostVertexCache = function (
   geometry,
-  cacheCapacity
+  cacheCapacity,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(geometry)) {
@@ -472,7 +471,7 @@ function copyVertex(destinationAttributes, sourceAttributes, index) {
 
       for (let k = 0; k < attr.componentsPerAttribute; ++k) {
         destinationAttributes[attribute].values.push(
-          attr.values[index * attr.componentsPerAttribute + k]
+          attr.values[index * attr.componentsPerAttribute + k],
         );
       }
     }
@@ -508,7 +507,7 @@ GeometryPipeline.fitToUnsignedShortIndices = function (geometry) {
     geometry.primitiveType !== PrimitiveType.POINTS
   ) {
     throw new DeveloperError(
-      "geometry.primitiveType must equal to PrimitiveType.TRIANGLES, PrimitiveType.LINES, or PrimitiveType.POINTS."
+      "geometry.primitiveType must equal to PrimitiveType.TRIANGLES, PrimitiveType.LINES, or PrimitiveType.POINTS.",
     );
   }
   //>>includeEnd('debug');
@@ -563,7 +562,7 @@ GeometryPipeline.fitToUnsignedShortIndices = function (geometry) {
             primitiveType: geometry.primitiveType,
             boundingSphere: geometry.boundingSphere,
             boundingSphereCV: geometry.boundingSphereCV,
-          })
+          }),
         );
 
         // Reset for next vertex-array
@@ -582,7 +581,7 @@ GeometryPipeline.fitToUnsignedShortIndices = function (geometry) {
           primitiveType: geometry.primitiveType,
           boundingSphere: geometry.boundingSphere,
           boundingSphereCV: geometry.boundingSphereCV,
-        })
+        }),
       );
     }
   } else {
@@ -622,7 +621,7 @@ GeometryPipeline.projectTo2D = function (
   attributeName,
   attributeName3D,
   attributeName2D,
-  projection
+  projection,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(geometry)) {
@@ -639,7 +638,7 @@ GeometryPipeline.projectTo2D = function (
   }
   if (!defined(geometry.attributes[attributeName])) {
     throw new DeveloperError(
-      `geometry must have attribute matching the attributeName argument: ${attributeName}.`
+      `geometry must have attribute matching the attributeName argument: ${attributeName}.`,
     );
   }
   if (
@@ -647,7 +646,7 @@ GeometryPipeline.projectTo2D = function (
     ComponentDatatype.DOUBLE
   ) {
     throw new DeveloperError(
-      "The attribute componentDatatype must be ComponentDatatype.DOUBLE."
+      "The attribute componentDatatype must be ComponentDatatype.DOUBLE.",
     );
   }
   //>>includeEnd('debug');
@@ -665,24 +664,24 @@ GeometryPipeline.projectTo2D = function (
     const value = Cartesian3.fromArray(
       values3D,
       i,
-      scratchProjectTo2DCartesian3
+      scratchProjectTo2DCartesian3,
     );
 
     const lonLat = ellipsoid.cartesianToCartographic(
       value,
-      scratchProjectTo2DCartographic
+      scratchProjectTo2DCartographic,
     );
     //>>includeStart('debug', pragmas.debug);
     if (!defined(lonLat)) {
       throw new DeveloperError(
-        `Could not project point (${value.x}, ${value.y}, ${value.z}) to 2D.`
+        `Could not project point (${value.x}, ${value.y}, ${value.z}) to 2D.`,
       );
     }
     //>>includeEnd('debug');
 
     const projectedLonLat = projection.project(
       lonLat,
-      scratchProjectTo2DCartesian3
+      scratchProjectTo2DCartesian3,
     );
 
     projectedValues[index++] = projectedLonLat.x;
@@ -690,7 +689,7 @@ GeometryPipeline.projectTo2D = function (
     projectedValues[index++] = projectedLonLat.z;
   }
 
-  // Rename original cartesians to WGS84 cartesians.
+  // Rename original cartesians to ellipsoid cartesians.
   geometry.attributes[attributeName3D] = attribute;
 
   // Replace original cartesians with 2D projected cartesians
@@ -732,7 +731,7 @@ GeometryPipeline.encodeAttribute = function (
   geometry,
   attributeName,
   attributeHighName,
-  attributeLowName
+  attributeLowName,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(geometry)) {
@@ -749,7 +748,7 @@ GeometryPipeline.encodeAttribute = function (
   }
   if (!defined(geometry.attributes[attributeName])) {
     throw new DeveloperError(
-      `geometry must have attribute matching the attributeName argument: ${attributeName}.`
+      `geometry must have attribute matching the attributeName argument: ${attributeName}.`,
     );
   }
   if (
@@ -757,7 +756,7 @@ GeometryPipeline.encodeAttribute = function (
     ComponentDatatype.DOUBLE
   ) {
     throw new DeveloperError(
-      "The attribute componentDatatype must be ComponentDatatype.DOUBLE."
+      "The attribute componentDatatype must be ComponentDatatype.DOUBLE.",
     );
   }
   //>>includeEnd('debug');
@@ -814,7 +813,7 @@ function transformVector(matrix, attribute) {
       Matrix3.multiplyByVector(matrix, scratchCartesian3, scratchCartesian3);
       scratchCartesian3 = Cartesian3.normalize(
         scratchCartesian3,
-        scratchCartesian3
+        scratchCartesian3,
       );
       Cartesian3.pack(scratchCartesian3, values, i);
     }
@@ -876,7 +875,7 @@ GeometryPipeline.transformToWorldCoordinates = function (instance) {
     instance.geometry.boundingSphere = BoundingSphere.transform(
       boundingSphere,
       modelMatrix,
-      boundingSphere
+      boundingSphere,
     );
   }
 
@@ -928,7 +927,7 @@ function findAttributesInAllGeometries(instances, propertyName) {
           normalize: attribute.normalize,
           values: ComponentDatatype.createTypedArray(
             attribute.componentDatatype,
-            numberOfComponents
+            numberOfComponents,
           ),
         });
       }
@@ -959,12 +958,12 @@ function combineGeometries(instances, propertyName) {
     }
     if (defined(instances[i][propertyName].indices) !== haveIndices) {
       throw new DeveloperError(
-        "All instance geometries must have an indices or not have one."
+        "All instance geometries must have an indices or not have one.",
       );
     }
     if (instances[i][propertyName].primitiveType !== primitiveType) {
       throw new DeveloperError(
-        "All instance geometries must have the same primitiveType."
+        "All instance geometries must have the same primitiveType.",
       );
     }
   }
@@ -1006,11 +1005,11 @@ function combineGeometries(instances, propertyName) {
       new Geometry({
         attributes: attributes,
         primitiveType: PrimitiveType.POINTS,
-      })
+      }),
     );
     const destIndices = IndexDatatype.createTypedArray(
       numberOfVertices,
-      numberOfIndices
+      numberOfIndices,
     );
 
     let destOffset = 0;
@@ -1053,7 +1052,7 @@ function combineGeometries(instances, propertyName) {
       bs = instances[i][propertyName].boundingSphere;
       const tempRadius =
         Cartesian3.magnitude(
-          Cartesian3.subtract(bs.center, center, tempScratch)
+          Cartesian3.subtract(bs.center, center, tempScratch),
         ) + bs.radius;
 
       if (tempRadius > radius) {
@@ -1106,7 +1105,7 @@ GeometryPipeline.combineInstances = function (instances) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(instances) || instances.length < 1) {
     throw new DeveloperError(
-      "instances is required and must have length greater than zero."
+      "instances is required and must have length greater than zero.",
     );
   }
   //>>includeEnd('debug');
@@ -1134,10 +1133,10 @@ GeometryPipeline.combineInstances = function (instances) {
 
   if (instanceSplitGeometry.length > 0) {
     geometries.push(
-      combineGeometries(instanceSplitGeometry, "westHemisphereGeometry")
+      combineGeometries(instanceSplitGeometry, "westHemisphereGeometry"),
     );
     geometries.push(
-      combineGeometries(instanceSplitGeometry, "eastHemisphereGeometry")
+      combineGeometries(instanceSplitGeometry, "eastHemisphereGeometry"),
     );
   }
 
@@ -1173,7 +1172,7 @@ GeometryPipeline.computeNormal = function (geometry) {
     !defined(geometry.attributes.position.values)
   ) {
     throw new DeveloperError(
-      "geometry.attributes.position.values is required."
+      "geometry.attributes.position.values is required.",
     );
   }
   if (!defined(geometry.indices)) {
@@ -1181,12 +1180,12 @@ GeometryPipeline.computeNormal = function (geometry) {
   }
   if (geometry.indices.length < 2 || geometry.indices.length % 3 !== 0) {
     throw new DeveloperError(
-      "geometry.indices length must be greater than 0 and be a multiple of 3."
+      "geometry.indices length must be greater than 0 and be a multiple of 3.",
     );
   }
   if (geometry.primitiveType !== PrimitiveType.TRIANGLES) {
     throw new DeveloperError(
-      "geometry.primitiveType must be PrimitiveType.TRIANGLES."
+      "geometry.primitiveType must be PrimitiveType.TRIANGLES.",
     );
   }
   //>>includeEnd('debug');
@@ -1274,7 +1273,7 @@ GeometryPipeline.computeNormal = function (geometry) {
         Cartesian3.add(
           normal,
           normalsPerTriangle[normalIndices[vertexNormalData.indexOffset + j]],
-          normal
+          normal,
         );
       }
 
@@ -1284,7 +1283,7 @@ GeometryPipeline.computeNormal = function (geometry) {
       ) {
         Cartesian3.clone(
           normalsPerTriangle[normalIndices[vertexNormalData.indexOffset]],
-          normal
+          normal,
         );
       }
     }
@@ -1347,7 +1346,7 @@ GeometryPipeline.computeTangentAndBitangent = function (geometry) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(attributes.position) || !defined(attributes.position.values)) {
     throw new DeveloperError(
-      "geometry.attributes.position.values is required."
+      "geometry.attributes.position.values is required.",
     );
   }
   if (!defined(attributes.normal) || !defined(attributes.normal.values)) {
@@ -1361,12 +1360,12 @@ GeometryPipeline.computeTangentAndBitangent = function (geometry) {
   }
   if (indices.length < 2 || indices.length % 3 !== 0) {
     throw new DeveloperError(
-      "geometry.indices length must be greater than 0 and be a multiple of 3."
+      "geometry.indices length must be greater than 0 and be a multiple of 3.",
     );
   }
   if (geometry.primitiveType !== PrimitiveType.TRIANGLES) {
     throw new DeveloperError(
-      "geometry.primitiveType must be PrimitiveType.TRIANGLES."
+      "geometry.primitiveType must be PrimitiveType.TRIANGLES.",
     );
   }
   //>>includeEnd('debug');
@@ -1507,7 +1506,7 @@ GeometryPipeline.compressVertices = function (geometry) {
       encodeResult2 = AttributeCompression.octEncodeInRange(
         toEncode1,
         65535,
-        encodeResult2
+        encodeResult2,
       );
       compressedDirections[i2++] = encodeResult2.x;
       compressedDirections[i2++] = encodeResult2.y;
@@ -1570,9 +1569,8 @@ GeometryPipeline.compressVertices = function (geometry) {
   for (i = 0; i < numVertices; ++i) {
     if (hasSt) {
       Cartesian2.fromArray(st, i * 2.0, scratchCartesian2);
-      compressedAttributes[
-        normalIndex++
-      ] = AttributeCompression.compressTextureCoordinates(scratchCartesian2);
+      compressedAttributes[normalIndex++] =
+        AttributeCompression.compressTextureCoordinates(scratchCartesian2);
     }
 
     const index = i * 3.0;
@@ -1585,30 +1583,27 @@ GeometryPipeline.compressVertices = function (geometry) {
         toEncode1,
         toEncode2,
         toEncode3,
-        scratchCartesian2
+        scratchCartesian2,
       );
       compressedAttributes[normalIndex++] = scratchCartesian2.x;
       compressedAttributes[normalIndex++] = scratchCartesian2.y;
     } else {
       if (hasNormal) {
         Cartesian3.fromArray(normals, index, toEncode1);
-        compressedAttributes[
-          normalIndex++
-        ] = AttributeCompression.octEncodeFloat(toEncode1);
+        compressedAttributes[normalIndex++] =
+          AttributeCompression.octEncodeFloat(toEncode1);
       }
 
       if (hasTangent) {
         Cartesian3.fromArray(tangents, index, toEncode1);
-        compressedAttributes[
-          normalIndex++
-        ] = AttributeCompression.octEncodeFloat(toEncode1);
+        compressedAttributes[normalIndex++] =
+          AttributeCompression.octEncodeFloat(toEncode1);
       }
 
       if (hasBitangent) {
         Cartesian3.fromArray(bitangents, index, toEncode1);
-        compressedAttributes[
-          normalIndex++
-        ] = AttributeCompression.octEncodeFloat(toEncode1);
+        compressedAttributes[normalIndex++] =
+          AttributeCompression.octEncodeFloat(toEncode1);
       }
     }
   }
@@ -1647,14 +1642,14 @@ function indexTriangles(geometry) {
   }
   if (numberOfVertices % 3 !== 0) {
     throw new DeveloperError(
-      "The number of vertices must be a multiple of three."
+      "The number of vertices must be a multiple of three.",
     );
   }
   //>>includeEnd('debug');
 
   const indices = IndexDatatype.createTypedArray(
     numberOfVertices,
-    numberOfVertices
+    numberOfVertices,
   );
   for (let i = 0; i < numberOfVertices; ++i) {
     indices[i] = i;
@@ -1675,7 +1670,7 @@ function indexTriangleFan(geometry) {
 
   const indices = IndexDatatype.createTypedArray(
     numberOfVertices,
-    (numberOfVertices - 2) * 3
+    (numberOfVertices - 2) * 3,
   );
   indices[0] = 1;
   indices[1] = 0;
@@ -1704,7 +1699,7 @@ function indexTriangleStrip(geometry) {
 
   const indices = IndexDatatype.createTypedArray(
     numberOfVertices,
-    (numberOfVertices - 2) * 3
+    (numberOfVertices - 2) * 3,
   );
   indices[0] = 0;
   indices[1] = 1;
@@ -1751,7 +1746,7 @@ function indexLines(geometry) {
 
   const indices = IndexDatatype.createTypedArray(
     numberOfVertices,
-    numberOfVertices
+    numberOfVertices,
   );
   for (let i = 0; i < numberOfVertices; ++i) {
     indices[i] = i;
@@ -1772,7 +1767,7 @@ function indexLineStrip(geometry) {
 
   const indices = IndexDatatype.createTypedArray(
     numberOfVertices,
-    (numberOfVertices - 1) * 2
+    (numberOfVertices - 1) * 2,
   );
   indices[0] = 0;
   indices[1] = 1;
@@ -1798,7 +1793,7 @@ function indexLineLoop(geometry) {
 
   const indices = IndexDatatype.createTypedArray(
     numberOfVertices,
-    numberOfVertices * 2
+    numberOfVertices * 2,
   );
 
   indices[0] = 0;
@@ -1885,9 +1880,9 @@ function getXZIntersectionOffsetPoints(p, p1, u1, v1) {
     Cartesian3.multiplyByScalar(
       Cartesian3.subtract(p1, p, c3),
       p.y / (p.y - p1.y),
-      c3
+      c3,
     ),
-    u1
+    u1,
   );
   Cartesian3.clone(u1, v1);
   offsetPointFromXZPlane(u1, true);
@@ -1905,7 +1900,7 @@ const splitTriangleResult = {
 };
 
 function splitTriangle(p0, p1, p2) {
-  // In WGS84 coordinates, for a triangle approximately on the
+  // In ellipsoid coordinates, for a triangle approximately on the
   // ellipsoid to cross the IDL, first it needs to be on the
   // negative side of the plane x = 0.
   if (p0.x >= 0.0 || p1.x >= 0.0 || p2.x >= 0.0) {
@@ -2024,7 +2019,7 @@ function updateGeometryAfterSplit(geometry, computeBoundingSphere) {
       const attribute = attributes[property];
       attribute.values = ComponentDatatype.createTypedArray(
         attribute.componentDatatype,
-        attribute.values
+        attribute.values,
       );
     }
   }
@@ -2032,12 +2027,12 @@ function updateGeometryAfterSplit(geometry, computeBoundingSphere) {
   const numberOfVertices = Geometry.computeNumberOfVertices(geometry);
   geometry.indices = IndexDatatype.createTypedArray(
     numberOfVertices,
-    geometry.indices
+    geometry.indices,
   );
 
   if (computeBoundingSphere) {
     geometry.boundingSphere = BoundingSphere.fromVertices(
-      attributes.position.values
+      attributes.position.values,
     );
   }
 
@@ -2090,7 +2085,7 @@ function updateInstanceAfterSplit(instance, westGeometry, eastGeometry) {
 
 function generateBarycentricInterpolateFunction(
   CartesianType,
-  numberOfComponents
+  numberOfComponents,
 ) {
   const v0Scratch = new CartesianType();
   const v1Scratch = new CartesianType();
@@ -2104,22 +2099,22 @@ function generateBarycentricInterpolateFunction(
     sourceValues,
     currentValues,
     insertedIndex,
-    normalize
+    normalize,
   ) {
     const v0 = CartesianType.fromArray(
       sourceValues,
       i0 * numberOfComponents,
-      v0Scratch
+      v0Scratch,
     );
     const v1 = CartesianType.fromArray(
       sourceValues,
       i1 * numberOfComponents,
-      v1Scratch
+      v1Scratch,
     );
     const v2 = CartesianType.fromArray(
       sourceValues,
       i2 * numberOfComponents,
-      v2Scratch
+      v2Scratch,
     );
 
     CartesianType.multiplyByScalar(v0, coords.x, v0);
@@ -2136,22 +2131,22 @@ function generateBarycentricInterpolateFunction(
     CartesianType.pack(
       value,
       currentValues,
-      insertedIndex * numberOfComponents
+      insertedIndex * numberOfComponents,
     );
   };
 }
 
 const interpolateAndPackCartesian4 = generateBarycentricInterpolateFunction(
   Cartesian4,
-  4
+  4,
 );
 const interpolateAndPackCartesian3 = generateBarycentricInterpolateFunction(
   Cartesian3,
-  3
+  3,
 );
 const interpolateAndPackCartesian2 = generateBarycentricInterpolateFunction(
   Cartesian2,
-  2
+  2,
 );
 const interpolateAndPackBoolean = function (
   i0,
@@ -2160,7 +2155,7 @@ const interpolateAndPackBoolean = function (
   coords,
   sourceValues,
   currentValues,
-  insertedIndex
+  insertedIndex,
 ) {
   const v1 = sourceValues[i0] * coords.x;
   const v2 = sourceValues[i1] * coords.y;
@@ -2189,7 +2184,7 @@ function computeTriangleAttributes(
   customAttributeNames,
   customAttributesLength,
   allAttributes,
-  insertedIndex
+  insertedIndex,
 ) {
   if (
     !defined(normals) &&
@@ -2219,7 +2214,7 @@ function computeTriangleAttributes(
       normals,
       currentAttributes.normal.values,
       insertedIndex,
-      true
+      true,
     );
   }
 
@@ -2250,7 +2245,7 @@ function computeTriangleAttributes(
     Cartesian3.pack(
       direction,
       currentAttributes.extrudeDirection.values,
-      insertedIndex * 3
+      insertedIndex * 3,
     );
   }
 
@@ -2262,7 +2257,7 @@ function computeTriangleAttributes(
       coords,
       applyOffset,
       currentAttributes.applyOffset.values,
-      insertedIndex
+      insertedIndex,
     );
   }
 
@@ -2275,7 +2270,7 @@ function computeTriangleAttributes(
       tangents,
       currentAttributes.tangent.values,
       insertedIndex,
-      true
+      true,
     );
   }
 
@@ -2288,7 +2283,7 @@ function computeTriangleAttributes(
       bitangents,
       currentAttributes.bitangent.values,
       insertedIndex,
-      true
+      true,
     );
   }
 
@@ -2300,7 +2295,7 @@ function computeTriangleAttributes(
       coords,
       texCoords,
       currentAttributes.st.values,
-      insertedIndex
+      insertedIndex,
     );
   }
 
@@ -2314,7 +2309,7 @@ function computeTriangleAttributes(
         coords,
         insertedIndex,
         allAttributes[attributeName],
-        currentAttributes[attributeName]
+        currentAttributes[attributeName],
       );
     }
   }
@@ -2327,7 +2322,7 @@ function genericInterpolate(
   coords,
   insertedIndex,
   sourceAttribute,
-  currentAttribute
+  currentAttribute,
 ) {
   const componentsPerAttribute = sourceAttribute.componentsPerAttribute;
   const sourceValues = sourceAttribute.values;
@@ -2342,7 +2337,7 @@ function genericInterpolate(
         sourceValues,
         currentValues,
         insertedIndex,
-        false
+        false,
       );
       break;
     case 3:
@@ -2354,7 +2349,7 @@ function genericInterpolate(
         sourceValues,
         currentValues,
         insertedIndex,
-        false
+        false,
       );
       break;
     case 2:
@@ -2366,7 +2361,7 @@ function genericInterpolate(
         sourceValues,
         currentValues,
         insertedIndex,
-        false
+        false,
       );
       break;
     default:
@@ -2383,7 +2378,7 @@ function insertSplitPoint(
   currentIndexMap,
   indices,
   currentIndex,
-  point
+  point,
 ) {
   const insertIndex = currentAttributes.position.values.length / 3;
 
@@ -2506,7 +2501,7 @@ function splitLongitudeTriangles(instance) {
           currentIndexMap,
           indices,
           resultIndex < 3 ? i + resultIndex : -1,
-          point
+          point,
         );
         computeTriangleAttributes(
           i0,
@@ -2524,7 +2519,7 @@ function splitLongitudeTriangles(instance) {
           customAttributeNames,
           customAttributesLength,
           attributes,
-          insertedIndex
+          insertedIndex,
         );
       }
     } else {
@@ -2550,7 +2545,7 @@ function splitLongitudeTriangles(instance) {
         currentIndexMap,
         indices,
         i,
-        p0
+        p0,
       );
       computeTriangleAttributes(
         i0,
@@ -2568,7 +2563,7 @@ function splitLongitudeTriangles(instance) {
         customAttributeNames,
         customAttributesLength,
         attributes,
-        insertedIndex
+        insertedIndex,
       );
 
       insertedIndex = insertSplitPoint(
@@ -2577,7 +2572,7 @@ function splitLongitudeTriangles(instance) {
         currentIndexMap,
         indices,
         i + 1,
-        p1
+        p1,
       );
       computeTriangleAttributes(
         i0,
@@ -2595,7 +2590,7 @@ function splitLongitudeTriangles(instance) {
         customAttributeNames,
         customAttributesLength,
         attributes,
-        insertedIndex
+        insertedIndex,
       );
 
       insertedIndex = insertSplitPoint(
@@ -2604,7 +2599,7 @@ function splitLongitudeTriangles(instance) {
         currentIndexMap,
         indices,
         i + 2,
-        p2
+        p2,
       );
       computeTriangleAttributes(
         i0,
@@ -2622,7 +2617,7 @@ function splitLongitudeTriangles(instance) {
         customAttributeNames,
         customAttributesLength,
         attributes,
-        insertedIndex
+        insertedIndex,
       );
     }
   }
@@ -2642,7 +2637,7 @@ function computeLineAttributes(
   positions,
   insertIndex,
   currentAttributes,
-  applyOffset
+  applyOffset,
 ) {
   if (!defined(applyOffset)) {
     return;
@@ -2717,14 +2712,14 @@ function splitLongitudeLines(instance) {
       p0,
       p1,
       xzPlane,
-      p2Scratch
+      p2Scratch,
     );
     if (defined(intersection)) {
       // move point on the xz-plane slightly away from the plane
       const offset = Cartesian3.multiplyByScalar(
         Cartesian3.UNIT_Y,
         5.0 * CesiumMath.EPSILON9,
-        offsetScratch
+        offsetScratch,
       );
       if (p0.y < 0.0) {
         Cartesian3.negate(offset, offset);
@@ -2740,7 +2735,7 @@ function splitLongitudeLines(instance) {
       const offsetPoint = Cartesian3.add(
         intersection,
         offset,
-        offsetPointScratch
+        offsetPointScratch,
       );
 
       insertIndex = insertSplitPoint(
@@ -2749,7 +2744,7 @@ function splitLongitudeLines(instance) {
         p0IndexMap,
         indices,
         i,
-        p0
+        p0,
       );
       computeLineAttributes(
         i0,
@@ -2758,7 +2753,7 @@ function splitLongitudeLines(instance) {
         positions,
         insertIndex,
         p0Attributes,
-        applyOffset
+        applyOffset,
       );
 
       insertIndex = insertSplitPoint(
@@ -2767,7 +2762,7 @@ function splitLongitudeLines(instance) {
         p0IndexMap,
         indices,
         -1,
-        offsetPoint
+        offsetPoint,
       );
       computeLineAttributes(
         i0,
@@ -2776,7 +2771,7 @@ function splitLongitudeLines(instance) {
         positions,
         insertIndex,
         p0Attributes,
-        applyOffset
+        applyOffset,
       );
 
       Cartesian3.negate(offset, offset);
@@ -2787,7 +2782,7 @@ function splitLongitudeLines(instance) {
         p1IndexMap,
         indices,
         -1,
-        offsetPoint
+        offsetPoint,
       );
       computeLineAttributes(
         i0,
@@ -2796,7 +2791,7 @@ function splitLongitudeLines(instance) {
         positions,
         insertIndex,
         p1Attributes,
-        applyOffset
+        applyOffset,
       );
 
       insertIndex = insertSplitPoint(
@@ -2805,7 +2800,7 @@ function splitLongitudeLines(instance) {
         p1IndexMap,
         indices,
         i + 1,
-        p1
+        p1,
       );
       computeLineAttributes(
         i0,
@@ -2814,7 +2809,7 @@ function splitLongitudeLines(instance) {
         positions,
         insertIndex,
         p1Attributes,
-        applyOffset
+        applyOffset,
       );
     } else {
       let currentAttributes;
@@ -2837,7 +2832,7 @@ function splitLongitudeLines(instance) {
         currentIndexMap,
         indices,
         i,
-        p0
+        p0,
       );
       computeLineAttributes(
         i0,
@@ -2846,7 +2841,7 @@ function splitLongitudeLines(instance) {
         positions,
         insertIndex,
         currentAttributes,
-        applyOffset
+        applyOffset,
       );
 
       insertIndex = insertSplitPoint(
@@ -2855,7 +2850,7 @@ function splitLongitudeLines(instance) {
         currentIndexMap,
         indices,
         i + 1,
-        p1
+        p1,
       );
       computeLineAttributes(
         i0,
@@ -2864,7 +2859,7 @@ function splitLongitudeLines(instance) {
         positions,
         insertIndex,
         currentAttributes,
-        applyOffset
+        applyOffset,
       );
     }
   }
@@ -2900,7 +2895,7 @@ function updateAdjacencyAfterSplit(geometry) {
     const prevPosition = Cartesian3.unpack(
       prevPositions,
       j,
-      cartesian3Scratch2
+      cartesian3Scratch2,
     );
     if (
       (position.y < 0.0 && prevPosition.y > 0.0) ||
@@ -2918,7 +2913,7 @@ function updateAdjacencyAfterSplit(geometry) {
     const nextPosition = Cartesian3.unpack(
       nextPositions,
       j,
-      cartesian3Scratch3
+      cartesian3Scratch3,
     );
     if (
       (position.y < 0.0 && nextPosition.y > 0.0) ||
@@ -3005,7 +3000,7 @@ function splitLongitudePolyline(instance) {
       p0,
       p2,
       xzPlane,
-      cartesian3Scratch4
+      cartesian3Scratch4,
     );
     if (defined(intersection)) {
       intersectionFound = true;
@@ -3014,7 +3009,7 @@ function splitLongitudePolyline(instance) {
       const offset = Cartesian3.multiplyByScalar(
         Cartesian3.UNIT_Y,
         offsetScalar,
-        cartesian3Scratch5
+        cartesian3Scratch5,
       );
       if (p0.y < 0.0) {
         Cartesian3.negate(offset, offset);
@@ -3027,51 +3022,51 @@ function splitLongitudePolyline(instance) {
       const offsetPoint = Cartesian3.add(
         intersection,
         offset,
-        cartesian3Scratch6
+        cartesian3Scratch6,
       );
       p0Attributes.position.values.push(p0.x, p0.y, p0.z, p0.x, p0.y, p0.z);
       p0Attributes.position.values.push(
         offsetPoint.x,
         offsetPoint.y,
-        offsetPoint.z
+        offsetPoint.z,
       );
       p0Attributes.position.values.push(
         offsetPoint.x,
         offsetPoint.y,
-        offsetPoint.z
+        offsetPoint.z,
       );
 
       p0Attributes.prevPosition.values.push(
         prevPositions[i0 * 3],
         prevPositions[i0 * 3 + 1],
-        prevPositions[i0 * 3 + 2]
+        prevPositions[i0 * 3 + 2],
       );
       p0Attributes.prevPosition.values.push(
         prevPositions[i0 * 3 + 3],
         prevPositions[i0 * 3 + 4],
-        prevPositions[i0 * 3 + 5]
+        prevPositions[i0 * 3 + 5],
       );
       p0Attributes.prevPosition.values.push(p0.x, p0.y, p0.z, p0.x, p0.y, p0.z);
 
       p0Attributes.nextPosition.values.push(
         offsetPoint.x,
         offsetPoint.y,
-        offsetPoint.z
+        offsetPoint.z,
       );
       p0Attributes.nextPosition.values.push(
         offsetPoint.x,
         offsetPoint.y,
-        offsetPoint.z
+        offsetPoint.z,
       );
       p0Attributes.nextPosition.values.push(
         offsetPoint.x,
         offsetPoint.y,
-        offsetPoint.z
+        offsetPoint.z,
       );
       p0Attributes.nextPosition.values.push(
         offsetPoint.x,
         offsetPoint.y,
-        offsetPoint.z
+        offsetPoint.z,
       );
 
       Cartesian3.negate(offset, offset);
@@ -3079,52 +3074,52 @@ function splitLongitudePolyline(instance) {
       p2Attributes.position.values.push(
         offsetPoint.x,
         offsetPoint.y,
-        offsetPoint.z
+        offsetPoint.z,
       );
       p2Attributes.position.values.push(
         offsetPoint.x,
         offsetPoint.y,
-        offsetPoint.z
+        offsetPoint.z,
       );
       p2Attributes.position.values.push(p2.x, p2.y, p2.z, p2.x, p2.y, p2.z);
 
       p2Attributes.prevPosition.values.push(
         offsetPoint.x,
         offsetPoint.y,
-        offsetPoint.z
+        offsetPoint.z,
       );
       p2Attributes.prevPosition.values.push(
         offsetPoint.x,
         offsetPoint.y,
-        offsetPoint.z
+        offsetPoint.z,
       );
       p2Attributes.prevPosition.values.push(
         offsetPoint.x,
         offsetPoint.y,
-        offsetPoint.z
+        offsetPoint.z,
       );
       p2Attributes.prevPosition.values.push(
         offsetPoint.x,
         offsetPoint.y,
-        offsetPoint.z
+        offsetPoint.z,
       );
 
       p2Attributes.nextPosition.values.push(p2.x, p2.y, p2.z, p2.x, p2.y, p2.z);
       p2Attributes.nextPosition.values.push(
         nextPositions[i2 * 3],
         nextPositions[i2 * 3 + 1],
-        nextPositions[i2 * 3 + 2]
+        nextPositions[i2 * 3 + 2],
       );
       p2Attributes.nextPosition.values.push(
         nextPositions[i2 * 3 + 3],
         nextPositions[i2 * 3 + 4],
-        nextPositions[i2 * 3 + 5]
+        nextPositions[i2 * 3 + 5],
       );
 
       const ew0 = Cartesian2.fromArray(
         expandAndWidths,
         i0 * 2,
-        cartesian2Scratch0
+        cartesian2Scratch0,
       );
       const width = Math.abs(ew0.y);
 
@@ -3134,10 +3129,10 @@ function splitLongitudePolyline(instance) {
       p2Attributes.expandAndWidth.values.push(-1, -width, 1, -width);
 
       let t = Cartesian3.magnitudeSquared(
-        Cartesian3.subtract(intersection, p0, cartesian3Scratch3)
+        Cartesian3.subtract(intersection, p0, cartesian3Scratch3),
       );
       t /= Cartesian3.magnitudeSquared(
-        Cartesian3.subtract(p2, p0, cartesian3Scratch3)
+        Cartesian3.subtract(p2, p0, cartesian3Scratch3),
       );
 
       if (defined(colors)) {
@@ -3166,7 +3161,7 @@ function splitLongitudePolyline(instance) {
         const s3 = Cartesian2.fromArray(
           texCoords,
           (i + 3) * 2,
-          cartesian2Scratch1
+          cartesian2Scratch1,
         );
 
         const sx = CesiumMath.lerp(s0.x, s3.x, t);
