@@ -10,10 +10,10 @@ uniform vec3 u_atmosphereMieCoefficient;
 const float ATMOSPHERE_THICKNESS = 111e3; // The thickness of the atmosphere in meters.
 const int PRIMARY_STEPS_MAX = 16; // Maximum number of times the ray from the camera to the world position (primary ray) is sampled.
 const int LIGHT_STEPS_MAX = 4; // Maximum number of times the light is sampled from the light source's intersection with the atmosphere to a sample position on the primary ray.
-
+// 天空盒、地形的共用方法
 /**
  * This function computes the colors contributed by Rayliegh and Mie scattering on a given ray, as well as
- * the transmittance value for the ray.
+ * the transmittance（透射率） value for the ray.
  *
  * @param {czm_ray} primaryRay The ray from the camera to the position.
  * @param {float} primaryRayLength The length of the primary ray.

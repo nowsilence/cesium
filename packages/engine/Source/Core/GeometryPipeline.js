@@ -3251,7 +3251,7 @@ GeometryPipeline.splitLongitude = function (instance) {
     throw new DeveloperError("instance is required.");
   }
   //>>includeEnd('debug');
-
+ 
   const geometry = instance.geometry;
   const boundingSphere = geometry.boundingSphere;
   if (defined(boundingSphere)) {

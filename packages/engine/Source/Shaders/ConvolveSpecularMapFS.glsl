@@ -44,7 +44,7 @@ vec3 importanceSampleGGX(vec2 xi, float alphaRoughness, vec3 N)
     vec3 tangentY = cross(N, tangentX);
     return tangentX * H.x + tangentY * H.y + N * H.z;
 }
-
+// convolve 卷积
 // Sample count is relatively low for the sake of performance, but should still be enough to prevent artifacting in lower roughnesses
 const int samples = 128;
 

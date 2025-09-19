@@ -1,3 +1,6 @@
+/**
+ * 用于Globe地形
+ */
 void computeAtmosphereScattering(vec3 positionWC, vec3 lightDirection, out vec3 rayleighColor, out vec3 mieColor, out float opacity) {
 
     vec3 cameraToPositionWC = positionWC - czm_viewerPositionWC;

@@ -47,14 +47,18 @@ void main() {
 
     // Get the relevant region of the texture
     float dimension = float(u_extentsLength);
-    if (u_extentsLength > 2) {
+    if (u_extentsLength > 2) { 
+        // 维度 可表示为存储extent需要dimension行dimension列
+        // 会把一个大的纹理分成dimension*dimension的区域，每一个区域存放一个exent
         dimension = ceil(log2(float(u_extentsLength)));
     }
+    // 根据从顶点着色器传过来的v_textureCoordinates，确定当前片段在哪个区域
     int regionIndex = getPolygonIndex(dimension, v_textureCoordinates);
 
     for (int polygonIndex = 0; polygonIndex < u_polygonsLength; polygonIndex++) {
         ivec2 positionsLengthAndExtents = getPositionsLengthAndExtentsIndex(lastPolygonIndex);
         int positionsLength = positionsLengthAndExtents.x;
+        // polygon对应的extent的索引
         int polygonExtentsIndex = positionsLengthAndExtents.y;
         lastPolygonIndex += 1;
 
@@ -67,6 +71,7 @@ void main() {
             float s = 1.0;
 
             // Check each edge for absolute distance
+            // 计算点p在多边形内部还是外部，以及最近的距离
             for (int i = 0, j = positionsLength - 1; i < positionsLength; j = i, i++) {
                 vec2 a = getPolygonPosition(lastPolygonIndex + i);
                 vec2 b = getPolygonPosition(lastPolygonIndex + j);
@@ -76,16 +81,17 @@ void main() {
                 float t = dot(pa, ab) / dot(ab, ab);
                 t = clamp(t, 0.0, 1.0);
 
-                vec2 pq = pa - t * ab;
-                float d = length(pq);
+                vec2 pq = pa - t * ab; // t * ab 最近点
+                float d = length(pq); // 距离
 
+                // 用于测试给定的布尔向量中的所有元素是否均为true，类似的有any，not
                 // Inside / outside computation to determine sign
                 bvec3 cond = bvec3(p.y >= a.y, 
                             p.y < b.y, 
-                            ab.x * pa.y > ab.y * pa.x);
+                            ab.x * pa.y > ab.y * pa.x); // 叉乘
                 if (all(cond) || all(not(cond))) s = -s;
                 if (abs(d) < abs(clipAmount)) {
-                    clipAmount = d;
+                    clipAmount = d; // 点p到边的最小距离
                 }
             }
 

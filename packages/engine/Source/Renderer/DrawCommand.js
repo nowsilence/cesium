@@ -17,8 +17,7 @@ const Flags = {
  * Represents a command to the renderer for drawing.
  *
  * @alias DrawCommand
- * @constructor
- *
+ * @constructor *
  * @private
  */
 function DrawCommand(options) {

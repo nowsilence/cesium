@@ -189,7 +189,12 @@ function Globe(ellipsoid) {
 
   /**
    * Enable the ground atmosphere, which is drawn over the globe when viewed from a distance between <code>lightingFadeInDistance</code> and <code>lightingFadeOutDistance</code>.
-   *
+   * showGroundAtmosphere
+   * 控制是否显示地球表面的大气层效果。当该参数设置为 true 时（默认值），Cesium 会渲染地球表面的大气层效果，包括：
+   * 地球边缘的蓝色光晕
+   * 从太空视角看到的大气包裹效果
+   * 随视角变化的大气散射视觉效果
+   * 当设置为 false 时，这些大气层视觉效果将被关闭，地球会显示为一个没有大气包裹的球体。
    * @type {boolean}
    * @default true when using the WGS84 ellipsoid, false otherwise
    */

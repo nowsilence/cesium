@@ -22,6 +22,7 @@ import BlendingState from "./BlendingState.js";
 import SceneMode from "./SceneMode.js";
 
 /**
+ * 在TEME坐标系定义，体现在SkyBoxVS.js中，需要实时转到伪固定轴坐标系下
  * A sky box around the scene to draw stars.  The sky box is defined using the True Equator Mean Equinox (TEME) axes.
  * <p>
  * This is only supported in 3D.  The sky box is faded out when morphing to 2D or Columbus view.  The size of

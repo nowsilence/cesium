@@ -10,9 +10,11 @@ import CesiumMath from "./Math.js";
 import Ray from "./Ray.js";
 
 /**
- * Represents a point in stereographic coordinates, which can be obtained by projecting a cartesian coordinate from one pole onto a tangent plane at the other pole.
+ * Represents a point in stereographic coordinates（极射赤面投影法）, which can be obtained by projecting a cartesian coordinate from one pole onto a tangent plane at the other pole.
  * The stereographic projection faithfully represents the relative directions of all great circles passing through its center point.
  * To faithfully represents angles everywhere, this is a conformal projection, which means points are projected onto an arbrary sphere.
+ * 立体投影/球极平面投影（Stereographic Projection） —— 一种常用的地图投影算法，尤其适用于极地或小区域范围的高精度地理数据可视化
+ * 它是一种方位投影（Azimuthal Projection），基于 “将地球表面（或椭球面）上的点投影到一个与地球相切 / 相割的平面上” 
  * @param {Cartesian2} [position] The steroegraphic coordinates.
  * @param {EllipseGeometry} [tangentPlane] The tangent plane onto which the point was projected.
  */
@@ -124,7 +126,7 @@ const scratchProjectPointOntoPlaneCartesian3 = new Cartesian3();
 
 /**
  * Computes the projection of the provided 3D position onto the 2D polar plane, radially outward from the provided origin.
- *
+ * 投影到-1~1
  * @param {Cartesian3} cartesian The point to project.
  * @param {Stereographic} [result] The object onto which to store the result.
  * @returns {Sterographic} The modified result parameter or a new Sterographic instance if none was provided.

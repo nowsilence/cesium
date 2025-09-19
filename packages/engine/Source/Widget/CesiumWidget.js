@@ -357,7 +357,8 @@ function CesiumWidget(container, options) {
       }
     }
 
-    // Blue sky, and the glow around the Earth's limb.
+    // Blue sky, and the glow around the Earth's limb. 
+    // (Earth's limb)通常指地球大气层边缘的可见轮廓，即大气层与太空交界处的光晕现象
     let skyAtmosphere = options.skyAtmosphere;
     if (!defined(skyAtmosphere) && Ellipsoid.WGS84.equals(ellipsoid)) {
       skyAtmosphere = new SkyAtmosphere(ellipsoid);

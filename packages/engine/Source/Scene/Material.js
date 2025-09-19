@@ -1032,7 +1032,7 @@ function createUniform(material, uniformId) {
       }
     }
 
-    // Add uniform declaration to source code.
+    // Add uniform declaration to source code. 看变量是否声明，没声明则添加
     const uniformDeclarationRegex = new RegExp(
       `uniform\\s+${uniformType}\\s+${uniformId}\\s*;`,
     );
@@ -1179,11 +1179,19 @@ function createSubMaterials(material) {
   }
 }
 
+/**
+ * 带前后缀的即：a_token/token_b不会被替换
+ * @param {*} material 
+ * @param {*} token 
+ * @param {*} newToken 
+ * @param {*} excludePeriod 不允许句点作为前缀（默认行为）.token不会被替换，"token = .token + token.xyz;"
+ * @returns 
+ */
 // Used for searching or replacing a token in a material's shader source with something else.
 // If excludePeriod is true, do not accept tokens that are preceded by periods.
 // http://stackoverflow.com/questions/641407/javascript-negative-lookbehind-equivalent
 function replaceToken(material, token, newToken, excludePeriod) {
-  excludePeriod = excludePeriod ?? true;
+  excludePeriod = excludePeriod ?? true; // 是否排除带前后缀的情况，即：a_token/token_b
   let count = 0;
   const suffixChars = "([\\w])?";
   const prefixChars = `([\\w${excludePeriod ? "." : ""}])?`;

@@ -561,13 +561,16 @@ Transforms.computeIcrfToCentralBodyFixedMatrix = function (date, result) {
 };
 
 /**
- * Computes a rotation matrix to transform a point or vector from True Equator Mean Equinox (TEME) axes to the
- * pseudo-fixed axes at a given time.  This method treats the UT1 time standard as equivalent to UTC.
- *
+ * Computes a rotation matrix to transform a point or vector from True Equator（章动后的瞬时赤道平面） Mean Equinox (TEME) axes to the
+ * pseudo-fixed axes（伪固定轴） at a given time.  This method treats the UT1 time standard as equivalent to UTC.
+ * TEME是近似惯性坐标系，其坐标轴方向相对恒星背景近似固定，不随地球自转而转动，原点为地球质心。
+ * 在短时间内，可认为 TEME 的坐标轴方向不变，适用于描述卫星等天体的轨道运动，牛顿运动定律在该坐标系中可直接应用。
  * @param {JulianDate} date The time at which to compute the rotation matrix.
  * @param {Matrix3} [result] The object onto which to store the result.
  * @returns {Matrix3} The modified result parameter or a new Matrix3 instance if none was provided.
- *
+ * 该函数的作用是将给定瞬时地心惯性系的位置、速度和加速度数据转换为伪固定轴坐标系下的数据。
+ * 伪固定轴坐标系并非完全与地球固连，它与地球固定坐标系（如 ITRF）存在一定的差异，
+ * 其轴的方向相对于地球的旋转有一定的固定关系，但又不是像地心地固坐标系那样完全随地球自转实时转动
  * @example
  * //Set the view to the inertial frame.
  * scene.postUpdate.addEventListener(function(scene, time) {

@@ -390,7 +390,7 @@ function getExtents(polygons) {
     paddedExtents.north = Math.min(paddedExtents.north, Math.PI);
     paddedExtents.east = Math.min(paddedExtents.east, Math.PI);
 
-    const polygonIndices = [polygonIndex];
+    const polygonIndices = [polygonIndex]; // 一个extent对应的是哪几个polygon，
     for (let i = 0; i < extentsList.length; ++i) {
       const e = extentsList[i];
       if (
@@ -409,7 +409,7 @@ function getExtents(polygons) {
             ),
           extents,
         );
-
+        // 把原来的extent删掉
         extentsList[i] = undefined;
         polygonIndicesList[i] = undefined;
 
@@ -436,7 +436,7 @@ function getExtents(polygons) {
     polygonIndicesList.push(polygonIndices);
   }
 
-  const extentsIndexByPolygon = new Map();
+  const extentsIndexByPolygon = new Map(); // key 为polygon的索引，value为extent的索引
   polygonIndicesList
     .filter(defined)
     .forEach((polygonIndices, e) =>
@@ -472,13 +472,13 @@ function packPolygonsAsFloats(clippingPolygonCollection) {
   const polygons = clippingPolygonCollection._polygons;
 
   const { extentsList, extentsIndexByPolygon } = getExtents(polygons);
-
+  // 封装polygon的顶点信息，点的数量，对应的entent索引，顶点数据（弧度）
   let floatIndex = 0;
   for (const [polygonIndex, polygon] of polygons.entries()) {
     // Pack the length of the polygon into the polygon texture array buffer
     const length = polygon.length;
     polygonsFloat32View[floatIndex++] = length;
-    polygonsFloat32View[floatIndex++] = extentsIndexByPolygon.get(polygonIndex);
+    polygonsFloat32View[floatIndex++] = extentsIndexByPolygon.get(polygonIndex); // extent索引
 
     // Pack the polygon positions into the polygon texture array buffer
     for (let i = 0; i < length; ++i) {
@@ -502,7 +502,7 @@ function packPolygonsAsFloats(clippingPolygonCollection) {
     }
   }
 
-  // Pack extents
+  // Pack extents 封装extent信息，每个extent占4个float32
   let extentsFloatIndex = 0;
   for (const extents of extentsList) {
     const longitudeRangeInverse = 1.0 / (extents.east - extents.west);
@@ -623,7 +623,7 @@ ClippingPolygonCollection.prototype.update = function (frameState) {
       this.pixelsNeededForExtents,
       textureResolutionScratch,
     );
-
+    // 一个extent一个像素点
     extentsTexture = new Texture({
       context: context,
       width: requiredResolution.x,

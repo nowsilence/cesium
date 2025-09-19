@@ -122,7 +122,8 @@ function geometryPipeline(parameters) {
   transformToWorldCoordinates(instances, modelMatrix, scene3DOnly);
 
   // Clip to IDL
-  if (!scene3DOnly) {
+  if (!scene3DOnly) 
+    {
     for (i = 0; i < length; ++i) {
       if (defined(instances[i].geometry)) {
         GeometryPipeline.splitLongitude(instances[i]);

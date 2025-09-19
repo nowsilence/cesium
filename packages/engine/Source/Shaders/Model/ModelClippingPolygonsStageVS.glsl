@@ -22,6 +22,8 @@ void modelClippingPolygonsStage(ProcessedAttributes attributes)
         float threshold = 0.01;
         if (rectUv.x > threshold && rectUv.y > threshold && rectUv.x < 1.0 - threshold && rectUv.y < 1.0 - threshold) {
             v_regionIndex = regionIndex;
+            // 在处理region的时候，已经确保了region之间不会重叠
+            // 这个地方没有加break，猜测应该是性能考虑，跟GPU 线程束有关
         }
     }
 }

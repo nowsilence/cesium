@@ -2,7 +2,7 @@
  * This function computes the colors contributed by Rayliegh and Mie scattering on a given ray, as well as
  * the transmittance value for the ray. This function uses automatic uniforms
  * so the atmosphere settings are always synced with the current scene.
- *
+ * 用3dtile和模型,天空盒
  * @name czm_computeScattering
  * @glslfunction
  *
@@ -104,7 +104,7 @@ void czm_computeScattering(
 
         float lightStepLength = lightRayAtmosphereIntersect.stop / float(LIGHT_STEPS);
         float lightPositionLength = 0.0;
-
+        // 光学距离/光学厚度 Optical Depth
         vec2 lightOpticalDepth = vec2(0.0);
 
         // Sample positions along the light ray, to accumulate incidence of light on the latest sample segment.
@@ -129,10 +129,13 @@ void czm_computeScattering(
             lightPositionLength += lightStepLength;
         }
 
-        // Compute attenuation via the primary ray and the light ray.
-        vec3 attenuation = exp(-((czm_atmosphereMieCoefficient * (opticalDepth.y + lightOpticalDepth.y)) + (czm_atmosphereRayleighCoefficient * (opticalDepth.x + lightOpticalDepth.x))));
+        // Compute attenuation（衰减） via the primary ray and the light ray.
+        vec3 attenuation = exp(-(
+            (czm_atmosphereMieCoefficient * (opticalDepth.y + lightOpticalDepth.y))
+            + (czm_atmosphereRayleighCoefficient * (opticalDepth.x + lightOpticalDepth.x))
+        ));
 
-        // Accumulate the scattering.
+        // Accumulate(累积) the scattering.
         rayleighAccumulation += sampleDensity.x * attenuation;
         mieAccumulation += sampleDensity.y * attenuation;
 
@@ -144,6 +147,6 @@ void czm_computeScattering(
     rayleighColor = czm_atmosphereRayleighCoefficient * rayleighAccumulation;
     mieColor = czm_atmosphereMieCoefficient * mieAccumulation;
 
-    // Compute the transmittance i.e. how much light is passing through the atmosphere.
+    // Compute the transmittance（能见度） i.e. how much light is passing through the atmosphere.
     opacity = length(exp(-((czm_atmosphereMieCoefficient * opticalDepth.y) + (czm_atmosphereRayleighCoefficient * opticalDepth.x))));
 }

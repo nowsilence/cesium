@@ -1,7 +1,7 @@
 /**
  * Compute atmosphere scattering for the ground atmosphere and fog. This method
  * uses automatic uniforms so it is always synced with the scene settings.
- *
+ * 用于3dtile和模型
  * @name czm_computeGroundAtmosphereScattering
  * @glslfunction
  *

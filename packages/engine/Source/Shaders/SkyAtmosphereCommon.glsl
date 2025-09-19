@@ -1,3 +1,6 @@
+/**
+ * 用于天空盒
+*/
 float interpolateByDistance(vec4 nearFarScalar, float distance)
 {
     float startDistance = nearFarScalar.x;
@@ -21,6 +24,7 @@ void computeAtmosphereScattering(vec3 positionWC, vec3 lightDirection, out vec3 
     // Since atmosphere scattering assumes the atmosphere is a spherical shell, we compute an inner radius of the atmosphere best fit
     // for the position on the ellipsoid.
     float radiusAdjust = (ellipsoidRadiiDifference / 4.0) + distanceAdjust;
+    // 低空内半径下修小一点，中高空下修大一点，为了视角补偿
     float atmosphereInnerRadius = (length(czm_viewerPositionWC) - czm_eyeHeight) - radiusAdjust;
 
     // Setup the primary ray: from the camera position to the vertex position.

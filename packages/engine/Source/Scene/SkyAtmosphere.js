@@ -53,14 +53,15 @@ function SkyAtmosphere(ellipsoid) {
   /**
    * Compute atmosphere per-fragment instead of per-vertex.
    * This produces better looking atmosphere with a slight performance penalty.
-   *
+   * 用于控制大气效应是通过每个像素来计算（per-fragment）还是通过更大范围（例如每个网格或区域）来计算。
+   * 如果启用每像素计算，效果会更精细，但可能会影响性能。
    * @type {boolean}
    * @default false
    */
   this.perFragmentAtmosphere = false;
 
   this._ellipsoid = ellipsoid;
-
+  // 热层，作为地球大气层的次外层，距离地球表面约160千米
   const outerEllipsoidScale = 1.025;
   const scaleVector = Cartesian3.multiplyByScalar(
     ellipsoid.radii,
@@ -81,7 +82,7 @@ function SkyAtmosphere(ellipsoid) {
 
   /**
    * The intensity of the light that is used for computing the sky atmosphere color.
-   *
+   * 控制内大气层的光照强度。通过调整这个值，可以控制大气的亮度效果。值越高，天空看起来越亮。
    * @type {number}
    * @default 50.0
    */
@@ -89,7 +90,7 @@ function SkyAtmosphere(ellipsoid) {
 
   /**
    * The Rayleigh scattering coefficient used in the atmospheric scattering equations for the sky atmosphere.
-   *
+   * 设置大气中的（红、绿、蓝）光散射强度
    * @type {Cartesian3}
    * @default Cartesian3(5.5e-6, 13.0e-6, 28.4e-6)
    */
@@ -97,7 +98,7 @@ function SkyAtmosphere(ellipsoid) {
 
   /**
    * The Mie scattering coefficient used in the atmospheric scattering equations for the sky atmosphere.
-   *
+   * 分别对应红、绿、蓝通道的散射强度。增加这些值可以增加大气中的雾霾效果。
    * @type {Cartesian3}
    * @default Cartesian3(21e-6, 21e-6, 21e-6)
    */
@@ -105,7 +106,7 @@ function SkyAtmosphere(ellipsoid) {
 
   /**
    * The Rayleigh scale height used in the atmospheric scattering equations for the sky atmosphere, in meters.
-   *
+   * 描述大气分子垂直分布的全球尺度参数
    * @type {number}
    * @default 10000.0
    */
@@ -113,23 +114,24 @@ function SkyAtmosphere(ellipsoid) {
 
   /**
    * The Mie scale height used in the atmospheric scattering equations for the sky atmosphere, in meters.
-   *
+   * 描述气溶胶垂直分布的区域 / 局地尺度参数
    * @type {number}
    * @default 3200.0
    */
   this.atmosphereMieScaleHeight = 3200.0;
 
   /**
-   * The anisotropy of the medium to consider for Mie scattering.
+   * The anisotropy(异向性) of the medium to consider for Mie scattering.
    * <p>
    * Valid values are between -1.0 and 1.0.
-   * </p>
+   * </p> 控制大气中 Mie 散射的各项异性。各项异性描述了光在不同方向上的散射差异，通常用于模拟阳光或大气中的不对称散射现象。
    * @type {number}
    * @default 0.9
    */
   this.atmosphereMieAnisotropy = 0.9;
 
   /**
+   * 色调
    * The hue shift to apply to the atmosphere. Defaults to 0.0 (no shift).
    * A hue shift of 1.0 indicates a complete rotation of the hues available.
    * @type {number}
@@ -138,6 +140,7 @@ function SkyAtmosphere(ellipsoid) {
   this.hueShift = 0.0;
 
   /**
+   * 饱和度
    * The saturation shift to apply to the atmosphere. Defaults to 0.0 (no shift).
    * A saturation shift of -1.0 is monochrome.
    * @type {number}
@@ -146,6 +149,7 @@ function SkyAtmosphere(ellipsoid) {
   this.saturationShift = 0.0;
 
   /**
+   * 亮度
    * The brightness shift to apply to the atmosphere. Defaults to 0.0 (no shift).
    * A brightness shift of -1.0 is complete darkness, which will let space show through.
    * @type {number}

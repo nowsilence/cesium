@@ -1008,6 +1008,7 @@ function expandRectangle(
       }
     }
   }
+  // cross
   const direction = lastPolar.x * polar.y - polar.x * lastPolar.y;
 
   // The total internal angle in either hemisphere determines if the pole is inside or outside the polygon

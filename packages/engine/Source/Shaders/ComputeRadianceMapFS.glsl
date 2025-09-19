@@ -11,7 +11,7 @@ uniform vec4 u_groundColor; // alpha component represent albedo
 vec4 getCubeMapDirection(vec2 uv, vec3 faceDir) {
     vec2 scaledUV = uv * 2.0 - 1.0;
 
-    if (faceDir.x != 0.0) {
+    if (faceDir.x != 0.0) { // 确保正面朝里
         return vec4(faceDir.x,  scaledUV.x * faceDir.x, -scaledUV.y, 0.0);
     } else if (faceDir.y != 0.0) {
         return vec4(scaledUV.x, -scaledUV.y * faceDir.y, faceDir.y, 0.0);
@@ -71,7 +71,7 @@ void main() {
     vec3 lookupDirection = -normalizedDirection;
      // Flipping the X vector is a cheap way to get the inverse of czm_temeToPseudoFixed, since that's a rotation about Z.
     lookupDirection.x = -lookupDirection.x;
-    lookupDirection = -normalize(czm_temeToPseudoFixed * lookupDirection);
+    lookupDirection = -normalize(czm_temeToPseudoFixed * lookupDirection); // 天空盒是基于TEME定义的
     lookupDirection.x = -lookupDirection.x;
 
     // Values outside the atmopshere are rendered as black, when they should be treated as transparent
@@ -79,6 +79,7 @@ void main() {
     skyAlpha = czm_branchFreeTernary(length(atmopshereColor.rgb) <= czm_epsilon7, 0.0, skyAlpha); // Treat black as transparent
 
     // Blend starmap with atmopshere scattering
+    // czm_environmentMap 星空skyBox frameState.environmentMap = this.skyBox && this.skyBox._cubeMap;
     float intensity = u_brightnessSaturationGammaIntensity.w;
     vec4 sceneSkyBoxColor = czm_textureCube(czm_environmentMap, lookupDirection);
     vec3 skyBackgroundColor = mix(czm_backgroundColor.rgb, sceneSkyBoxColor.rgb, sceneSkyBoxColor.a);

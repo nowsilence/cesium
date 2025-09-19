@@ -1,6 +1,7 @@
 /**
  * Compute the intersection interval of a ray with a sphere.
- *
+ * 计算射线与球相交的一段
+ * 返回start、end都是相对于射线起始点的
  * @name czm_raySphereIntersectionInterval
  * @glslFunction
  *

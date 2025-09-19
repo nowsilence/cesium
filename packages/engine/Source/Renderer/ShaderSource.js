@@ -49,6 +49,13 @@ function getDependencyNode(name, glslSource, nodes) {
   return dependencyNode;
 }
 
+/**
+ * 查找shader中使用到的函数，插入到shader中
+ * 查找shader用到的uniform变量，配置之
+ * @param {*} currentNode 
+ * @param {*} dependencyNodes 
+ * @returns 
+ */
 function generateDependencies(currentNode, dependencyNodes) {
   if (currentNode.evaluated) {
     return;

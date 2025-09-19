@@ -68,10 +68,19 @@ import ConvolveSpecularMapVS from "../Shaders/ConvolveSpecularMapVS.js";
  */
 function DynamicEnvironmentMapManager(options) {
   this._position = undefined;
-
+  /**
+   * radianceMap（辐射度贴图）—— 记录 “场景中每个方向的光辐射强度” 的纹理（通常是立方体贴图），是环境反射 / 折射的核心数据源（如水面反射、金属材质反光的原始纹理）。
+   */
   this._radianceMapDirty = false;
   this._radianceCommandsDirty = false;
+  /**
+   * convolutionsCommands（卷积渲染指令队列）——“卷积” 是环境贴图处理的关键步骤（如将radianceMap卷积为 “预过滤环境贴图”，用于 PBR 材质的粗糙表面反射，让不同粗糙程度的物体呈现不同的模糊反射效果）。
+   */
   this._convolutionsCommandsDirty = false;
+  /**
+   * 目标是生成 irradianceTexture（辐照度贴图）或球谐系数—— 记录 “某个点上所有入射方向的光辐射强度的平均值”（即 “这个点整体接收多少环境光”），是一种 “平均化” 的数据。
+    例如：漫反射材质（如墙面、地面）对环境光的反射不依赖具体方向细节，只需知道 “周围环境平均有多亮”，irradianceCommand就负责计算这种平均值，用于漫反射的环境光着色
+   */
   this._irradianceCommandDirty = false;
   this._irradianceTextureDirty = false;
   this._sphericalHarmonicCoefficientsDirty = false;
@@ -187,7 +196,7 @@ function DynamicEnvironmentMapManager(options) {
     DynamicEnvironmentMapManager.AVERAGE_EARTH_GROUND_COLOR;
 
   /**
-   * The percentage of light reflected from the ground. The average earth albedo is 0.31.
+   * The percentage of light reflected from the ground. The average earth albedo(反照率;反射率；漫反射系数) is 0.31.
    * @type {number}
    * @default 0.31
    */
@@ -726,7 +735,11 @@ function updateSpecularMaps(manager, frameState) {
 const irradianceTextureDimensions = new Cartesian2(3, 3); // 9 coefficients
 
 /**
+ * 通过对环境贴图进行卷积运算，计算球谐函数系数
+ * 球谐函数是一种用于描述三维空间中球形分布数据的数学工具，其系数是将复杂的三维环境信息（如光照、颜色）简化为一组可高效计算的数值，
+ * 常用于实时渲染（如游戏、3D 建模）中快速模拟全局光照。
  * Computes spherical harmonic coefficients by convolving the environment map.
+ * irradiance 辐照度
  * @param {DynamicEnvironmentMapManager} manager this manager
  * @param {FrameState} frameState the current frameState
  * @private

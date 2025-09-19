@@ -325,7 +325,7 @@ function Scene(options) {
 
   /**
    * The background color, which is only visible if there is no sky box, i.e., {@link Scene#skyBox} is <code>undefined</code>.
-   *
+   * 其实是作为clearColor，因为skybox是无限远所以看不到
    * @type {Color}
    * @default {@link Color.BLACK}
    *
