@@ -158,6 +158,9 @@ function Geometry(options) {
   this.boundingSphereCV = options.boundingSphereCV;
 
   /**
+   * 只有以下几何有启用：BoxGeometry/BoxGeometry、RectangleGeometry/RectangleOutlineGeometry、
+   * PolygonGeometry/PolygonOutlineGeometry、EllipsoidGeometry/ElipsoidOutlineGeometry、EllipseGeometry/EllipsoidGeometry、
+   * CylinderGeometry/CylinderOutlineGeometry、CorridorGeometry/CorridorOutlineGeometry
    * Used for computing the bounding sphere for geometry using the applyOffset vertex attribute
    * @private
    */

@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="cn">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  
+  <style>
+    @import url(./Source/Widgets/widgets.css);
+
+    html,
+    body,
+    #cesiumContainer {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="cesiumContainer"></div>
+  <script type="module">
+
+    /**
+     * 不是所有的渲染都需要设置material或者Appearance，(BillboardCollection,LabelCollection<内部通过实例化BillboardCollection实现>,PointPrimitiveCollection)不需要设置
+     * 
+     * 
+     * PolylineCollection->polyline.material
+     * EllipsoidPrimitive.material
+     * EntityCollection->Entity->PlaneGraphics.material // 创建的是MaterialProperty对象，赋值可以为MaterialProperty子对象， 若不为MaterialProperty对象，则尝试创建ColorMetarialProperty/ImageMaterialProperty(详见createPropertyDescriptor的set方法) 或者是颜色值（内部创建ColorMaterialProperty对象）或者是string/Resource/HTMLCanvasElement/HTMLVideoElement(详见createMaterialPropertyDescriptor)
+     *                         ->PathGraphics.material
+     *                         ->BoxGraphics.material 
+     *                         ->WallGraphics.material 
+     *                         ->EllipseGraphics.material 
+     *                         ->PolygonGraphics.material
+     *                         ->CorridorGraphics.material
+     *                         ->CylinderGraphics.material  
+     *                         ->PolylineGraphics.material 
+     *                         ->EllipsoidGraphics.material
+     *                         ->RectangleGraphics.material
+     *                         ->PolylineVolumeGraphics.material   
+     * MaterialProperty何时转化成Material？
+     * 在updater.update方法中（DynamicGeometryUpdater/EllipsoidGeometeryUpdater/PolylineGeometryUpdater/StaticGeometryPerMaterialBatch/StaticGroundGeometryPerMaterialBatch/StaticGroundPolylinePerMaterialBatch）
+     * 最终通过material构建Appearance
+     * 在PolylineUpdater中，情况又有不同，没有通过material构建Appearance
+     * Appearance.material
+     * Primitive.appearance
+     * GroundPrimitive.appearance
+     * ClassificationPrimitive.appearance
+     * GroundPolylinePrimitive.appearance
+     * 
+     * Appearance常用的是两种，PerInstanceColorAppearance和MaterialAppearance，ColorMaterialProperty对应的是PerInstanceColorAppearance，其余对应MaterialAppearance
+     * 特殊情况：PolylineColorAppearance/PolylineMaterialAppearance,ColorMaterialProperty对应PolylineColorAppearance，其余对应PolylineMaterialAppearance
+     * 其余Appearance，ShadowVolumeAppearance/EllipsoidAppearance/DebugAppearance
+     * MaterialProperty对应一个Material，里面有一个或者多个uniform属性，且对应一个glsl
+    */
+    
+    /**
+     * 
+     * 
+
+    // 初始化 Cesium Viewer
+    const viewer = new Cesium.Viewer('cesiumContainer');
+
+    // 定义折线的顶点位置
+    const positions = Cesium.Cartesian3.fromDegreesArray([
+        -75.59777, 40.03883,
+        -75.60106, 40.03324
+    ]);
+
+    // 创建折线几何体
+    const geometryInstances = new Cesium.GeometryInstance({
+        geometry: new Cesium.PolylineGeometry({
+            positions: positions,
+            width: 5,
+            vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+        })
+    });
+
+    // 创建图元
+    const primitive = new Cesium.Primitive({
+        geometryInstances: geometryInstances,
+        appearance: new Cesium.PerInstanceColorAppearance({
+            flat: true,
+            translucent: false
+        })
+    });
+
+    // 自定义虚线材质的 GLSL 代码
+    const dashMaterialSource = `
+        uniform vec4 color;
+        uniform float dashLength;
+        czm_material czm_getMaterial(czm_materialInput materialInput)
+        {
+            czm_material material = czm_getDefaultMaterial(materialInput);
+            float t = fract(materialInput.s * dashLength);
+            if (t > 0.5) {
+                discard;
+            }
+            material.diffuse = color.rgb;
+            material.alpha = color.a;
+            return material;
+        }
+    `;
+
+    // 创建自定义材质
+    const dashMaterial = new Cesium.Material({
+        fabric: {
+            type: 'Dash',
+            uniforms: {
+                color: new Cesium.Color(1.0, 0.0, 0.0, 1.0),
+                dashLength: 10.0
+            },
+            source: dashMaterialSource
+        }
+    });
+
+    // 应用材质到图元
+    primitive.appearance.material = dashMaterial;
+
+    // 将图元添加到场景中
+    viewer.scene.primitives.add(primitive);
+
+     * // 自定义虚线材质的 GLSL 代码
+        const dashMaterialSource = `
+            uniform vec4 color;
+            uniform float dashLength;
+            czm_material czm_getMaterial(czm_materialInput materialInput)
+            {
+                czm_material material = czm_getDefaultMaterial(materialInput);
+                float t = fract(materialInput.s * dashLength);
+                if (t > 0.5) {
+                    discard;
+                }
+                material.diffuse = color.rgb;
+                material.alpha = color.a;
+                return material;
+            }
+        `;
+
+        // 创建自定义材质
+        const dashMaterial = new Cesium.Material({
+            fabric: {
+                type: 'Dash',
+                uniforms: {
+                    color: new Cesium.Color(1.0, 0.0, 0.0, 1.0),
+                    dashLength: 10.0
+                },
+                source: dashMaterialSource
+            }
+        });
+
+        // 创建折线实体，并使用自定义材质
+        const polyline = viewer.entities.add({
+            polyline: {
+                positions: positions,
+                width: 5,
+                material: dashMaterial
+            }
+        });
+     */
+    // window.CESIUM_BASE_URL = "./Source/";
+    // Cesium.TaskProcessor._workerModulePrefix = '../../../package/engine/Source/Workers';
+
+    import * as Cesium from "./Build/CesiumUnminified/index.js"
+
+//     var tiandiMap = new Cesium.ProviderViewModel({
+//      name: 'Tiditu',
+//      iconUrl: './SampleData/fire.png',
+//      tooltip: 'Tiditu image',
+//      category: 'Cesium ion',
+//      creationFunction: function() {
+//          return new Cesium.WebMapTileServiceImageryProvider({
+//              //调用影像服务 
+//              url: "http://t1.tianditu.com/img_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=img&tileMatrixSet=w&" +
+//                  "TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default&tk=" + tidituToken
+//          })
+//      }
+//  })
+//  //google map
+//  var googleMap = new Cesium.ProviderViewModel({
+//      name: 'Goolge Map',
+//      iconUrl: './SampleData/fire.png',
+//      tooltip: 'Google image',
+//      category: 'Cesium ion',
+//      creationFunction: function() {
+//          return new Cesium.UrlTemplateImageryProvider({
+//              //调用影像服务 
+//              url: "http://mt1.google.cn/vt/lyrs=s&hl=zh-CN&x={x}&y={y}&z={z}"
+//          })
+//      }
+//  })
+ Cesium.Ion.defaultAccessToken='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwYjZkZTViOC0xN2E5LTRlMDctOTcxOS04YjU1N2NjMjljOTkiLCJpZCI6MTM0NzcsInNjb3BlcyI6WyJhc3IiLCJnYyJdLCJpYXQiOjE1NjMzNTM5ODB9.RGY9YEPoZFxqKWq-mUb5Yu8QWnRBlnqsvpC-eEKxGDc';
+
+    var viewer = new Cesium.Viewer('cesiumContainer', {
+        // terrainProviderViewModels: [
+        //     {
+        //     name: 'World Terrain',
+        //     tooltip: 'Global terrain data',
+        //         creationFunction: function() {
+        //             return new Cesium.CesiumTerrainProvider({
+        //                 url: 'https://assets.cesium.com/assets/terrain/world'
+        //             });
+        //         }
+        //     }
+        // ],
+        // animation: false,
+        //     baseLayerPicker: false,
+        //     fullscreenButton: false,
+        //     geocoder: false,
+            homeButton: false,
+            scene3DOnly: true, // 默认为false，场景仅渲染 3D 模式，可提供渲染性能
+        //     sceneModePicker: true,
+        //     selectionIndicator: false,
+            timeline: false,
+            navigationHelpButton: false,
+            infoBox: false,
+            // navigationInstructionsInitiallyVisible: false,
+            // imageryProviderViewModels: [googleMap]
+    })
+    // viewer.scene.globe._surface.tileProvider._debug.wireframe = true;
+    // viewer.scene.globe.fillHighlightColor = new Cesium.Color(1.0, 0.0, 0, 1);
+    // viewer.camera.constrainedAxis = Cesium.Cartesian3.UNIT_Y;
+    // const terrainProvider = await Cesium.createWorldTerrainAsync();
+    viewer.terrainProvider = await Cesium.createWorldTerrainAsync();
+    // viewer.terrainProvider = new Cesium.EllipsoidTerrainProvider()
+    // viewer.imageryLayers.removeAll();
+    // viewer.scene.camera.switchToOrthographicFrustum()
+    // viewer.scene.fog.enabled = false;
+    // viewer.imageryLayers.addImageryProvider(new Cesium.TileCoordinatesImageryProvider());
+
+    // 添加mapbox自定义地图实例-
+    // var layer=new Cesium.MapboxStyleImageryProvider({
+    //     url:'https://api.mapbox.com/styles/v1',
+    //     username:'nowsilence',
+    //     styleId: 'cjyxrkx3g361d1cqozci0c6hy',
+    //     accessToken: 'pk.eyJ1Ijoibm93c2lsZW5jZSIsImEiOiJjanh2ZXFkZ2YwNDc4M2NvYzNwdWc2cGRiIn0.VbsFYhiH15bbdI9IW1-VbQ',
+    //     scaleFactor:true
+    // });
+
+    // const layer1 = new Cesium.WebMapServiceImageryProvider({ 
+    //             url: 'http://192.168.15.123:7090/rest/wms?VERSION=1.1.1', 
+    //             layers: 'cesium:taile', 
+    //             parameters: { 
+    //                 service : 'WMS', 
+    //                 format: 'image/png', 
+    //                 transparent: true, 
+    //             } 
+    //       }); 
+    // viewer.imageryLayers.addImageryProvider(new Cesium.TileCoordinatesImageryProvider())
+    // viewer.imageryLayers.addImageryProvider(layer);
+    // viewer.imageryLayers.addImageryProvider(layer1);
+
+    // for (let i = 0; i < 33; i++) {
+    //     var l=new Cesium.MapboxStyleImageryProvider({
+    //     url:'https://api.mapbox.com/styles/v1',
+    //     username:'nowsilence',
+    //     styleId: 'cjyxrkx3g361d1cqozci0c6hy',
+    //     accessToken: 'pk.eyJ1Ijoibm93c2lsZW5jZSIsImEiOiJjanh2ZXFkZ2YwNDc4M2NvYzNwdWc2cGRiIn0.VbsFYhiH15bbdI9IW1-VbQ',
+    //     scaleFactor:true
+    // });
+    //       viewer.imageryLayers.addImageryProvider(l);
+
+    // }
+
+    // let a = Cesium.Cartesian3.fromDegrees(116.445663,39.984186) 
+    // let b = Cesium.Cartesian3.fromDegrees(116.611238,40.001875) 
+    // let c = Cesium.Cartesian3.fromDegreesArray([116.445663,39.984186,0,0])
+    // const cart = Cesium.Cartographic.fromDegrees(116.445663,39.984186, 0);
+    // setTimeout(() => {
+    //     viewer.scene.globe.getHeight(cart)
+    // }, 10000);
+    // var polylines = viewer.scene.primitives.add(new Cesium.PolylineCollection());
+
+    // var loopPolyline = polylines.add({
+    //     positions : Cesium.PolylinePipeline.generateCartesianArc({
+    //         positions : Cesium.Cartesian3.fromDegreesArray([-105.0, 30.0,
+    //                                                         -105.0, 25.0,
+    //                                                         -100.0, 22.0,
+    //                                                         -100.0, 28.0])
+    //     }),
+    //     width : 3.0,
+    //     // material : new Cesium.PolylineArrowMaterialProperty(Cesium.Color.PURPLE)
+
+    //     // loop : true
+    // });
+
+    {
+        const positions = [
+            Cesium.Cartesian3.fromDegrees(116, 40.03883, 50),
+            Cesium.Cartesian3.fromDegrees(116  + 1.01, 40.03883 - 1.01, 50)
+        ] 
+        const polyline = viewer.entities.add({
+            polyline: {
+                positions: positions,
+                // width: 5,
+                // material: new Cesium.PolylineDashMaterialProperty({
+                //     color: Cesium.Color.RED,
+                //     dashLength: 100
+                // })
+                width: 50,
+                arcType: Cesium.ArcType.NONE,
+                material: new Cesium.PolylineArrowMaterialProperty(Cesium.Color.PURPLE)
+            }
+        });
+    }
+
+    {
+        const positionProperty = new Cesium.SampledPositionProperty();
+
+        // 添加时间-位置样本点（使用JulianDate表示时间）
+        const startTime = Cesium.JulianDate.now();// Cesium.JulianDate.fromIso8601('2025-06-17T00:00:00Z');
+        positionProperty.addSample(startTime, Cesium.Cartesian3.fromDegrees(0, 40, 1000));
+
+        const endTime = Cesium.JulianDate.addSeconds(startTime, 10, new Cesium.JulianDate());// Cesium.JulianDate.addHours(startTime, 1, new Cesium.JulianDate());
+        positionProperty.addSample(endTime, Cesium.Cartesian3.fromDegrees(116, 41, 2000));
+
+        const entity = viewer.entities.add({
+            position:  positionProperty,//Cesium.Cartesian3.fromDegrees(116.0, 40.0),
+            point: {
+                pixelSize: 15,
+            color: Cesium.Color.BLUE.withAlpha(0.7), // 带透明度的颜色
+            // heightReference: Cesium.HeightReference.CLAMP_TO_GROUND, // 贴地
+            // disableDepthTestDistance: Number.POSITIVE_INFINITY, // 永远可见（不被地形遮挡）
+            // scaleByDistance: new Cesium.NearFarScalar(1.0e3, 1.0, 4.0e3, 0.2), // 根据距离缩放
+            // translucencyByDistance: new Cesium.NearFarScalar(1.0e3, 1.0, 2.0e3, 0.1), // 根据距离改变透明度
+            // distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 10000) //
+            }
+        });
+
+        // viewer.clock.startTime = startTime;
+        // viewer.clock.stopTime = endTime;
+
+        const clock = viewer.clock;
+
+        // 设置时钟范围与样本点匹配
+        clock.startTime = startTime.clone();
+        clock.stopTime = endTime.clone();//Cesium.JulianDate.addSeconds(startTime, 120, new Cesium.JulianDate());
+        clock.currentTime = startTime.clone();
+
+        // 设置时钟行为
+        // clock.clockRange = Cesium.ClockRange.LOOP_STOP; // 循环播放
+        clock.multiplier = 1; // 时间流速（1=实时，负值=倒流）
+        // clock.shouldAnimate = true; // 自动播放
+
+        // Property.getValueOrUndefined调用，基本上在visualizer或者updater里的update函数里调用
+        /**
+         * 每一种Property都需要有一个getValue方法 
+         **/
+        // entity.position = new Cesium.CallbackProperty(function(time) {
+        //     const angle = time.secondsOfDay * 0.1;
+        //     const x = 116.4 + 0.1 * Math.cos(angle);
+        //     const y = 39.9 + 0.1 * Math.sin(angle);
+        //     return Cesium.Cartesian3.fromDegrees(x, y);
+        // }, false);
+
+    }
+    // viewer.dataSourceDisplay.defaultDataSource.clustering.show = false;
+    console.log(viewer.dataSourceDisplay.defaultDataSource.clustering)
+    console.log(viewer.scene.maximumAliasedLineWidth)
+    // var purpleArrow = viewer.entities.add({
+    //     // name : '空中紫色直箭头',
+    //     polyline : {
+    //         positions : Cesium.Cartesian3.fromDegreesArrayHeights([
+    //             0, 0, 5550,
+    //             40, 0, 5550,
+    //             // -124, 43, 500000,
+    //             40, 40, 5550
+    //         ]),
+    //         width : 10,
+    //         // 不符合椭球面的直线。
+    //         // arcType : Cesium.ArcType.GEODESIC,
+    //         // color: Cesium.Color.RED,
+    //         // material: new Cesium.PolylineGlowMaterialProperty({
+    //         //     color: Cesium.Color.fromCssColorString('#67ADDF'),
+    //         //     glowPower: 0.25,
+    //         //     taperPower: 1,
+    //         // })
+            
+    //         // material : new Cesium.PolylineArrowMaterialProperty(Cesium.Color.PURPLE)
+    //         material: new Cesium.PolylineDashMaterialProperty({
+    //             dashLength: 100,
+    //             dashPattern: parseInt('11011', 2),
+    //             color: Cesium.Color.CYAN,
+    //         }),
+    //     }
+    // });
+
+
+    // var redLine = viewer.entities.add({
+    //     name: "Red line on terrain",
+    //     position:a,
+    //     testName: 'ddd',
+    //     // polyline: {
+    //     //     positions: c,
+    //     //     show:true,
+    //     //     // pixelSize: 20,
+    //     //     width: 51,
+    //     //     material: Cesium.Color.RED,
+    //     //     // clampToGround: true,
+    //     // },
+    //     label:{
+    //         text:"测试"
+    //     }
+    // });
+
+    // var bluePlane = viewer.entities.add({
+    //   name: "Blue plane",
+    //   position: Cesium.Cartesian3.fromDegrees(-114.0, 40.0, 300000.0),
+    //   plane: {
+    //     show: true,
+        
+    //     plane: new Cesium.Plane(Cesium.Cartesian3.UNIT_X, 0.0),
+    //     dimensions: new Cesium.Cartesian2(400000.0, 300000.0), 
+    //     fill: true,
+    //     material: Cesium.Color.BLUE,
+    //     outline: false,
+    //     outlineColor: Cesium.Color.BLACK,
+    //     outlineWidth: 1.0,
+    //     shadows: Cesium.ShadowMode.DISABLED,
+    //   },
+    // });
+//     const rectangle = viewer.scene.primitives.add(
+//     new Cesium.Primitive({
+//       geometryInstances: new Cesium.GeometryInstance({
+//         geometry: new Cesium.RectangleGeometry({
+//           rectangle: Cesium.Rectangle.fromDegrees(
+//             -120.0,
+//             20.0,
+//             -60.0,
+//             40.0
+//           ),
+//           vertexFormat: Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT,
+//         }),
+//       }),
+//       appearance: new Cesium.EllipsoidSurfaceAppearance({
+//         aboveGround: false,
+//       }),
+//     })
+//   );
+
+        // console.log(Cesium.Cartesian3.dot(new Cesium.Cartesian3(0.5, 2, 0), new Cesium.Cartesian3(1, 0, 0)));
+    {
+        // 如果属性为非Constant那么则为动态更新，每一帧都会获取新的属性
+        // 直接修改属性，entity会触发definitionChanged事件，很多地方都监听了这个事件，比如entityCollection、GeometryUpdaterSet
+        // var entity = viewer.entities.add({
+        //     name: "cylinder",
+        //     position: Cesium.Cartesian3.fromDegrees(-105.0, 40.0, 200000.0),
+        //     cylinder: {
+        //         length: 400000.0, 
+        //         topRadius: 
+        //         200000,
+        //         // new Cesium.CallbackProperty(function(time) {
+        //         //     return Date.now() % 5 * 100000
+        //         // }, false), 
+        //         bottomRadius: 200000.0, 
+        //         heightReference: Cesium.HeightReference.NONE,
+        //         fill: true,
+        //         material: Cesium.Color.GREEN.withAlpha(0.5),
+        //         outline: true,
+        //         outlineColor: Cesium.Color.DARK_GREEN,
+        //         outlineWidth: 1.0,
+        //         numberOfVerticalLines: 16, 
+        //         shadows: Cesium.ShadowMode.DISABLED,
+        //         slices: 128, 
+        //         clampToGround: true
+        //     },
+        // });
+
+        // console.log(entity.position)
+
+        // setTimeout(() => {
+        //     entity.position =  Cesium.Cartesian3.fromDegrees(-18.0, 40.0, 200000.0)
+        // }, 10000);
+    }
+    
+
+    // var modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(
+    // Cesium.Cartesian3.fromDegrees(-75.62898254394531, 40.02804946899414, 200000.0));
+
+    // viewer.scene.primitives.add(
+    //   new Cesium.ClassificationPrimitive({
+    //     geometryInstances: new Cesium.GeometryInstance({
+    //       geometry: Cesium.BoxGeometry.fromDimensions({
+    //         vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+    //         dimensions: new Cesium.Cartesian3(400000.0, 300000.0, 1500000.0)
+    //       }),
+    //       modelMatrix: modelMatrix,
+    //       attributes: {
+    //         color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+    //           new Cesium.Color(1.0, 0.0, 0.0, 0.5)
+    //         ),
+    //         show: new Cesium.ShowGeometryInstanceAttribute(true),
+    //       },
+    //       id: "volume",
+    //     }),
+    //     classificationType: Cesium.ClassificationType.TERRAIN,
+    //   })
+    // );
+
+//     const positions1 = [];
+// const colors = [];
+// for (let j = 0; j <= 50; j += 5) {
+//     positions1.push(
+//         Cesium.Cartesian3.fromDegrees(-124.0 + j, 40, 50000.0 * (j % 10))
+//     );
+//     colors.push(Cesium.Color.fromRandom({ alpha: 1.0 }));
+// }
+// // //设置线段的位置和颜色，一一对应，arcType为ArcType.NONE
+// const perSegmentPolyline = new Cesium.GeometryInstance({
+//      geometry: new Cesium.SimplePolylineGeometry({
+//          positions: positions1,
+//          colors: colors,
+//          arcType: Cesium.ArcType.NONE,
+//      }),
+//  });
+//使用逐顶点着色绘制多段线
+//对于逐顶点着色，将colorsPerVertex选项设置为true，并为colors选项提供长度等于位置数的颜色数组
+// const perVertexPolyline = new Cesium.GeometryInstance({
+// 	geometry: new Cesium.SimplePolylineGeometry({
+// 	    positions: Cesium.Cartesian3.fromDegreesArray([-100, 40, -80, 30]),
+// 	    colors: [Cesium.Color.RED, Cesium.Color.BLUE],
+// 	    colorsPerVertex: true,
+// 	}),
+// });
+//添加多段线instances到primitives
+// viewer.scene.primitives.add(
+//     new Cesium.Primitive({
+//         geometryInstances: perSegmentPolyline,//[perSegmentPolyline],
+//         appearance: new Cesium.PolylineColorAppearance({
+//             // flat: true,
+//             // renderState: {
+//             //     lineWidth: Math.min(2.0, viewer.scene.maximumAliasedLineWidth),
+//             // },
+//         }),
+//     })
+// );
+
+    // const r = Cesium.OrientedBoundingBox.fromPoints([new Cesium.Cartesian3(-2177865.921106488, 4387848.421003733, 4070949.1142915394), new Cesium.Cartesian3(-2177844.4921231125, 4387805.247027799, 4071006.7241713805), new Cesium.Cartesian3(-2177888.7172238596, 4387807.158791821, 4070981.1766222217)]);
+    // const r = Cesium.OrientedBoundingBox.fromPoints([new Cesium.Cartesian3(-1000, -1000, 0), new Cesium.Cartesian3(1000, -1000, 0), new Cesium.Cartesian3(1000, 1000, 0), new Cesium.Cartesian3(-1000, 1000, 0),
+
+    // new Cesium.Cartesian3(-1000, -1000, 1000), new Cesium.Cartesian3(1000, -1000, 1000), new Cesium.Cartesian3(1000, 1000, 1000), new Cesium.Cartesian3(-1000, 1000, 1000)
+
+    // window.viewer = viewer;
+    // window.Cesium = Cesium;
+    // setTimeout(() => {
+        // const center = Cesium.Cartesian3.fromDegrees(116.39,39.91, 199)
+        // // 设置一个水平旋转方向的角度
+        // const heading = Cesium.Math.toRadians(50)
+        // // 设置一个垂直旋转视口的角度
+        
+        // const pitch =  Cesium.Math.toRadians(-90)
+        // // 设置相机距离目标点的高度
+        // const range = 2500 
+        // viewer.camera.lookAt(center,new Cesium.HeadingPitchRange(heading,pitch,range))
+        // viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY); // 取消lookAt
+    // }, 10000);
+
+    // function findParent(x, y, z) {
+    //     for (let i = 0; i < z; i++) {
+    //         const px = Math.floor(x / (2 >> (i + 1)));
+    //         const py = Math.floor(y / (2 >> (i + 1)));
+    //         const pz = z - (i + 1);
+    //         console.log(px, py, pz);
+
+    //         // findParent(px, py, pz)
+    //     }
+    // }
+
+    // 创建折线几何体实例
+// const positions = Cesium.Cartesian3.fromDegreesArray([
+//     -75.59777, 40.03883, 100,
+//     -75.60106, 40.03324, 100
+// ]);
+// const geometryInstances = new Cesium.GeometryInstance({
+//     geometry: new Cesium.PolylineGeometry({
+//         positions: positions,
+//         width: 15,
+//         vertexFormat: Cesium.PolylineColorAppearance.VERTEX_FORMAT
+//     }),
+//     attributes : {
+//        color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 0.0, 0.0, 1.0))
+//      },
+// });
+
+// 创建图元
+// const primis
+
+const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+handler.setInputAction(function (movement) {
+    const pickedObject = viewer.scene.pick(movement.position);
+    if (Cesium.defined(pickedObject)) {
+        // 当点击到折线实体时，改变其材质颜色
+        // polylineEntity.polyline.material.color = Cesium.Color.BLUE;
+        console.log('jjjj')
+    }
+}, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+// const entity = viewer.entities.add({
+//     position: Cesium.Cartesian3.fromDegrees(-103.0, 40.0),
+//     ellipse: {
+//         semiMinorAxis: 250000.0,
+//         semiMajorAxis: 400000.0,
+//         material: new Cesium.ImageMaterialProperty('yourImageUrl.jpg')
+//     }
+// });
+
+function averageSmooth(points, size = 1) {
+    if (!points || points.length < 3 || size == 0) {
+        return points;
+    }
+    if (size % 2 == 0) {
+        size++;
+    }
+    let half = Math.floor(size / 2);
+
+    const len = points.length;
+    const arr = new Array(len);
+    if (Array.isArray(points[0])) {
+        for (let i = half; i < len - half; i++) {
+            let x = 0, y = 0, z = 0;
+
+            for (let n = i - half; i <= i + half; i++) {
+                x += points[n][0];
+                y += points[n][1];
+                z += points[n][2] || 0;
+            }
+            x /= size;
+            y /= size;
+            z /= size;
+            arr[i] = [x, y, z];
+        }
+    } else {
+        for (let i = half; i < len - half; i++) {
+            let x = 0, y = 0, z = 0;
+
+            for (let n = i - half; i <= i + half; i++) {
+                x += points[n].x;
+                y += points[n].y;
+                z += points[n].z || 0;
+            }
+            x /= size;
+            y /= size;
+            z /= size;
+            arr[i] = { x, y, z };
+        }
+    }
+
+    return arr;
+}
+// function smoothPass(coordinates) {
+//     const smoothed = coordinates.map(c => ({...c}));
+//     for (let i = 1; i < coordinates.length - 1; i++) {
+//         smoothed[i] = new Coordinate(
+//             (coordinates[i - 1].x + coordinates[i].x + coordinates[i + 1].x) / 3,
+//             (coordinates[i - 1].y + coordinates[i].y + coordinates[i + 1].y) / 3
+//         );
+//     }
+//     // 保持首尾不变
+//     smoothed[0] = {...coordinates[0]};
+//     smoothed[smoothed.length - 1] = {...coordinates[coordinates.length - 1]};
+//     return smoothed;
+// }
+
+// 创建多段线和每段颜色
+// var positions11 = Cesium.Cartesian3.fromDegreesArray([
+//     0.0, 0.0, 5.0, 
+//     0.0, 5.0, 5.0]);
+// var colors = [
+// Cesium.Color.fromRandom({ alpha: 1.0 }),
+// Cesium.Color.fromRandom({ alpha: 1.0 }),
+// Cesium.Color.fromRandom({ alpha: 1.0 })
+// ];
+// var polyline = new Cesium.PolylineGeometry({
+//   positions: positions11,
+//   width: 5,
+//   colors: colors,
+//   colorsPerVertex: true,
+//   arcType: Cesium.ArcType.NONE
+// });
+// var geometryInstance = new Cesium.GeometryInstance({
+//   geometry: polyline,
+//   attributes: {
+//     // 可以添加其他属性，如id等
+//   }
+// });
+// viewer.scene.primitives.add(new Cesium.Primitive({
+//     geometryInstances: [geometryInstance],
+//     appearance: new Cesium.PerInstanceColorAppearance({
+//         flat: true,
+//         // renderState: { lineWidth: 5 } // 设置线宽为5
+//     })
+//     }));
+
+
+// {
+//     // 创建多个线段的顶点数据
+// const positions = Cesium.Cartesian3.fromDegreesArray([
+//     -75.1641667, 39.9522222,  // 费城起点
+//     -77.036667, 38.895,       // 华盛顿终点
+    
+//     -122.4194, 37.7749,       // 旧金山起点
+//     -123.1207, 49.2827,       // 温哥华终点
+    
+//     -74.006, 40.7128,         // 纽约起点
+//     -71.0589, 42.3601         // 波士顿终点
+// ]);
+
+// // 创建SimplePolylineGeometry实例
+// const geometry = new Cesium.SimplePolylineGeometry({
+//     positions: positions,
+//     colors: [
+//         Cesium.Color.fromBytes(255, 0, 0, 255),
+//         Cesium.Color.fromBytes(255, 0, 0, 255),
+
+//         Cesium.Color.fromBytes(0, 255, 0, 255),
+//         Cesium.Color.fromBytes(0, 255, 0, 255),
+
+//         Cesium.Color.fromBytes(0, 0, 255, 255),
+//         Cesium.Color.fromBytes(0, 0, 255, 255)
+//     ],
+//     colorsPerVertex: false // 每条线段使用相同颜色
+// });
+
+// // 创建几何实例
+// const geometryInstance = new Cesium.GeometryInstance({
+//     geometry: geometry,
+//     attributes : {
+//         color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 1.0, 1.0, 1.0))
+//       },
+//     id: 'multi-colored-lines'
+// });
+
+// // 添加Primitive到场景
+// const primitive = viewer.scene.primitives.add(new Cesium.Primitive({
+//     geometryInstances: geometryInstance,
+//     appearance: new Cesium.PerInstanceColorAppearance({
+//         flat: false,
+//         translucent: false
+//     }),
+//     asynchronous: false
+// }));
+
+
+// }
+  </script>
+</body>
+
+</html>

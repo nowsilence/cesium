@@ -291,6 +291,7 @@ EntityCollection.prototype.add = function (entity) {
   if (!this._removedEntities.remove(id)) {
     this._addedEntities.set(id, entity);
   }
+  // 每个属性变化的时候都会触发definitionChanged事件
   entity.definitionChanged.addEventListener(
     EntityCollection.prototype._onEntityDefinitionChanged,
     this,

@@ -12,6 +12,9 @@ out float v_width;
 out vec2 v_st;
 out float v_polylineAngle;
 
+/**
+ * 默认使用的是 PolylineFS
+ */
 void main()
 {
     float expandDir = expandAndWidth.x;

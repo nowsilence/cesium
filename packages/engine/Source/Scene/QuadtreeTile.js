@@ -341,6 +341,7 @@ QuadtreeTile.prototype._updateCustomData = function (
     // interior or leaf tile, update from parent
     const parent = this._parent;
     if (defined(parent) && this._frameUpdated !== parent._frameUpdated) {
+        // this._frameUpdated !== parent._frameUpdated 可以判断上一帧渲染有没有这个瓦片
       customData.length = 0;
 
       rectangle = this._rectangle;

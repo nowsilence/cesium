@@ -1355,7 +1355,7 @@ function setSunAndMoonDirections(uniformState, frameState) {
  * @param {object} camera The camera to synchronize with.
  */
 UniformState.prototype.updateCamera = function (camera) {
-  setView(this, camera.viewMatrix);
+  setView(this, camera.viewMatrix); // pos * viewMatrix 将世界坐标转化成相机下的视图坐标
   setInverseView(this, camera.inverseViewMatrix);
   setCamera(this, camera);
 
@@ -1654,7 +1654,7 @@ function cleanViewProjection(uniformState) {
     Matrix4.multiply(
       uniformState._projection,
       uniformState._view,
-      uniformState._viewProjection,
+      uniformState._viewProjection // 将视图坐标（相机坐标系）转化成投影坐标（裁剪坐标）
     );
   }
 }
@@ -1745,7 +1745,15 @@ function cleanModelViewInfiniteProjection(uniformState) {
 function cleanNormal(uniformState) {
   if (uniformState._normalDirty) {
     uniformState._normalDirty = false;
-
+    /**
+     * 在 3D 渲染里，法线矩阵的主要功能是正确变换法线向量。
+     * 当我们对模型进行非均匀缩放（即不同方向缩放比例不同）时，
+     * 直接使用模型视图矩阵（ModelView Matrix）变换法线会使法线方向出现偏差，
+     * 进而导致光照计算出错，比如出现明暗异常或阴影错误等问题。
+     * 法线矩阵就是专门用来解决这个问题的。
+     * [https://blog.csdn.net/danshiming/article/details/132525514]
+     */
+    // 法线矩阵的数学定义为：模型视图矩阵的逆矩阵的转置，用数学公式表示就是 (M⁻¹)ᵀ
     const m = uniformState._normal;
     Matrix4.getMatrix3(uniformState.inverseModelView, m);
     Matrix3.transpose(m, m);

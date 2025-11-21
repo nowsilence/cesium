@@ -84,6 +84,7 @@ void main(void)
     // When classifying translucent geometry, logDepthOrDepth == 0.0
     // indicates a region that should not be classified, possibly due to there
     // being opaque pixels there in another buffer.
+    // 渲染的是一个体，然而我们只需要阴影体与地形相交的一部分，在地图俯仰的情况下参与片元计算的可能是很大一部分，这样做可以提升性能
     if (uv.x <= 0.0 || 1.0 <= uv.x || uv.y <= 0.0 || 1.0 <= uv.y || logDepthOrDepth == 0.0) {
         discard;
     }

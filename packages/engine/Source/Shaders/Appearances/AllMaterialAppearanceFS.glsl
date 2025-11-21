@@ -13,7 +13,7 @@ void main()
 #ifdef FACE_FORWARD
     normalEC = faceforward(normalEC, vec3(0.0, 0.0, 1.0), -normalEC);
 #endif
-
+    // 比BasicMaterial多了纹理坐标和切线空间转换矩阵
     czm_materialInput materialInput;
     materialInput.normalEC = normalEC;
     materialInput.tangentToEyeMatrix = tangentToEyeMatrix;
@@ -28,3 +28,10 @@ void main()
     out_FragColor = czm_phong(normalize(positionToEyeEC), material, czm_lightDirectionEC);
 #endif
 }
+
+/**
+ *                   纹理坐标 切线空间转换矩阵
+ * BasicMaterial        无         无
+ * AllMaterial          有         有
+ * TexturedMaterial     有
+*/

@@ -86,19 +86,17 @@ MultisampleFramebuffer.prototype.getColorFramebuffer = function () {
 };
 
 /**
- * Copy from the render framebuffer to the color framebuffer, resolving the stencil.
- *
- * @param {Context} context
- * @param {boolean} blitStencil <code>true</code> if the stencil mask should be applied.
- *
- * @private
+ * 渲染缓冲对象赋值到纹理对象。
+ * @param {*} context 
+ * @param {*} blitStencil 
  */
 MultisampleFramebuffer.prototype.blitFramebuffers = function (
   context,
   blitStencil,
 ) {
-  this._renderFramebuffer.bindRead();
-  this._colorFramebuffer.bindDraw();
+  // Blit 表示Bit Block Transfer 位块传输
+  this._renderFramebuffer.bindRead(); // 源缓冲区
+  this._colorFramebuffer.bindDraw();  // 绘制到的缓冲区
   const gl = context._gl;
   let mask = 0;
   if (this._colorFramebuffer._colorTextures.length > 0) {

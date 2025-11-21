@@ -191,7 +191,7 @@ FramebufferManager.prototype.update = function (
           width: width,
           height: height,
           pixelFormat: PixelFormat.DEPTH_STENCIL,
-          pixelDatatype: PixelDatatype.UNSIGNED_INT_24_8,
+          pixelDatatype: PixelDatatype.UNSIGNED_INT_24_8, // 每个像素或纹理元素占用4个字节，其中 24 位用于表示整数部分，8 位用于表示其他用途，可能是用于存储额外的属性或标志位
           sampler: Sampler.NEAREST,
         });
         if (this._numSamples > 1) {

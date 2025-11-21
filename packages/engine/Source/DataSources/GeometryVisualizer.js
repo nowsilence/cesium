@@ -51,7 +51,7 @@ function GeometryVisualizer(
   this._addedObjects = new AssociativeArray();
   this._removedObjects = new AssociativeArray();
   this._changedObjects = new AssociativeArray();
-
+  // open和close区分开渲染，主要是为了 背景面是否剔除 功能是否开启
   const numberOfShadowModes = ShadowMode.NUMBER_OF_SHADOW_MODES;
   this._outlineBatches = new Array(numberOfShadowModes * 2);
   this._closedColorBatches = new Array(numberOfShadowModes * 2);
@@ -66,6 +66,7 @@ function GeometryVisualizer(
 
   let i;
   for (i = 0; i < numberOfShadowModes; ++i) {
+    // 实际是三个参数，但是传入4个参数，实际没有用到，不知道为什么要这样写
     this._outlineBatches[i] = new StaticOutlineGeometryBatch(
       primitives,
       scene,
@@ -79,7 +80,7 @@ function GeometryVisualizer(
       primitives,
       PerInstanceColorAppearance,
       undefined,
-      true,
+      true, // closed，用于背景面剔除
       i,
       true,
     );
@@ -437,9 +438,23 @@ GeometryVisualizer.prototype._insertUpdaterIntoBatch = function (
 
   let shadows;
   if (updater.outlineEnabled || updater.fillEnabled) {
+    // 通过entity设置shadows=ShadowMode.DISABLED
     shadows = updater.shadowsProperty.getValue(time);
   }
 
+ /**
+  * 是否使用阴影由shadowsProperty（是否设置了阴影）和是否设置terrainOffsetProperty（离地高度）决定
+  * terrainOffsetProperty值是否设置又由geometry.heightReference是否设置决定
+  * terrainOffsetProperty仅针对Box/Cylinder/Ellipsoid
+  * 
+  * 不设置heightReference（默认NONE）+ 启用shadows,此时实体的高度基准是椭球面（不考虑地形）
+  * 阴影会投射到椭球面上（而非地形表面），无论实际地形如何起伏，阴影的形状和位置仅由椭球面曲率、实体位置和光源方向决定。
+  * 设置heightReference（如CLAMP_TO_GROUND或RELATIVE_TO_GROUND）+ 启用shadows
+  * 此时实体的高度基准与地形关联
+  * 阴影会投射到地形表面（而非椭球面），阴影的形状会跟随地形起伏（例如实体在山坡上，阴影会沿山坡倾斜投射）。
+  * 他们处理阴影的方式不同，要分开渲染
+  * 渲染为什么把他们分开，在Batch中增加了offset属性
+  */
   const numberOfShadowModes = ShadowMode.NUMBER_OF_SHADOW_MODES;
   if (updater.outlineEnabled) {
     if (defined(updater.terrainOffsetProperty)) {
@@ -450,16 +465,29 @@ GeometryVisualizer.prototype._insertUpdaterIntoBatch = function (
   }
 
   if (updater.fillEnabled) {
-    if (updater.onTerrain) {
-      const classificationType =
-        updater.classificationTypeProperty.getValue(time);
+    /**
+     * 只有GroundGeometryUdater实现了定义，
+     * 只有Rectangle、Ellipse、Polygon继承了GroundGeometryUdater
+     * _isOnTerrain = function (entity, geometry) {
+        return (
+            this._fillEnabled &&
+            !defined(geometry.height) &&
+            !defined(geometry.extrudedHeight) &&
+            GroundPrimitive.isSupported(this._scene)
+        );
+        };
+     */
+    if (updater.onTerrain) { // 是否为贴地，也就是只针对Rectangle、Ellipse、Polygon
+      const classificationType = updater.classificationTypeProperty.getValue(
+        time
+      );
       if (updater.fillMaterialProperty instanceof ColorMaterialProperty) {
         this._groundColorBatches[classificationType].add(time, updater);
       } else {
         // If unsupported, updater will not be on terrain.
         this._groundMaterialBatches[classificationType].add(time, updater);
       }
-    } else if (updater.isClosed) {
+    } else if (updater.isClosed) { // 是否闭合，用背景面是否剔除
       if (updater.fillMaterialProperty instanceof ColorMaterialProperty) {
         if (defined(updater.terrainOffsetProperty)) {
           this._closedColorBatches[numberOfShadowModes + shadows].add(
@@ -477,7 +505,7 @@ GeometryVisualizer.prototype._insertUpdaterIntoBatch = function (
       } else {
         this._closedMaterialBatches[shadows].add(time, updater);
       }
-    } else if (updater.fillMaterialProperty instanceof ColorMaterialProperty) {
+    } else if (updater.fillMaterialProperty instanceof ColorMaterialProperty) { // 是否为颜色材质
       if (defined(updater.terrainOffsetProperty)) {
         this._openColorBatches[numberOfShadowModes + shadows].add(
           time,
@@ -486,7 +514,7 @@ GeometryVisualizer.prototype._insertUpdaterIntoBatch = function (
       } else {
         this._openColorBatches[shadows].add(time, updater);
       }
-    } else if (defined(updater.terrainOffsetProperty)) {
+    } else if (defined(updater.terrainOffsetProperty)) { // 是否偏移地形，偏离地形的才渲染阴影？
       this._openMaterialBatches[numberOfShadowModes + shadows].add(
         time,
         updater,
@@ -523,7 +551,11 @@ GeometryVisualizer.prototype._onCollectionChanged = function (
   const addedObjects = this._addedObjects;
   const removedObjects = this._removedObjects;
   const changedObjects = this._changedObjects;
-
+  /**
+   * 每个entity都会走到这里，对应一个GeometryUpdaterSet，
+   * 在GeometryUpdaterSet内部会给entity创建一系列updater，
+   * 每个updater都会监听自己的geometryPropertyName，如果没有则不会创建geometry，
+   */
   let i;
   let id;
   let entity;

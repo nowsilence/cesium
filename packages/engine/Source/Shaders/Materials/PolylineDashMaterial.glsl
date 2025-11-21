@@ -6,6 +6,7 @@ in float v_polylineAngle;
 
 const float maskLength = 16.0;
 
+// 旋转坐标矩阵，不是旋转点
 mat2 rotate(float rad) {
     float c = cos(rad);
     float s = sin(rad);
@@ -15,10 +16,22 @@ mat2 rotate(float rad) {
     );
 }
 
+/**
+// 旋转点，计算的是原坐标系下的点，和上边对偶，互为转置
+mat2 rotate(float angle) {
+    float c = cos(angle);
+    float s = sin(angle);
+    return mat2(
+        c, -s,  // 第一列
+        s,  c   // 第二列
+    );
+}
+*/
+
 czm_material czm_getMaterial(czm_materialInput materialInput)
 {
     czm_material material = czm_getDefaultMaterial(materialInput);
-
+    // 计算的是新坐标系下的点
     vec2 pos = rotate(v_polylineAngle) * gl_FragCoord.xy;
 
     // Get the relative position within the dash from 0 to 1

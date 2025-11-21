@@ -9,7 +9,9 @@ in vec4 color;
 in float batchId;
 
 out vec4 v_color;
-
+/**
+ * FS默认使用的是PerInstanceFlatColorAppearanceFS
+ */
 void main()
 {
     float expandDir = expandAndWidth.x;

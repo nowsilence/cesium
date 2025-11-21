@@ -188,7 +188,7 @@ Appearance.getDefaultRenderState = function (translucent, closed, existing) {
     rs.blending = BlendingState.ALPHA_BLEND;
   }
 
-  if (closed) {
+  if (closed) { // 用于背景面剔除
     rs.cull = {
       enabled: true,
       face: CullFace.BACK,

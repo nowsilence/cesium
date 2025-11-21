@@ -80,7 +80,7 @@ function Context(canvas, options) {
   this._textureCache = new TextureCache();
 
   const gl = glContext;
-
+  // 返回值若为8表示模板缓冲区有8位，即可以存储256种不同的模板值
   this._stencilBits = gl.getParameter(gl.STENCIL_BITS);
 
   ContextLimits._maximumCombinedTextureImageUnits = gl.getParameter(
@@ -709,6 +709,7 @@ Object.defineProperties(Context.prototype, {
   },
 
   /**
+   * 是否支持深度纹理
    * <code>true</code> if WEBGL_depth_texture is supported.  This extension provides
    * access to depth textures that, for example, can be attached to framebuffers for shadow mapping.
    * @memberof Context.prototype
@@ -1267,7 +1268,7 @@ Context.prototype.clear = function (clearCommand, passState) {
   if (defined(s)) {
     if (s !== this._clearStencil) {
       this._clearStencil = s;
-      gl.clearStencil(s);
+      gl.clearStencil(s); // 设置清除模板缓存的值，在调用clear时候把模板值初始为s
     }
     bitmask |= gl.STENCIL_BUFFER_BIT;
   }

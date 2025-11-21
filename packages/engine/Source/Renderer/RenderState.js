@@ -614,15 +614,15 @@ function applyDepthTest(gl, renderState) {
 
 function applyColorMask(gl, renderState) {
   const colorMask = renderState.colorMask;
-  gl.colorMask(colorMask.red, colorMask.green, colorMask.blue, colorMask.alpha);
+  gl.colorMask(colorMask.red, colorMask.green, colorMask.blue, colorMask.alpha); // boolean
 }
 
 function applyDepthMask(gl, renderState) {
-  gl.depthMask(renderState.depthMask);
+  gl.depthMask(renderState.depthMask); // boolean
 }
 
 function applyStencilMask(gl, renderState) {
-  gl.stencilMask(renderState.stencilMask);
+  gl.stencilMask(renderState.stencilMask); // 整数表示哪些位可以写入操作
 }
 
 function applyBlendingColor(gl, color) {

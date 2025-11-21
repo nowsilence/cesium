@@ -24,6 +24,12 @@ import StencilFunction from "./StencilFunction.js";
 import StencilOperation from "./StencilOperation.js";
 
 /**
+ * 几何体着色
+ * 仅支持PerInstanceColorAppearance且每个instance的必须设置颜色且必须相同，不支持材质
+ * a volume enclosing geometry 几何体
+ * 使用场景除了可以贴地形，还可以贴3DTile，比如标记每个楼层（GroundPrimitive做不到）
+ * 阴影体是用户生成，所以有可能贴不上地形，主要取决于用户设置最低点和最高点
+ * 也可以设置非几何体的Geometry，但是渲染的时候会有问题
  * A classification primitive represents a volume enclosing geometry in the {@link Scene} to be highlighted.
  * <p>
  * A primitive combines geometry instances with an {@link Appearance} that describes the full shading, including
@@ -161,7 +167,11 @@ function ClassificationPrimitive(options) {
   this._hasSphericalExtentsAttribute = false;
   this._hasPlanarExtentsAttributes = false;
   this._hasPerColorAttribute = false;
-
+  /**
+   * 当ClassificationPrimitive创建不是从GroundPrimitive中创建的（实例由用户创建），
+   * appearance只能使用PerInstanceColorAppearance
+   * 默认也是PerInstanceColorAppearance
+   */
   this.appearance = options.appearance;
 
   this._createBoundingVolumeFunction = options._createBoundingVolumeFunction;
@@ -332,9 +342,16 @@ ClassificationPrimitive.isSupported = function (scene) {
 function getStencilDepthRenderState(enableStencil, mask3DTiles) {
   const stencilFunction = mask3DTiles
     ? StencilFunction.EQUAL
-    : StencilFunction.ALWAYS;
+    : StencilFunction.ALWAYS; // 
+    /**
+     * 背面被遮挡的部分-1，遮挡物为立方体内的地形或3dtile
+     * 正面被遮挡的部分+1，遮挡物为立方体外的地形或者3dtile，这部分和上面部分抵消，这部分是不渲染颜色的
+     * 地表以上是完全不渲染的，因为深度测试通过了。
+     * 地表下背面被前面遮挡的部分刚好一个+1一个-1抵消为0
+     * 颜色渲染的时候判断，模板值不为0即渲染，参见getColorRenderState
+     */
   return {
-    colorMask: {
+    colorMask: { // 禁止颜色写入
       red: false,
       green: false,
       blue: false,
@@ -357,7 +374,7 @@ function getStencilDepthRenderState(enableStencil, mask3DTiles) {
       reference: StencilConstants.CESIUM_3D_TILE_MASK,
       mask: StencilConstants.CESIUM_3D_TILE_MASK,
     },
-    stencilMask: StencilConstants.CLASSIFICATION_MASK,
+    stencilMask: StencilConstants.CLASSIFICATION_MASK, // 指定哪些位可以被写入，0x0f低四位
     depthTest: {
       enabled: true,
       func: DepthFunction.LESS_OR_EQUAL,
@@ -1087,6 +1104,7 @@ ClassificationPrimitive.prototype.update = function (frameState) {
       }
       //>>includeStart('debug', pragmas.debug);
       else if (hasPerColorAttribute) {
+        // 一旦其中一个instance设置了颜色，则每个instance都必须设置颜色属性
         throw new DeveloperError(
           "All GeometryInstances must have color attributes to use per-instance color.",
         );
@@ -1106,6 +1124,8 @@ ClassificationPrimitive.prototype.update = function (frameState) {
       !hasSphericalExtentsAttribute &&
       !hasPlanarExtentsAttributes
     ) {
+      // 通过new ClassificationPrimitive创建的对象每个instance设置的颜色必须一样，
+      // 若需要使用不同的颜色请使用GroundPrimitive
       throw new DeveloperError(
         "All GeometryInstances must have the same color attribute except via GroundPrimitives",
       );
@@ -1124,6 +1144,7 @@ ClassificationPrimitive.prototype.update = function (frameState) {
       !hasPerColorAttribute &&
       appearance instanceof PerInstanceColorAppearance
     ) {
+      // 如果appearance为PerInstanceColorAppearance那么每个instance必须设置颜色
       throw new DeveloperError(
         "PerInstanceColorAppearance requires color GeometryInstanceAttributes on all GeometryInstances",
       );
@@ -1133,6 +1154,7 @@ ClassificationPrimitive.prototype.update = function (frameState) {
       !hasSphericalExtentsAttribute &&
       !hasPlanarExtentsAttributes
     ) {
+      // 如果不是从GroundPrimitive实例化则不支持材质
       throw new DeveloperError(
         "Materials on ClassificationPrimitives are not supported except via GroundPrimitives",
       );

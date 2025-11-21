@@ -23,7 +23,11 @@ import PolylineVisualizer from "./PolylineVisualizer.js";
  * Visualizes a collection of {@link DataSource} instances.
  * @alias DataSourceDisplay
  * @constructor
- *
+ * DataSourceDisplay有个默认的dataSource(CustomDataSource),持有一组dataSource(dataSourceCollection),
+ * 每个一个dataSource都有一组Visualizers, 
+ * BillboardVisualizer/LabelVisualizer/PointVisualizer对应着dataSource里的cluster，
+ * GeometryVisualizer/PathVisualizer/PolylineVisualizer对应着一个updater
+ * 
  * @param {object} options Object with the following properties:
  * @param {Scene} options.scene The scene in which to display the data.
  * @param {DataSourceCollection} options.dataSourceCollection The data sources to display.
@@ -94,6 +98,8 @@ function DataSourceDisplay(options) {
   let removeDefaultDataSourceListener;
   let removeDataSourceCollectionListener;
   if (!primitivesAdded) {
+    // 如果没有添加自己的datasource，当往viewer.entities中add的时候，会调用addPrimitives
+    // 目的应该没有entity的时候就不往scene.primitives添加对象
     const that = this;
     const addPrimitives = function () {
       scene.primitives.add(primitives);
@@ -281,6 +287,8 @@ DataSourceDisplay.prototype.destroy = function () {
 
 /**
  * Updates the display to the provided time.
+ * 
+ * 先于scene.render调用
  *
  * @param {JulianDate} time The simulation time.
  * @returns {boolean} True if all data sources are ready to be displayed, false otherwise.

@@ -167,6 +167,7 @@ function PolylineCollection(options) {
     frameCount: 0,
   };
 
+  // SceneMode
   this._mode = undefined;
 
   this._polylinesToUpdate = [];
@@ -267,6 +268,7 @@ PolylineCollection.prototype.add = function (options) {
  * @see Polyline#show
  */
 PolylineCollection.prototype.remove = function (polyline) {
+  // 相当于是标记移除，先不从_polylines数组中移除，等update函数调用后移除，统一创建渲染数据、shader
   if (this.contains(polyline)) {
     this._polylinesRemoved = true;
     this._createVertexArray = true;
@@ -416,12 +418,13 @@ const scratchNearFarCartesian2 = new Cartesian2();
  * @exception {RuntimeError} Vertex texture fetch support is required to render primitives with per-instance attributes. The maximum number of vertex texture image units must be greater than zero.
  */
 PolylineCollection.prototype.update = function (frameState) {
+  // 移除被destroyed掉的polyline
   removePolylines(this);
 
   if (this._polylines.length === 0 || !this.show) {
     return;
   }
-
+  // 若mode改变需要重新创建顶点数据
   updateMode(this, frameState);
 
   const context = frameState.context;
@@ -438,7 +441,7 @@ PolylineCollection.prototype.update = function (frameState) {
     createBatchTable(this, context);
     this._createBatchTable = false;
   }
-
+  // Position属性变化了也需要重建顶点数据
   if (this._createVertexArray || computeNewBuffersUsage(this)) {
     createVertexArrays(this, context, projection);
   } else if (this._polylinesUpdated) {

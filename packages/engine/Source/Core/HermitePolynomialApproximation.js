@@ -62,7 +62,7 @@ function calculateCoefficientTerm(
 
 /**
  * An {@link InterpolationAlgorithm} for performing Hermite interpolation.
- *
+ * Hermite 多项式插值
  * @namespace HermitePolynomialApproximation
  */
 const HermitePolynomialApproximation = {

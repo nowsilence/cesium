@@ -403,7 +403,7 @@ GlobeSurfaceTileProvider.prototype.initialize = function (frameState) {
 /**
  * Called at the beginning of the update cycle for each render frame, before {@link QuadtreeTileProvider#showTileThisFrame}
  * or any other functions.
- *
+ * 清空各纹理数对应的瓦片统计，更新裁剪面信息，其他标志位初始化
  * @param {FrameState} frameState The frame state.
  */
 GlobeSurfaceTileProvider.prototype.beginUpdate = function (frameState) {
@@ -475,6 +475,7 @@ GlobeSurfaceTileProvider.prototype.endUpdate = function (frameState) {
 
   // If this frame has a mix of loaded and fill tiles, we need to propagate
   // loaded heights to the fill tiles.
+  // 若这一帧混合了已加载瓦片和填充瓦片，则需要把已加载瓦片的高程传递到填充瓦片
   if (this._hasFillTilesThisFrame && this._hasLoadedTilesThisFrame) {
     TerrainFillMesh.updateFillTiles(
       this,
@@ -1071,7 +1072,7 @@ const northeastScratch = new Cartesian3();
  * Shows a specified tile in this frame.  The provider can cause the tile to be shown by adding
  * render commands to the commandList, or use any other method as appropriate.  The tile is not
  * expected to be visible next frame as well, unless this method is called next frame, too.
- *
+ * 瓦片分类，将有相同纹理数量的瓦片分到一组。后面渲染每一组都要对应不同的shader
  * @param {QuadtreeTile} tile The tile instance.
  * @param {FrameState} frameState The state information of the current rendering frame.
  */
@@ -1090,7 +1091,8 @@ GlobeSurfaceTileProvider.prototype.showTileThisFrame = function (
       ++readyTextureCount;
     }
   }
-
+  // 后面会在endUpdate中遍历_tilesToRenderByTextureCount中的瓦片
+  // 这样相同纹理数量的瓦片在列表中的位置是连续的就能避免在渲染的时候频繁切换shader程序
   let tileSet = this._tilesToRenderByTextureCount[readyTextureCount];
   if (!defined(tileSet)) {
     tileSet = [];

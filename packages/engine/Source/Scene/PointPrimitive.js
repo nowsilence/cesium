@@ -19,7 +19,7 @@ import SplitDirection from "./SplitDirection.js";
  * </div>
  * A graphical point positioned in the 3D scene, that is created
  * and rendered using a {@link PointPrimitiveCollection}.
- *
+ * 虽然后缀名是Primitive，但是它不能加入到PrimitiveCollection中渲染，也不能直接实例化
  * @alias PointPrimitive
  *
  * @performance Reading a property, e.g., {@link PointPrimitive#show}, is constant time.

@@ -108,7 +108,7 @@ Object.defineProperties(TerrainOffsetProperty.prototype, {
 });
 
 /**
- * @private
+ * @private 更新当前位置地形或者3dtile的高程
  */
 TerrainOffsetProperty.prototype._updateClamping = function () {
   if (defined(this._removeCallbackFunc)) {
@@ -127,7 +127,8 @@ TerrainOffsetProperty.prototype._updateClamping = function () {
     position,
     this._cartographicPosition,
   );
-
+  // 获取地形高度只用到了_heightReference，是不是可以理解_heightReference和_extrudedHeightReference通常设置都是一样的
+  // getHeight不设置_heightReference，效果和设置RELATIVE_TO_GROUND/CLAMP_TO_GROUND一样，都会获取ground的高度
   const height = scene.getHeight(cartographicPosition, this._heightReference);
   if (defined(height)) {
     this._terrainHeight = height;
@@ -166,16 +167,22 @@ TerrainOffsetProperty.prototype.getValue = function (time, result) {
     time,
     HeightReference.NONE,
   );
+  // 会再Batch.update多次调用
   const extrudedHeightReference = Property.getValueOrDefault(
     this._extrudedHeightReference,
     time,
     HeightReference.NONE,
   );
 
+
+  /**
+   * 若heightReference为0，extrudedHeightReference不是相对高程即None或者CLAMP_TO_TERRAIN_**
+   * 则为绝对高程
+   */
   if (
     heightReference === HeightReference.NONE &&
-    !isHeightReferenceRelative(extrudedHeightReference)
-  ) {
+    !isHeightReferenceRelative(extrudedHeightReference) // 如果不是相对高程，那么就是贴到地形或者3dtile上的
+  ) { // 如果没有设置heightReference那么一定设置了extrudedHeightReference
     this._position = Cartesian3.clone(Cartesian3.ZERO, this._position);
     return Cartesian3.clone(Cartesian3.ZERO, result);
   }

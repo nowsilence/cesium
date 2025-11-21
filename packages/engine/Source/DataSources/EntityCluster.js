@@ -337,6 +337,11 @@ function createDeclutterCallback(entityCluster) {
       index.finish();
 
       if (currentHeight < previousHeight) {
+        /**
+         * 动态调整聚类范围：相机高度降低意味着视野变窄，原有聚类范围可能过大。算法会按高度比例缩小聚类范围（width = cluster.width * factor），并检查缩小后的范围内是否仍有足够多的点。
+         * 避免突然消失：如果直接丢弃所有旧聚类重新计算，会导致视觉上的"闪烁"或"跳跃"。渐进式调整能保持视觉连续性。
+         * 性能优化：优先复用已有聚类，减少不必要的重新计算。
+         */
         length = clusters.length;
         for (i = 0; i < length; ++i) {
           const cluster = clusters[i];
@@ -395,7 +400,18 @@ function createDeclutterCallback(entityCluster) {
           }
         }
       }
-
+      /**
+       * 第一阶段完成后，再处理未被任何聚类包含的点：
+       * 捕获新增实体：新添加到场景的实体可能不在任何已有聚类中。
+       * 处理相机升高时的扩散：当相机升高时（currentHeight >= previousHeight），旧聚类范围可能过小，需要重新寻找新的聚类组合。
+       * 填充空白区域：确保所有符合条件的邻近点都能被聚类，无遗漏。
+       * 适用场景：新增实体、相机升高、或之前因范围限制未被聚类的点。
+       * 为什么不能只用一阶段？
+       * 如果只处理新聚类：
+       * 相机缓慢降低时，会出现"聚类范围过大但点密度不足"的问题，导致本应显示的聚类突然消失。
+       * 如果只处理已有聚类：
+       * 新增实体或相机升高时，无法创建新的聚类，导致性能下降。
+       */
       length = points.length;
       for (i = 0; i < length; ++i) {
         const point = points[i];
@@ -666,7 +682,7 @@ function createGetEntity(
 
     let index;
     let entityItem;
-
+    // 复用PointPrimitiveCollection/LabelCollection/BilboarCollection里的_pointPrimitives里item
     const unusedIndices = this[unusedIndicesProperty];
     if (unusedIndices.length > 0) {
       index = unusedIndices.shift();
@@ -749,7 +765,7 @@ EntityCluster.prototype.removeLabel = function (entity) {
  * Returns a new {@link Billboard}.
  * @param {Entity} entity The entity that will use the returned {@link Billboard} for visualization.
  * @returns {Billboard} The label that will be used to visualize an entity.
- *
+ * 在pointVisualizer或者billVisualizer调用
  * @private
  */
 EntityCluster.prototype.getBillboard = createGetEntity(
@@ -795,7 +811,7 @@ EntityCluster.prototype.removeBillboard = function (entity) {
  * Returns a new {@link Point}.
  * @param {Entity} entity The entity that will use the returned {@link Point} for visualization.
  * @returns {Point} The label that will be used to visualize an entity.
- *
+ * pointVisualizer调用
  * @private
  */
 EntityCluster.prototype.getPoint = createGetEntity(
@@ -872,6 +888,7 @@ function updateEnable(entityCluster) {
 }
 
 /**
+ * 被添加到scene.primitives中，update函数会在scene.updateAndRenderPrimitives中调用
  * Gets the draw commands for the clustered billboards/points/labels if enabled, otherwise,
  * queues the draw commands for billboards/points/labels created for entities.
  * @private
@@ -919,7 +936,7 @@ EntityCluster.prototype.update = function (frameState) {
   }
 
   if (this._clusterDirty) {
-    this._cluster();
+    this._cluster(); // 函数内会判断是否要进行聚合
 
     // Unless all existing billboards and labels were clustered, clustering will need to execute again next frame
     this._clusterDirty =
@@ -927,6 +944,9 @@ EntityCluster.prototype.update = function (frameState) {
       (defined(billboardCollection) && !billboardCollection.ready);
   }
 
+  /**
+   * 聚合collection的渲染
+   */
   if (defined(this._clusterLabelCollection)) {
     this._clusterLabelCollection.update(frameState);
   }
@@ -937,8 +957,11 @@ EntityCluster.prototype.update = function (frameState) {
     this._clusterPointCollection.update(frameState);
   }
 
-  if (defined(labelCollection)) {
-    labelCollection.update(frameState);
+  /**
+   * 非聚合collection的渲染
+   */
+  if (defined(this._labelCollection)) {
+    this._labelCollection.update(frameState);
   }
   if (defined(billboardCollection)) {
     billboardCollection.update(frameState);

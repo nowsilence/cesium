@@ -183,7 +183,7 @@ CesiumMath.SOLAR_RADIUS = 6.955e8;
 CesiumMath.LUNAR_RADIUS = 1737400.0;
 
 /**
- * 64 * 1024
+ * 64 * 1024 Uint16
  * @type {number}
  * @constant
  */
@@ -992,7 +992,7 @@ CesiumMath.asinClamped = function (value) {
 
 /**
  * Finds the chord length between two points given the circle's radius and the angle between the points.
- *
+ * 计算弦长，
  * @param {number} angle The angle between the two points.
  * @param {number} radius The radius of the circle.
  * @returns {number} The chord length.
@@ -1087,7 +1087,7 @@ CesiumMath.fastApproximateAtan = function (x) {
 
 /**
  * Computes a fast approximation of Atan2(x, y) for arbitrary input scalars.
- *
+ * 性能较高，精度没那么高
  * Range reduction math based on nvidia's cg reference implementation: http://developer.download.nvidia.com/cg/atan2.html
  *
  * @param {number} x An input number that isn't zero if y is zero.

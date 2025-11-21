@@ -105,7 +105,7 @@ const requestRenderAfterFrame = function (scene) {
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The default ellipsoid. If not specified, the default ellipsoid is used.
  * @param {MapProjection} [options.mapProjection=new GeographicProjection(options.ellipsoid)] The map projection to use in 2D and Columbus View modes.
  * @param {boolean} [options.orderIndependentTranslucency=true] If true and the configuration supports it, use order independent translucency.
- * @param {boolean} [options.scene3DOnly=false] If true, optimizes memory use and performance for 3D mode but disables the ability to use 2D or Columbus View.
+ * @param {boolean} [options.scene3DOnly=false] If true, optimizes memory use and performance for 3D mode but disables the ability to use 2D or Columbus View. 可减少内存占用和渲染开销。
  * @param {boolean} [options.shadows=false] Determines if shadows are cast by light sources.
  * @param {MapMode2D} [options.mapMode2D=MapMode2D.INFINITE_SCROLL] Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
  * @param {boolean} [options.requestRenderMode=false] If true, rendering a frame will only occur when needed as determined by changes within the scene. Enabling improves performance of the application, but requires using {@link Scene#requestRender} to render a new frame explicitly in this mode. This will be necessary in many cases after making changes to the scene in other parts of the API. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
@@ -387,7 +387,8 @@ function Scene(options) {
   /**
    * The vertical exaggeration of the scene.
    * When set to 1.0, no exaggeration is applied.
-   *
+   * 以前名称为terrainExaggeration
+   * 在GroundPrimitive中有用到，生成阴影体时候缩放最低最高值
    * @type {number}
    * @default 1.0
    */
@@ -580,6 +581,7 @@ function Scene(options) {
   });
 
   /**
+   *  false， 3D Tiles正常渲染， true 已分类的3DTile正常渲染，未分类的3DTile 使用指定颜色渲染
    * When <code>false</code>, 3D Tiles will render normally. When <code>true</code>, classified 3D Tile geometry will render normally and
    * unclassified 3D Tile geometry will render with the color multiplied by {@link Scene#invertClassificationColor}.
    * @type {boolean}
@@ -694,15 +696,18 @@ function Scene(options) {
   this.maximumRenderTimeChange = options.maximumRenderTimeChange ?? 0.0;
   this._lastRenderTime = undefined;
   this._frameRateMonitor = undefined;
-
-  this._removeRequestListenerCallback =
-    RequestScheduler.requestCompletedEvent.addEventListener(
-      requestRenderAfterFrame(this),
-    );
-  this._removeTaskProcessorListenerCallback =
-    TaskProcessor.taskCompletedEvent.addEventListener(
-      requestRenderAfterFrame(this),
-    );
+  /**
+   * 有请求返回的时候调用requestRender
+   */
+  this._removeRequestListenerCallback = RequestScheduler.requestCompletedEvent.addEventListener(
+    requestRenderAfterFrame(this)
+  );
+  /**
+   * 有子线程的任务返回的时候调用requestRender
+   */
+  this._removeTaskProcessorListenerCallback = TaskProcessor.taskCompletedEvent.addEventListener(
+    requestRenderAfterFrame(this)
+  );
   this._removeGlobeCallbacks = [];
   this._removeTerrainProviderReadyListener = undefined;
 
@@ -781,11 +786,13 @@ function updateGlobeListeners(scene, globe) {
 
   const removeGlobeCallbacks = [];
   if (defined(globe)) {
+    // imagery有更新的时候requestRender
     removeGlobeCallbacks.push(
       globe.imageryLayersUpdatedEvent.addEventListener(
         requestRenderAfterFrame(scene),
       ),
     );
+    // 地形有更新的时候requestRender
     removeGlobeCallbacks.push(
       globe.terrainProviderChanged.addEventListener(
         requestRenderAfterFrame(scene),
@@ -993,6 +1000,8 @@ Object.defineProperties(Scene.prototype, {
 
   /**
    * Gets the collection of ground primitives.
+   * GroundPolylinePrimitive、GroundPrimitive应该添加到groundPrimitives
+   * 但也可以添加到primitives中，但是性能不好，或者不正常的渲染
    * @memberof Scene.prototype
    *
    * @type {PrimitiveCollection}
@@ -2664,10 +2673,10 @@ function executeCommands(scene, passState) {
 
     clearDepth.execute(context, passState);
 
-    if (context.stencilBuffer) {
+    if (context.stencilBuffer) { // 是否支持8位以上
       clearStencil.execute(context, passState);
     }
-
+    // 渲染地形
     if (globeTranslucencyState.translucent) {
       uniformState.updatePass(Pass.GLOBE);
       globeTranslucencyState.executeGlobeCommands(
@@ -2681,7 +2690,7 @@ function executeCommands(scene, passState) {
       performPass(frustumCommands, Pass.GLOBE);
     }
 
-    if (useGlobeDepthFramebuffer) {
+    if (useGlobeDepthFramebuffer) { // 拷贝并赋值给context.uniformState.globeDepthTexture
       globeDepth.executeCopyDepth(context, passState);
     }
 
@@ -2712,13 +2721,13 @@ function executeCommands(scene, passState) {
     if (!useInvertClassification || picking || renderTranslucentDepthForPick) {
       // Common/fastest path. Draw 3D Tiles and classification normally.
 
-      // Draw 3D Tiles
+      // Draw 3D Tiles 渲染3DTile的时候是开启了模板测试的，写入缓冲区的是StencilConstants.CESIUM_3D_TILE_MASK
       commandCount = performPass(frustumCommands, Pass.CESIUM_3D_TILE);
 
       if (commandCount > 0) {
         if (useGlobeDepthFramebuffer) {
-          globeDepth.prepareColorTextures(context, clearGlobeDepth);
-          globeDepth.executeUpdateDepth(
+          globeDepth.prepareColorTextures(context, clearGlobeDepth);// 将深度模板信息复制到颜色纹理
+          globeDepth.executeUpdateDepth( // 合并3dtile和地形的深度信息
             context,
             passState,
             globeDepth.depthStencilTexture,
@@ -2734,6 +2743,7 @@ function executeCommands(scene, passState) {
         }
       }
     } else {
+      // invert classification 渲染Vector3DTilePrimitive和ClassificationPrimitive覆盖的部分地表物体
       // When the invert classification color is opaque:
       //    Main FBO (FBO1):                   Main_Color   + Main_DepthStencil
       //    Invert classification FBO (FBO2) : Invert_Color + Main_DepthStencil
@@ -2766,10 +2776,10 @@ function executeCommands(scene, passState) {
       //
       // NOTE: Step six when translucent invert color occurs after the TRANSLUCENT pass
       //
-      scene._invertClassification.clear(context, passState);
-
+      scene._invertClassification.clear(context, passState); // 1
+      /*************_invertClassification._fbo.framebuffer****************/
       const opaqueClassificationFramebuffer = passState.framebuffer;
-      passState.framebuffer = scene._invertClassification._fbo.framebuffer;
+      passState.framebuffer = scene._invertClassification._fbo.framebuffer; // 2
 
       // Draw normally
       commandCount = performPass(frustumCommands, Pass.CESIUM_3D_TILE);
@@ -2789,10 +2799,8 @@ function executeCommands(scene, passState) {
         Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW,
       );
 
-      passState.framebuffer = opaqueClassificationFramebuffer;
-
-      // Fullscreen pass to copy classified fragments
-      scene._invertClassification.executeClassified(context, passState);
+      // Fullscreen pass to copy classified fragments 不等于0，即Vector3DTilePrimitive覆盖部分以外的地方进行着色成不透明或者半透明
+      scene._invertClassification.executeClassified(context, passState);// 3
       if (frameState.invertClassificationColor.alpha === 1.0) {
         // Fullscreen pass to copy unclassified fragments when alpha == 1.0
         scene._invertClassification.executeUnclassified(context, passState);
@@ -2803,7 +2811,7 @@ function executeCommands(scene, passState) {
         clearClassificationStencil.execute(context, passState);
       }
 
-      // Draw style over classification.
+      // Draw style over classification. 高亮地表物体
       commandCount = performPass(
         frustumCommands,
         Pass.CESIUM_3D_TILE_CLASSIFICATION,
@@ -2832,8 +2840,9 @@ function executeCommands(scene, passState) {
 
     if (
       context.depthTexture &&
-      scene.useDepthPicking &&
-      (useGlobeDepthFramebuffer || renderTranslucentDepthForPick)
+      scene.useDepthPicking && // 默认为true
+      (useGlobeDepthFramebuffer || // 只要浏览器环境支持深度深度纹理（即context.depthTexture为true），useGlobeDepthFramebuffer就为true
+        renderTranslucentDepthForPick)
     ) {
       // PERFORMANCE_IDEA: Use MRT to avoid the extra copy.
       const pickDepth = scene._picking.getPickDepth(scene, index);
@@ -2844,7 +2853,8 @@ function executeCommands(scene, passState) {
     if (picking || !usePostProcessSelected) {
       continue;
     }
-
+    /***************IdFramebuffer************/
+    // 渲染到IdFramebuffer，后续会有后处理环节
     const originalFramebuffer = passState.framebuffer;
     passState.framebuffer = sceneFramebuffer.getIdFramebuffer();
 
@@ -3364,16 +3374,16 @@ function executeCommandsInViewport(firstViewport, scene, passState) {
   const view = scene._view;
   const { renderTranslucentDepthForPick } = scene._environmentState;
 
-  if (!firstViewport) {
+  if (!firstViewport) { // 是否为第一次渲染
     scene.frameState.commandList.length = 0;
   }
-
+  // 填充commandList
   updateAndRenderPrimitives(scene);
-
+  // 整理、分类commandList
   view.createPotentiallyVisibleSet(scene);
 
   if (firstViewport) {
-    executeComputeCommands(scene);
+    executeComputeCommands(scene); // 先执行计算shader
     if (!renderTranslucentDepthForPick) {
       executeShadowMapCastCommands(scene);
     }
@@ -3602,6 +3612,8 @@ function updateAndRenderPrimitives(scene) {
   updateShadowMaps(scene);
 
   if (scene._globe) {
+    // 地形数据渲染命令添加
+    // ？地形数据渲染命令为什么会在_primitives添加，待理解
     scene._globe.render(frameState);
   }
 }
@@ -3636,7 +3648,7 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
     scene._sunBloom = false;
   }
 
-  // Clear the pass state framebuffer.
+  // Clear the pass state framebuffer.看了下_clearColorCommand的framebuffer没有赋值，应该是清空主缓冲区
   const clear = scene._clearColorCommand;
   Color.clone(clearColor, clear.color);
   clear.execute(context, passState);
@@ -3831,6 +3843,11 @@ function callAfterRenderFunctions(scene) {
   functions.length = 0;
 }
 
+/**
+ * 获取相机位置地形的高程或者是3DTile的高程
+ * @param {*} scene 
+ * @returns 
+ */
 function getGlobeHeight(scene) {
   if (scene.mode === SceneMode.MORPHING) {
     return;
@@ -3875,13 +3892,15 @@ function getMaxPrimitiveHeight(primitive, cartographic, scene) {
  * Gets the height of the loaded surface at the cartographic position.
  * @param {Cartographic} cartographic The cartographic position.
  * @param {HeightReference} [heightReference=CLAMP_TO_GROUND] Based on the height reference value, determines whether to ignore heights from 3D Tiles or terrain.
- * @private
+ * @private 
  */
 Scene.prototype.getHeight = function (cartographic, heightReference) {
   if (!defined(cartographic)) {
     return undefined;
   }
-
+  /**
+   * 看这个代码的意思是：heightReference为CLAMP_TO_GROUND或者RELATIVE_TO_GROUND或者NONE效果是等效的
+   */
   const ignore3dTiles =
     heightReference === HeightReference.CLAMP_TO_TERRAIN ||
     heightReference === HeightReference.RELATIVE_TO_TERRAIN;
@@ -3897,6 +3916,7 @@ Scene.prototype.getHeight = function (cartographic, heightReference) {
   let maxHeight = Number.NEGATIVE_INFINITY;
 
   if (!ignore3dTiles) {
+    // 获取3dtile上的高程
     const maxPrimitiveHeight = getMaxPrimitiveHeight(
       this.primitives,
       cartographic,
@@ -3907,6 +3927,7 @@ Scene.prototype.getHeight = function (cartographic, heightReference) {
     }
   }
 
+  // 获取地形上的高程
   const globe = this._globe;
   if (!ignoreTerrain && defined(globe) && globe.show) {
     const result = globe.getHeight(cartographic);

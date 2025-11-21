@@ -1140,12 +1140,13 @@ const scratchNdcAabb = new Cartesian4();
 const scratchTransformPositionWorldToLocal = new Matrix4();
 const scratchTransformPositionLocalToWorld = new Matrix4();
 const scratchTransformPositionLocalToProjection = new Matrix4();
-
+// 将[-1, 1]转换成[0, 1]（不一定是0-1范围，因为给定的值可能不在-1~1范围内）
 const transformPositionLocalToUv = Matrix4.fromRotationTranslation(
   Matrix3.fromUniformScale(0.5, new Matrix3()),
   new Cartesian3(0.5, 0.5, 0.5),
   new Matrix4(),
 );
+// 将[0, 1]转换成[-1, 1]
 const transformPositionUvToLocal = Matrix4.fromRotationTranslation(
   Matrix3.fromUniformScale(2.0, new Matrix3()),
   new Cartesian3(-1.0, -1.0, -1.0),
@@ -1629,11 +1630,17 @@ function updateShapeAndTransforms(primitive, shape, provider) {
     primitive._transformDirectionWorldToLocal,
   );
 
+  // 计算旋转和局部缩放组合矩阵的逆的转置，作为从局部法线到世界法线的变换矩阵
+//   primitive._transformNormalLocalToWorld = Matrix3.inverseTranspose(
+//     rotationAndLocalScale, 
+//     primitive._transformNormalLocalToWorld
+//   );
+
   return true;
 }
 
 /**
- * Set uniforms that come from the traversal.
+s * Set uniforms that come from the traversal.
  * @param {VoxelTraversal} traversal
  * @param {object} uniforms
  * @private
@@ -1703,6 +1710,44 @@ function checkShapeDefines(primitive, shape) {
  * @private
  */
 function getKeyframeLocation(timeIntervalCollection, clock) {
+  /**
+   * 设置动画
+   * const uris = [
+        "../../SampleData/Cesium3DTiles/PointCloud/PointCloudTimeDynamic/0.pnts",
+        "../../SampleData/Cesium3DTiles/PointCloud/PointCloudTimeDynamic/1.pnts",
+        "../../SampleData/Cesium3DTiles/PointCloud/PointCloudTimeDynamic/2.pnts",
+        "../../SampleData/Cesium3DTiles/PointCloud/PointCloudTimeDynamic/3.pnts",
+        "../../SampleData/Cesium3DTiles/PointCloud/PointCloudTimeDynamic/4.pnts",
+    ];
+
+    function dataCallback(interval, index) {
+        return {
+        uri: uris[index],
+        };
+    }
+   * const dates = [
+        "2018-07-19T15:18:00Z",
+        "2018-07-19T15:18:00.5Z",
+        "2018-07-19T15:18:01Z",
+        "2018-07-19T15:18:01.5Z",
+        "2018-07-19T15:18:02Z",
+        "2018-07-19T15:18:02.5Z",
+    ];
+    const timeIntervalCollection = Cesium.TimeIntervalCollection.fromIso8601DateArray(
+        {
+        iso8601Dates: dates,
+        dataCallback: dataCallback,
+        }
+    );
+   * const start = Cesium.JulianDate.fromIso8601(dates[0]);
+     const stop = Cesium.JulianDate.fromIso8601(dates[dates.length - 1]);
+   * const clock = viewer.clock;
+    clock.startTime = start;
+    clock.currentTime = start;
+    clock.stopTime = stop;
+    clock.clockRange = Cesium.ClockRange.LOOP_STOP;
+   * 
+   */
   if (!defined(timeIntervalCollection) || !defined(clock)) {
     return 0.0;
   }
@@ -1956,6 +2001,20 @@ function orientedBoundingBoxToNdcAabb(
         const neighborPosition = cornersClipSpace[neighborVertexIndex];
         if (neighborPosition.z >= -neighborPosition.w) {
           // Position is behind the near plane and neighbor is after, so get intersection point on the near plane.
+          /**
+           * 原理
+            在投影后的齐次坐标空间（裁剪空间）中，近裁剪面由不等式 z + w >= 0 定义（当 z + w = 0 时表示刚好在近裁剪面上）。
+            假设我们有两个点的齐次坐标 P1 = (x1, y1, z1, w1) 和 P2 = (x2, y2, z2, w2)，并且这两个点分别位于近裁剪面的两侧，即 (z1 + w1) 和 (z2 + w2) 的符号不同。
+            那么可以通过线性插值的方法找到这两个点连线上与近裁剪面相交的点。
+            步骤
+            判断两点是否位于近裁剪面两侧：计算 d1 = z1 + w1 和 d2 = z2 + w2，如果 d1 和 d2 的符号不同，则说明两点位于近裁剪面两侧，存在相交点。
+            计算插值因子 t：插值因子 t 表示相交点在 P1 和 P2 连线上的位置，计算公式为 t = d1 / (d1 - d2)。
+            进行线性插值：使用插值因子 t 对 P1 和 P2 的各个分量进行线性插值，得到相交点的齐次坐标 P_intersect：
+            x_intersect = x1 + t * (x2 - x1)
+            y_intersect = y1 + t * (y2 - y1)
+            z_intersect = z1 + t * (z2 - z1)
+            w_intersect = w1 + t * (w2 - w1)
+           */
           const distanceToPlaneFromPosition = position.z + position.w;
           const distanceToPlaneFromNeighbor =
             neighborPosition.z + neighborPosition.w;
@@ -2105,9 +2164,10 @@ VoxelPrimitive.DefaultCustomShader = new CustomShader({
 function DefaultVoxelProvider() {
   this.ready = true;
   this.shape = VoxelShapeType.BOX;
-  this.dimensions = new Cartesian3(1, 1, 1);
-  this.names = ["data"];
-  this.types = [MetadataType.SCALAR];
+  // const voxelCount = dimensions.x * dimensions.y * dimensions.z; 每个tile体素的数量
+  this.dimensions = new Cartesian3(1, 1, 1); // 一个小Tile内，xyz三个方向上有几个体素
+  this.names = ["data"]; // names 和 types长度要一一对应
+  this.types = [MetadataType.SCALAR]; // types的数量决定了纹理的数量，types里的值决定纹理通道的数量
   this.componentTypes = [MetadataComponentType.FLOAT32];
   this.maximumTileCount = 1;
 }

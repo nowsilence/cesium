@@ -1075,6 +1075,7 @@ CesiumWidget.prototype.resize = function () {
 CesiumWidget.prototype.render = function () {
   if (this._canRender) {
     this._scene.initializeFrame();
+    // 触发Viewer._onTick -> dataSourceDisplay.update(time)->更新每个datasource对应的visualizer;
     const currentTime = this._clock.tick();
     this._scene.render(currentTime);
   } else {

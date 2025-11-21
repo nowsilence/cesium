@@ -10,7 +10,7 @@ void main()
 #ifdef FACE_FORWARD
     normalEC = faceforward(normalEC, vec3(0.0, 0.0, 1.0), -normalEC);
 #endif
-
+    // 比BasicMaterial多了纹理坐标
     czm_materialInput materialInput;
     materialInput.normalEC = normalEC;
     materialInput.positionToEyeEC = positionToEyeEC;

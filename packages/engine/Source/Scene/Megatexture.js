@@ -63,13 +63,15 @@ function Megatexture(
     channelCount,
     componentTypeByteLength,
   );
-
-  const sliceCountPerRegionX = Math.ceil(Math.sqrt(dimensions.x));
-  const sliceCountPerRegionY = Math.ceil(dimensions.z / sliceCountPerRegionX);
-  const voxelCountPerRegionX = sliceCountPerRegionX * dimensions.x;
+  // 一个三维立方体从z方向进行切片，切片的数量为z;
+  // sliceCountPerRegionX * sliceCountPerRegionY = Math.ceil(Math.sqrt(dimensions.x)) * Math.ceil(dimensions.z / Math.ceil(Math.sqrt(dimensions.x))) >= z
+  // 这里为什么要用开根方，不清楚，可能让所有的切片更加集中些，是个方形最好
+  const sliceCountPerRegionX = Math.ceil(Math.sqrt(dimensions.x)); // 表示在纹理X方向上每个区域的切片数量，一个切片的尺寸是dimension.xy
+  const sliceCountPerRegionY = Math.ceil(dimensions.z / sliceCountPerRegionX); // 指的是在三维Tile中xz平面向y轴方向切片，sliceCountPerRegionX和sliceCountPerRegionY指的是纹理x方向和y方向
+  const voxelCountPerRegionX = sliceCountPerRegionX * dimensions.x; // 区域X方向上的体素数量
   const voxelCountPerRegionY = sliceCountPerRegionY * dimensions.y;
-  const regionCountPerMegatextureX = Math.floor(
-    textureDimension / voxelCountPerRegionX,
+  const regionCountPerMegatextureX = Math.floor( // 整张纹理上x方向上有多少个区域
+    textureDimension / voxelCountPerRegionX
   );
   const regionCountPerMegatextureY = Math.floor(
     textureDimension / voxelCountPerRegionY,
@@ -105,6 +107,7 @@ function Megatexture(
   this.voxelCountPerTile = Cartesian3.clone(dimensions, new Cartesian3());
 
   /**
+   * 一个区域代表一个Tile，一个区域存放tile的体素的三维信息
    * @type {number}
    * @readonly
    */
@@ -188,7 +191,7 @@ function Megatexture(
     MetadataComponentType.toComponentDatatype(componentType);
 
   /**
-   * @type {Array}
+   * @type {Array} 一个区域
    */
   this.tileVoxelDataTemp = ComponentDatatype.createTypedArray(
     componentDatatype,
@@ -287,11 +290,11 @@ function getTextureDimension(
   channelCount,
   componentByteLength,
 ) {
-  // Compute how many texels will fit in the available memory
+  // Compute how many texels will fit in the available memory // 可以容纳体素的数量
   const texelCount = Math.floor(
     availableTextureMemoryBytes / (channelCount * componentByteLength),
   );
-  // Return the largest power of two texture size that will fit in memory
+  // Return the largest power of two texture size that will fit in memory // 纹理的大小（宽高相同）s
   return Math.min(
     ContextLimits.maximumTextureSize,
     CesiumMath.previousPowerOfTwo(Math.floor(Math.sqrt(texelCount))),
@@ -337,9 +340,11 @@ Megatexture.prototype.add = function (data) {
   const node = this.emptyList;
   this.emptyList = this.emptyList.nextNode;
   if (defined(this.emptyList)) {
+    // 标记为第一个空node
     this.emptyList.previousNode = undefined;
   }
 
+  // 每次添加的node放到list的最前面
   // make head of occupied list
   node.nextNode = this.occupiedList;
   if (defined(node.nextNode)) {
@@ -458,7 +463,8 @@ Megatexture.prototype.writeDataToTexture = function (index, data) {
     regionCountPerMegatexture,
   } = this;
 
-  for (let z = 0; z < voxelCountPerTile.z; z++) {
+  for (let z = 0; z < voxelDimensionsPerTile.z; z++) { // 在z轴方向进行切片
+    // 计算切片起始位置
     const sliceVoxelOffsetX = (z % sliceCountPerRegion.x) * voxelCountPerTile.x;
     const sliceVoxelOffsetY =
       Math.floor(z / sliceCountPerRegion.x) * voxelCountPerTile.y;

@@ -59,7 +59,7 @@ import ShadowMode from "./ShadowMode.js";
  * show geometry that will be created on a web worker by using the descriptions of the geometry. The third example
  * shows how to create the geometry on the main thread by explicitly calling the <code>createGeometry</code> method.
  * </p>
- *
+ * 通过Primitive构建的默认allowPicking为true，增加选择功能，为false的话，把pickId置为undefined，如果command的pickId为undefined,Scene.updateDerivedCommands中就不会创建pick命令
  * @alias Primitive
  * @constructor
  *
@@ -78,6 +78,7 @@ import ShadowMode from "./ShadowMode.js";
  * @param {boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
  * @param {boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
  * @param {ShadowMode} [options.shadows=ShadowMode.DISABLED] Determines whether this primitive casts or receives shadows from light sources.
+ * @param {boolean} [options.rtcCenter] 相对原点，只有在scene.scene3DOnly为true，geometryInstances只能为一个实例，如果是数组，长度也只能为1
  *
  * @example
  * // 1. Draw a translucent ellipse on the surface with a checkerboard pattern
@@ -481,6 +482,11 @@ Object.defineProperties(Primitive.prototype, {
   },
 });
 
+/**
+ * 返回每个示例都有的属性，且属性类型一样
+ * @param {*} instances 
+ * @returns 
+ */
 function getCommonPerInstanceAttributeNames(instances) {
   const length = instances.length;
 
@@ -555,11 +561,11 @@ function createBatchTable(primitive, context) {
 
   const firstInstance = instances[0];
   let instanceAttributes = firstInstance.attributes;
-
+ 
   let i;
   let name;
   let attribute;
-
+  
   for (i = 0; i < length; ++i) {
     name = names[i];
     attribute = instanceAttributes[name];
@@ -753,16 +759,16 @@ Primitive._modifyShaderPosition = function (
           `${functionName}\n` +
           `{\n` +
           `    vec4 p;\n` +
-          `    if (czm_morphTime == 1.0)\n` +
+          `    if (czm_morphTime == 1.0)\n` + // 在Scene3D场景下为 1
           `    {\n` +
           `        p = czm_translateRelativeToEye(${name}3DHigh, ${name}3DLow);\n` +
           `    }\n` +
-          `    else if (czm_morphTime == 0.0)\n` +
+          `    else if (czm_morphTime == 0.0)\n` + // 在MORPHING场景下为0-1且不包含0和1
           `    {\n` +
           `        p = czm_translateRelativeToEye(${name}2DHigh.zxy, ${name}2DLow.zxy);\n` +
           `    }\n` +
           `    else\n` +
-          `    {\n` +
+          `    {\n` + // 其余场景下为 0
           `        p = czm_columbusViewMorph(\n` +
           `                czm_translateRelativeToEye(${name}2DHigh.zxy, ${name}2DLow.zxy),\n` +
           `                czm_translateRelativeToEye(${name}3DHigh, ${name}3DLow),\n` +
@@ -1324,7 +1330,7 @@ function loadSynchronous(primitive, frameState) {
 
     let createdGeometry;
     if (defined(geometry.attributes) && defined(geometry.primitiveType)) {
-      createdGeometry = cloneGeometry(geometry);
+      createdGeometry = cloneGeometry(geometry); // 判断是不是Geometry的实例
     } else {
       createdGeometry = geometry.constructor.createGeometry(geometry);
     }

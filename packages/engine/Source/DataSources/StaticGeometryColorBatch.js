@@ -172,6 +172,7 @@ Batch.prototype.update = function (time) {
         primitives.remove(primitive);
         primitive = undefined;
       }
+      // oldPrimitive用来过渡，primitive可能是异步加载，
       const oldPrimitive = this.oldPrimitive;
       if (defined(oldPrimitive)) {
         primitives.remove(oldPrimitive);
@@ -493,7 +494,7 @@ function updateItems(batch, items, time, isUpdated) {
   let i;
   for (i = length - 1; i >= 0; i--) {
     const item = items[i];
-    if (item.invalidated) {
+    if (item.invalidated) { // 当Batch的材质更换了
       items.splice(i, 1);
       const updaters = item.updaters.values;
       const updatersLength = updaters.length;
@@ -512,17 +513,17 @@ function updateItems(batch, items, time, isUpdated) {
 }
 
 StaticGeometryColorBatch.prototype.update = function (time) {
-  //Perform initial update
+  //Perform initial update 更新材质更新的情况
   let isUpdated = updateItems(this, this._solidItems, time, true);
   isUpdated =
     updateItems(this, this._translucentItems, time, isUpdated) && isUpdated;
 
   //If any items swapped between solid/translucent, we need to
-  //move them between batches
+  //move them between batches 透明度切换的情况
   const solidsMoved = moveItems(this, this._solidItems, time);
   const translucentsMoved = moveItems(this, this._translucentItems, time);
 
-  //If we moved anything around, we need to re-build the primitive
+  //If we moved anything around, we need to re-build the primitive 若透明度变化了
   if (solidsMoved || translucentsMoved) {
     isUpdated =
       updateItems(this, this._solidItems, time, isUpdated) && isUpdated;

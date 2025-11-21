@@ -288,6 +288,7 @@ GlobeDepth.prototype.update = function (
  */
 GlobeDepth.prototype.prepareColorTextures = function (context, blitStencil) {
   if (!this.picking && this._numSamples > 1) {
+    // 将多采样渲染缓冲区（包括颜色、深度，模板）复制到颜色缓冲区
     this._outputFramebuffer.prepareTextures(context, blitStencil);
   }
 };
@@ -295,6 +296,7 @@ GlobeDepth.prototype.prepareColorTextures = function (context, blitStencil) {
 GlobeDepth.prototype.executeCopyDepth = function (context, passState) {
   if (defined(this._copyDepthCommand)) {
     this.prepareColorTextures(context);
+    // 拷贝到_copyDepthFramebuffer
     this._copyDepthCommand.execute(context, passState);
     context.uniformState.globeDepthTexture =
       this._copyDepthFramebuffer.getColorTexture();

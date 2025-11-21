@@ -18,7 +18,7 @@ out vec4 v_pickColor;
 out float v_polylineAngle;
 
 void main()
-{
+{   // PolylineCollection
     float texCoord = texCoordExpandAndBatchIndex.x;
     float expandDir = texCoordExpandAndBatchIndex.y;
     bool usePrev = texCoordExpandAndBatchIndex.z < 0.0;
@@ -34,7 +34,8 @@ void main()
     }
 
     vec4 pickColor = batchTable_getPickColor(batchTableIndex);
-
+    // 相对于PolylineMaterialAppearance，pre、next的计算要参考morphTime
+    // 计算顶点位置，在Primitive里_modifyShaderPosition有处理，这个地方为什么没有替换？应该是PolylineCollection没有调用，是单独的渲染逻辑
     vec4 p, prev, next;
     if (czm_morphTime == 1.0)
     {
@@ -95,6 +96,7 @@ void main()
     gl_Position = czm_viewportOrthographic * positionWC * show;
 
     v_st.s = texCoord;
+    // 因为线宽是在屏幕空间，所以不能进行透视插值
     v_st.t = czm_writeNonPerspective(clamp(expandDir, 0.0, 1.0), gl_Position.w);
 
     v_width = width;

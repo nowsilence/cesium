@@ -410,12 +410,12 @@ GeometryUpdater.prototype._onEntityPropertyChanged = function (
   entity,
   propertyName,
   newValue,
-  oldValue,
-) {
+  oldValue
+) { // 这个回调在updaterset里面有监听
   if (this._observedPropertyNames.indexOf(propertyName) === -1) {
     return;
   }
-
+  // 这个geometry的命名很迷惑人，其实就是各种*Graphics
   const geometry = this._entity[this._geometryPropertyName];
 
   if (!defined(geometry)) {
@@ -426,7 +426,7 @@ GeometryUpdater.prototype._onEntityPropertyChanged = function (
     }
     return;
   }
-
+  // 未设置fill默认为true
   const fillProperty = geometry.fill;
   const fillEnabled =
     defined(fillProperty) && fillProperty.isConstant
@@ -473,6 +473,15 @@ GeometryUpdater.prototype._onEntityPropertyChanged = function (
 
   this._fillEnabled = fillEnabled;
 
+  /**
+   * groundGeometryUpdaer:
+   * (
+    this._fillEnabled &&
+    !defined(geometry.height) &&
+    !defined(geometry.extrudedHeight) &&
+    GroundPrimitive.isSupported(this._scene)
+  ); 表示是否为贴地
+   */
   const onTerrain =
     this._isOnTerrain(entity, geometry) &&
     (this._supportsMaterialsforEntitiesOnTerrain ||

@@ -492,7 +492,7 @@ function createCommands(
   pickCommands,
 ) {
   const primitive = groundPolylinePrimitive._primitive;
-  const length = primitive._va.length;
+  const length = primitive._va.length; // 表示GeometryInstance的数量，针对每个instance都要生成渲染命令
   colorCommands.length = length;
   pickCommands.length = length;
 

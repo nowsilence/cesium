@@ -678,7 +678,7 @@ Ellipsoid.prototype.toString = function () {
 
 /**
  * Computes a point which is the intersection of the surface normal with the z-axis.
- *
+ * 给定椭球体表面上的一个点，计算该点表面法线延伸后与椭球体 Z 轴的交点坐标。
  * @param {Cartesian3} position the position. must be on the surface of the ellipsoid.
  * @param {number} [buffer = 0.0] A buffer to subtract from the ellipsoid size when checking if the point is inside the ellipsoid.
  *                                In earth case, with common earth datums, there is no need for this buffer since the intersection point is always (relatively) very close to the center.

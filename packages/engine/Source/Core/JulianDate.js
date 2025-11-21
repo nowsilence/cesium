@@ -190,6 +190,7 @@ const matchHoursMinutesSeconds =
 const iso8601ErrorMessage = "Invalid ISO 8601 date.";
 
 /**
+ * 没有年月计数，只有天
  * Represents an astronomical Julian date, which is the number of days since noon on January 1, -4712 (4713 BC).
  * For increased precision, this class stores the whole number part of the date and the seconds
  * part of the date in separate components.  In order to be safe for arithmetic and represent

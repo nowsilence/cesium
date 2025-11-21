@@ -76,7 +76,7 @@ function BoxGeometry(options) {
  * @returns {BoxGeometry}
  *
  * @exception {DeveloperError} All dimensions components must be greater than or equal to zero.
- *
+ * 没有height属性，只能设置offset偏移
  *
  * @example
  * const box = Cesium.BoxGeometry.fromDimensions({
@@ -854,6 +854,7 @@ BoxGeometry.createGeometry = function (boxGeometry) {
     const length = positions.length;
     const offsetValue =
       boxGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
+    // applyOffset设置哪些顶点可以偏移，值为1则偏移
     const applyOffset = new Uint8Array(length / 3).fill(offsetValue);
     attributes.applyOffset = new GeometryAttribute({
       componentDatatype: ComponentDatatype.UNSIGNED_BYTE,

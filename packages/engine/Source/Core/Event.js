@@ -96,7 +96,8 @@ Event.prototype.removeEventListener = function (listener, scope) {
   }
 
   if (index !== -1) {
-    if (this._insideRaiseEvent) {
+    if (this._insideRaiseEvent) { 
+     // 防止raiseEvent被调用，for循环正在进行中的时候改变listener数组长度
       //In order to allow removing an event subscription from within
       //a callback, we don't actually remove the items here.  Instead
       //remember the index they are at and undefined their value.

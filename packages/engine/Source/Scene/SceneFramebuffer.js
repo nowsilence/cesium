@@ -13,6 +13,7 @@ function SceneFramebuffer() {
     depthStencil: true,
     supportsDepthTexture: true,
   });
+  // 得到渲染结果，后续会使用这个buffer进行后处理，最终结果会放到_colorFramebuffer上
   this._idFramebuffer = new FramebufferManager({
     depthStencil: true,
     supportsDepthTexture: true,

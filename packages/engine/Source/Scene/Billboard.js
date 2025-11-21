@@ -1182,7 +1182,7 @@ Billboard._updateClamping = function (collection, owner) {
 
     owner._clampedPosition = updatedClampedPosition;
   }
-
+  // 监听高度变化
   owner._removeCallbackFunc = scene.updateHeight(
     position,
     updateFunction,

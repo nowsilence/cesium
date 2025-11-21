@@ -17,11 +17,12 @@ function createProperty(
       const oldValue = this[privateName];
       const subscription = this[subscriptionName];
       if (defined(subscription)) {
-        subscription();
+        subscription(); // 移除监听
         this[subscriptionName] = undefined;
       }
 
       const hasValue = value !== undefined;
+      // value若为定义getValue方法则用回调创建属性
       if (
         hasValue &&
         (!defined(value) || !defined(value.getValue)) &&
@@ -32,11 +33,17 @@ function createProperty(
 
       if (oldValue !== value) {
         this[privateName] = value;
+        // 触发所在对象的change事件，比如Entity（此属性在entity内定义，如果监听了entity的definitionChanged事件，就会收到回调）等
         this._definitionChanged.raiseEvent(this, name, value, oldValue);
       }
 
       if (defined(value) && defined(value.definitionChanged)) {
-        this[subscriptionName] = value.definitionChanged.addEventListener(
+        /**
+         * value可能是一个数值，也可能是一个Property（e.g ConstantProperty/ConstantPositionProperty/***MaterailProperty/CallbackProperty……）
+         * 如果调用了property.setValue方法就会触发value的definitionChanged事件，
+         * 这里做了一个监听，触发宿主的definitionChanged事件
+         * */
+        this[subscriptionName] = value.definitionChanged.addEventListener( // 返回值是移除监听
           function () {
             this._definitionChanged.raiseEvent(this, name, value, value);
           },
