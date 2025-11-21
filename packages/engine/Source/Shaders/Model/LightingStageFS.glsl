@@ -14,7 +14,11 @@ vec3 computeIBL(vec3 position, vec3 normal, vec3 lightDirection, vec3 lightColor
 
 #ifdef USE_CLEARCOAT
 vec3 addClearcoatReflection(vec3 baseLayerColor, vec3 position, vec3 lightDirection, vec3 lightColorHdr, czm_modelMaterial material)
-{
+{   // clearcoat 透明涂层
+    /**
+        clearcoat（中文常称「清漆层」「透明涂层」）是一种模拟「物体表面覆盖透明 / 半透明保护层」的渲染技术 —— 核心作用是在原有材质（如车漆、塑料、木材、手机外壳）表面，叠加一层薄薄的、高光泽的透明介质（类似现实中的清漆、镀膜），从而呈现「基础材质纹理 + 透明层高光 / 反射」的复合效果。
+        它的本质是 “双层材质模型”：底层是物体本身的基础材质（如金属、非金属），顶层是透明的清漆层（通常是高折射率的电介质，类似玻璃、树脂），两层分别计算光照（反射、折射）后叠加，最终还原真实世界中 “带清漆保护的材质” 质感。
+    */
     vec3 viewDirection = -normalize(position);
     vec3 halfwayDirection = normalize(viewDirection + lightDirection);
     vec3 normal = material.clearcoatNormal;

@@ -3,6 +3,16 @@ vec3 lambertianDiffuse(vec3 diffuseColor)
     return diffuseColor / czm_pi;
 }
 
+/**
+ * 计算反射
+ * Schlick近似为简化版本：F = F0+(1−F0)(1−cosθ)5
+ * 参数 V（View Vector）：视线方向向量 从「物体表面着色点」指向「观察者 / 相机」的 3 维单位向量
+ * 参数 H（Halfway Vector）：半程向量 
+ * 入射光线方向向量（L，Light Vector）与视线方向向量（V）的角平分线向量，是「夹在 L 和 V 中间、且指向表面外部」的单位向量。
+ * 计算公式：H = normalize(L + V)（核心！必须归一化）。
+ * 半程向量是 PBR（基于物理的渲染）中的核心向量 —— 它对应「表面微观平面的法线方向」：当微观平面的法线与 H 一致时，入射光会沿视线方向反射（即镜面反射的关键条件）。
+ * 垂直入射反射系数（f₀） 和 掠射入射反射系数（f₉₀） 是描述「菲涅尔效应」的两个核心参数，它们定义了光线入射到两种介质（或物体表面）时，反射光强度的边界条件—— 即入射角度为 0°（垂直）和 90°（掠射）时的反射比例，是 Schlick 等菲涅尔近似公式的关键输入。
+*/
 vec3 fresnelSchlick2(vec3 f0, vec3 f90, float VdotH)
 {
     float versine = 1.0 - VdotH;

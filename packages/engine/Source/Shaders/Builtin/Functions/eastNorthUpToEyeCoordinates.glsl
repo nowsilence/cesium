@@ -22,6 +22,7 @@
  */
 mat3 czm_eastNorthUpToEyeCoordinates(vec3 positionMC, vec3 normalEC)
 {
+    // czm_normal3D 模型视图的逆矩阵转置，也就是说模型坐标系内的法线乘以它可以转换到视图坐标系下
     vec3 tangentMC = normalize(vec3(-positionMC.y, positionMC.x, 0.0));  // normalized surface tangent in model coordinates
     vec3 tangentEC = normalize(czm_normal3D * tangentMC);                // normalized surface tangent in eye coordinates
     vec3 bitangentEC = normalize(cross(normalEC, tangentEC));            // normalized surface bitangent in eye coordinates

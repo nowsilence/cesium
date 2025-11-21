@@ -17,8 +17,14 @@ in float v_WindowZ;
  * @see czm_depthClamp
  */
 void czm_writeDepthClamp()
-{
+{ // gl_FragCoord.w 是裁剪空间clip.w 的倒数即 1/clip.w
 #if (!defined(LOG_DEPTH) && (__VERSION__ == 300 || defined(GL_EXT_frag_depth)))
     gl_FragDepth = clamp(v_WindowZ * gl_FragCoord.w, 0.0, 1.0);
 #endif
 }
+// #if __VERSION__ == 300 || defined(GL_EXT_frag_depth)
+//     v_WindowZ = (0.5 * (coords.z / coords.w) + 0.5) * coords.w;
+//     coords.z = 0.0;
+// #else
+//     coords.z = min(coords.z, coords.w);
+// #endif
