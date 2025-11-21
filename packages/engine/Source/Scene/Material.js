@@ -269,6 +269,11 @@ import WaterMaterial from "../Shaders/Materials/Water.js";
  *     }
  *   }
  * });
+ * 
+ * material.uniforms和fabaric.uniforms，fabaric.uniforms属于属性定义，material.uniforms实例化，
+ * 若想在Material示例化后动态改变uniform值，须使用material.uniforms，
+ * fabaric.uniforms告诉着色器有哪些属性，以及值的初始化
+ * fabaric要翻译为结构更合适
  */
 function Material(options) {
   /**
@@ -687,9 +692,9 @@ const templateProperties = [
 const componentProperties = [
   "diffuse",
   "specular",
-  "shininess",
+  "shininess", // 高光指数
   "normal",
-  "emission",
+  "emission", // 自发光颜色
   "alpha",
 ];
 

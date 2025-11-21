@@ -44,28 +44,43 @@ void main()
     vec3 direction = normalize(v_positionEC);
     vec3 ellipsoidCenter = czm_modelView[3].xyz;
 
+    // 初始化射线与外接球的两个交点距离（t1：近交点，t2：远交点）
     float t1 = -1.0;
     float t2 = -1.0;
 
+    /**
+     * 一元二次方程
+     * 判别式 Δ（Delta）的计算公式为 Δ = b^2 - 4ac。
+     * 1. 如果 Δ > 0，则方程有两个不相等的实数根
+     * 2. 如果 Δ = 0，则方程有一个实数根
+     * 3.如果 Δ < 0，则方程没有实数根
+     * x = (-b ± √Δ) / (2a)
+    */
+
+    // 解球面方程：射线与外接球的相交检测（一元二次方程 ax²+bx+c=0）
+    // 球面方程：(direction * t - ellipsoidCenter)·(direction * t - ellipsoidCenter) = maxRadius²
+    // 展开后：t² - 2*direction·ellipsoidCenter * t + (ellipsoidCenter·ellipsoidCenter - maxRadius²) = 0
     float b = -2.0 * dot(direction, ellipsoidCenter);
     float c = dot(ellipsoidCenter, ellipsoidCenter) - maxRadius * maxRadius;
 
-    float discriminant = b * b - 4.0 * c;
+    // // 判别式：b²-4ac（判断射线与球面是否相交，a 是 一元二次方程的二次项系数，在代码对应的球面相交计算中，a = 1.0（固定值，只是代码里没显式写出来）！
+    float discriminant = b * b - 4.0 * c; // 判别方程是否有根
     if (discriminant >= 0.0) {
         t1 = (-b - sqrt(discriminant)) * 0.5;
         t2 = (-b + sqrt(discriminant)) * 0.5;
     }
-
+    // 若两个交点均为负数（射线起点在球外，且射线朝向远离球的方向）→ 无交点，丢弃片段
     if (t1 < 0.0 && t2 < 0.0) {
         discard;
     }
-
+    // 确定射线步进的起点 t（取较小的根，若为负则从 0 开始，避免反向步进）
     float t = min(t1, t2);
     if (t < 0.0) {
         t = 0.0;
     }
 
     // March ray forward to intersection with larger sphere and find
+    // 起点为外接球的交点出
     czm_ray ray = czm_ray(t * direction, direction);
 
     vec3 ellipsoid_inverseRadii = vec3(1.0 / u_radii.x, 1.0 / u_radii.y, 1.0 / u_radii.z);

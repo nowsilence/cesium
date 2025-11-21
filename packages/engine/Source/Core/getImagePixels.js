@@ -33,7 +33,9 @@ function getImagePixels(image, width, height) {
     canvas.width = width;
     canvas.height = height;
     // Since we re-use contexts, use the willReadFrequently option – See https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently
+    // 有性能开销，willReadFrequently: true 优化像素读取
     context2d = canvas.getContext("2d", { willReadFrequently: true });
+    // copy 模式的 “替换逻辑” 是 “全量覆盖”，与透明度无关
     context2d.globalCompositeOperation = "copy";
     context2DsByHeight[height] = context2d;
   }

@@ -25,7 +25,7 @@ out float v_WindowZ;
  * @name czm_depthClamp
  * @glslFunction
  *
- * @param {vec4} coords The vertex in clip coordinates.
+ * @param {vec4} coords The vertex in clip coordinates. 裁剪空间坐标
  * @returns {vec4} The modified vertex.
  *
  * @example
@@ -37,9 +37,17 @@ vec4 czm_depthClamp(vec4 coords)
 {
 #ifndef LOG_DEPTH
 #if __VERSION__ == 300 || defined(GL_EXT_frag_depth)
-    v_WindowZ = (0.5 * (coords.z / coords.w) + 0.5) * coords.w;
-    coords.z = 0.0;
+    /**
+     * windowZ = 0.5 * (z/w) + 0.5（OpenGL 标准转换，将裁剪空间的 z/w ∈ [-1,1] 映射到窗口空间 [0,1]）；
+     * 这里多乘了 coords.w，最终 v_WindowZ = windowZ * w = 0.5*z + 0.5*w—— 目的是「保留原始深度信息」，
+     * 且通过 v_WindowZ 传递给片段着色器（注释里的 “emulated noperspective” 就是为了让这个深度值不被透视插值扭曲，保证准确）。   
+    */
+    v_WindowZ = (0.5 * (coords.z / coords.w) + 0.5) * coords.w; // 用来在片段着色器恢复深度信息，所以要求支持深度修改
+    coords.z = 0.0; // 裁剪空间的裁剪规则是：z/w 超出 [-1,1] 的顶点会被裁掉；
 #else
+// 裁剪空间中，coords.w 对应 “远裁剪面” 的边界（z/w = 1 时是远裁剪面）；
+// 将 z 值限制在 ≤ coords.w，即 z/w ≤ 1—— 避免顶点因超出远裁剪面被裁掉
+// 会轻微扭曲超出远裁剪面的几何形状（因为强制修改了 z 值）
     coords.z = min(coords.z, coords.w);
 #endif
 #endif

@@ -19,6 +19,7 @@ void main()
     materialInput.tangentToEyeMatrix = tangentToEyeMatrix;
     materialInput.positionToEyeEC = positionToEyeEC;
     materialInput.st = v_st;
+    // 在**Material.glsl中定义
     czm_material material = czm_getMaterial(materialInput);
 
 #ifdef FLAT

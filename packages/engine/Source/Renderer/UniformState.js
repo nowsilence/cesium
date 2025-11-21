@@ -1758,8 +1758,10 @@ function cleanNormal3D(uniformState) {
 
     const m = uniformState._normal3D;
     Matrix4.getMatrix3(uniformState.inverseModelView3D, m);
-    Matrix3.transpose(m, m);
+    Matrix3.transpose(m, m); // 法线矩阵 = 转置(inverse(ModelView矩阵))
   }
+  // 视图空间法线 ≠ ModelView 矩阵 × 模型空间法线（会导致法线方向失真，尤其是模型有非均匀缩放时）；
+  // 法线矩阵 = 转置 (逆 (ModelView 矩阵)) —— 函数中 inverseModelView3D 已经是逆矩阵，因此只需再转置即可得到法线矩阵。
 }
 
 function cleanInverseNormal(uniformState) {

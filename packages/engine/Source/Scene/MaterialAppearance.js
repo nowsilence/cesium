@@ -11,6 +11,9 @@ import Appearance from "./Appearance.js";
 import Material from "./Material.js";
 
 /**
+ *  1.为 Primitive（Cesium 底层渲染单元）指定材质（Material） 和渲染参数（如是否透明、双面渲染、深度测试等）；
+    自动处理材质与几何的适配（如纹理坐标映射、顶点颜色融合），无需手动编写着色器（除非自定义扩展）。
+    2. 与 Entity 材质的区别
      * An appearance for arbitrary geometry (as opposed to {@link EllipsoidSurfaceAppearance}, for example)
      * that supports shading with materials.
      *

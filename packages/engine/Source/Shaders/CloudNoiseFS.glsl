@@ -75,6 +75,9 @@ float worleyFBMNoise(vec3 p, float octaves, float scale) {
     return noise;
 }
 
+/**
+ * 通过预计算的随机噪声数据，模拟云层的自然形态、蓬松感和细节变化
+*/
 void main() {
     float textureSliceWidth = u_noiseTextureDimensions.x;
     float inverseNoiseTextureRows = u_noiseTextureDimensions.z;

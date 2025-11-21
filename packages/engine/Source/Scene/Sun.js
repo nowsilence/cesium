@@ -84,6 +84,7 @@ function Sun() {
 
 Object.defineProperties(Sun.prototype, {
   /**
+   * lens flare 镜头眩光 https://www.cnblogs.com/chenglixue/p/17278887.html
    * Gets or sets a number that controls how "bright" the Sun's lens flare appears
    * to be.  Zero shows just the Sun's disc without any flare.
    * Use larger values for a more pronounced flare around the Sun.
@@ -144,7 +145,11 @@ Sun.prototype.update = function (frameState, passState, useHdr) {
     this._useHdr = useHdr;
 
     let size = Math.max(drawingBufferWidth, drawingBufferHeight);
-    size = Math.pow(2.0, Math.ceil(Math.log(size) / Math.log(2.0)) - 2.0);
+    size = Math.pow(2.0, Math.ceil(Math.log(size) / Math.log(2.0)) - 2.0); // 缩小4倍
+    /**
+     * 为什么Math.log(size) / Math.log(2.0)不直接用Math.log2(size)?
+     * 可能是因为Math.log2() 是 ES6（ECMAScript 2015）新增的方法
+     */
 
     // The size computed above can be less than 1.0 if size < 4.0. This will probably
     // never happen in practice, but does in the tests. Clamp to 1.0 to prevent WebGL
@@ -173,7 +178,7 @@ Sun.prototype.update = function (frameState, passState, useHdr) {
         return that._radiusTS;
       },
     };
-
+    // 动态生成太阳纹理
     this._commands.computeCommand = new ComputeCommand({
       fragmentShaderSource: SunTextureFS,
       outputTexture: this._texture,
@@ -216,7 +221,7 @@ Sun.prototype.update = function (frameState, passState, useHdr) {
         index: attributeLocations.direction,
         vertexBuffer: vertexBuffer,
         componentsPerAttribute: 2,
-        normalize: true,
+        normalize: true, // 当 normalize 为 true 时，WebGL/OpenGL 会自动将其值归一化到 [0.0, 1.0] 区间
         componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
       },
     ];

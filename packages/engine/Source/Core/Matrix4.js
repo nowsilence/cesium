@@ -1053,7 +1053,7 @@ Matrix4.computeInfinitePerspectiveOffCenter = function (
  * @param {number} [farDepthRange=1.0] The far plane distance in window coordinates.
  * @param {Matrix4} [result] The object in which the result will be stored.
  * @returns {Matrix4} The modified result parameter.
- *
+ * 这个转出来的屏幕坐标y是向上的，就是说原点在左下角
  * @example
  * // Create viewport transformation using an explicit viewport and depth range.
  * const m = Cesium.Matrix4.computeViewportTransformation({

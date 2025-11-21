@@ -12,7 +12,9 @@ out vec3 v_maximumSize;
 out vec4 v_color;
 out float v_slice;
 out float v_brightness;
-
+/**
+ * 云层渲染
+*/
 void main() {
     // Unpack attributes.
     vec3 positionHigh = positionHighAndScaleX.xyz;
