@@ -369,7 +369,8 @@ Object.defineProperties(PostProcessStage.prototype, {
    * </p>
    *
    * @memberof PostProcessStage.prototype
-   * @type {Array}
+   * @type {Array} [ { pickId: PickId }] 只需要包含pickId属性即可，pickId的属性值类型为PickId（在Context中定义），这里面又只使用了PickId对象的color属性
+   *                                     或者pickIds属性，为数组，值参考pickId
    */
   selected: {
     get: function () {
@@ -479,7 +480,7 @@ function createUniformMap(stage) {
   }
 
   const uniformMap = {};
-  const newUniforms = {};
+  const newUniforms = {}; // 存的值是函数，或者具有get/set方法的变量
   const uniforms = stage._uniforms;
   const actualUniforms = stage._actualUniforms;
   for (const name in uniforms) {
@@ -493,7 +494,7 @@ function createUniformMap(stage) {
       uniformMap[name] = uniforms[name];
       newUniforms[name] = uniforms[name];
     }
-
+    
     actualUniforms[name] = uniforms[name];
 
     const value = uniformMap[name]();
@@ -504,6 +505,7 @@ function createUniformMap(stage) {
       value instanceof HTMLCanvasElement ||
       value instanceof HTMLVideoElement
     ) {
+        // Cesium会对每一个名为xxx、类型为Cesium.Texture的uniform变量都增加一个名为xxxDimensions的uniform变量。用来传递纹理尺寸。
       uniformMap[`${name}Dimensions`] = getUniformMapDimensionsFunction(
         uniformMap,
         name,
@@ -664,7 +666,17 @@ function updateUniformTextures(stage, context) {
   if (dirtyUniforms.length === 0 || defined(stage._texturePromise)) {
     return;
   }
-
+  /**
+      dirtyUniforms只存放这三种数据，参见函数[getUniformValueGetterAndSetter] 
+      (
+        typeof value === "string" ||
+        value instanceof HTMLCanvasElement ||
+        value instanceof HTMLImageElement ||
+        value instanceof HTMLVideoElement ||
+        value instanceof ImageData
+      ) {
+        stage._dirtyUniforms.push(name);
+   */
   const uniforms = stage._uniforms;
   const promises = [];
   for (let i = 0; i < dirtyUniforms.length; ++i) {
@@ -924,11 +936,12 @@ PostProcessStage.prototype.update = function (context, useLogDepth) {
 };
 
 /**
+ * 参考Scene.prototype.resolveFramebuffers
  * Executes the post-process stage. The color texture is the texture rendered to by the scene or from the previous stage.
  * @param {Context} context The context.
  * @param {Texture} colorTexture The input color texture.
- * @param {Texture} depthTexture The input depth texture.
- * @param {Texture} idTexture The id texture.
+ * @param {Texture} depthTexture The input depth texture. (globeFramebuffer ?? sceneFramebuffer).getDepthStencilTexture()
+ * @param {Texture} idTexture The id texture. view.sceneFramebuffer.idFramebuffer
  * @private
  */
 PostProcessStage.prototype.execute = function (

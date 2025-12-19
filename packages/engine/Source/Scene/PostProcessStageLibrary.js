@@ -121,6 +121,8 @@ PostProcessStageLibrary.createBlurStage = function () {
 };
 
 /**
+ * 让场景中焦点平面的物体清晰，而焦点前后的区域呈现自然的模糊效果，大幅提升 3D 场景的真实感和沉浸感
+ * depth of field 景深 可以理解为背景模糊
  * Creates a post-process stage that applies a depth of field effect.
  * <p>
  * Depth of field simulates camera focus. Objects in the scene that are in focus
@@ -210,6 +212,7 @@ PostProcessStageLibrary.isDepthOfFieldSupported = function (scene) {
 
 /**
  * Creates a post-process stage that detects edges.
+ * 只是将边缘信息写入到poststage.outputTexture纹理中
  * <p>
  * Writes the color to the output texture with alpha set to 1.0 when it is on an edge.
  * </p>
@@ -301,12 +304,13 @@ function getSilhouetteEdgeDetection(edgeDetectionStages) {
     `    { \n${fsLoop}    } \n` +
     `    out_FragColor = color; \n` +
     `} \n`;
-
+  // 将所有的边缘检测的数据都渲染到edgeComposite上
   const edgeComposite = new PostProcessStage({
     name: "czm_edge_detection_combine",
     fragmentShader: fs,
     uniforms: compositeUniforms,
   });
+  // 全部放到PostProcessStageComposite应该是效率太慢了
   return new PostProcessStageComposite({
     name: "czm_edge_detection_composite",
     stages: [edgeDetection, edgeComposite],
@@ -470,6 +474,14 @@ PostProcessStageLibrary.createBloomStage = function () {
 };
 
 /**
+ * 用于实现环境光遮蔽（Ambient Occlusion，简称 AO） 效果的后处理阶段，
+ * 核心作用是模拟现实中 “物体缝隙 / 重叠处因光线被遮挡而更暗” 的物理现象，
+ * 让 3D 场景的细节（如建筑缝隙、地形褶皱、模型转角）更有层次感和真实感
+ * 模拟物理遮挡的阴影
+ * 现实世界中，光线会被物体阻挡：
+ * 开阔区域：环境光能均匀照射，表面明亮；
+ * 狭窄区域（如墙角、建筑之间的缝隙、地形的凹陷处）：环境光被遮挡，形成柔和的暗部（非硬阴影）。
+ * createAmbientOcclusionStage 就是通过后处理算法，在 Cesium 场景中复现这种 “局部暗化” 效果，解决场景 “平、无层次” 的问题。
  * Creates a post-process stage that Horizon-based Ambient Occlusion (HBAO) to the input texture.
  * <p>
  * Ambient occlusion simulates shadows from ambient light. These shadows would always be present when the

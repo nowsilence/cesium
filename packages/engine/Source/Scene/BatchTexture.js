@@ -43,10 +43,10 @@ function BatchTexture(options) {
   this._batchValues = undefined; // Per-feature RGBA (A is based on the color's alpha and feature's show property)
 
   this._batchValuesDirty = false;
-  this._batchTexture = undefined;
+  this._batchTexture = undefined; // 只存储color和show
   this._defaultTexture = undefined;
 
-  this._pickTexture = undefined;
+  this._pickTexture = undefined; // 只存储pickColor
   this._pickIds = [];
 
   // Dimensions for batch and pick textures
@@ -237,7 +237,6 @@ BatchTexture.prototype.setShow = function (batchId, show) {
   checkBatchId(batchId, this._featuresLength);
   Check.typeOf.bool("show", show);
   //>>includeEnd('debug');
-
   if (show && !defined(this._showAlphaProperties)) {
     // Avoid allocating since the default is show = true
     return;

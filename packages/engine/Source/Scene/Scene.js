@@ -3768,6 +3768,7 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
 }
 
 /**
+ * OIT和后处理
  * @private
  */
 Scene.prototype.resolveFramebuffers = function (passState) {
@@ -3791,7 +3792,9 @@ Scene.prototype.resolveFramebuffers = function (passState) {
     : undefined;
   const sceneFramebuffer = view.sceneFramebuffer._colorFramebuffer;
   const idFramebuffer = view.sceneFramebuffer.idFramebuffer;
-
+  // OIT（Order-Independent Transparency）
+  // 一种实现半透明物体渲染的技术，旨在解决传统Alpha混合中因渲染顺序依赖而导致的视觉错误。
+  // 其核心思想是通过离屏缓冲和加权混合策略，实现与绘制顺序无关的半透明效果
   if (useOIT) {
     passState.framebuffer = usePostProcess
       ? sceneFramebuffer.framebuffer

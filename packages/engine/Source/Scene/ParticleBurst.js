@@ -2,7 +2,7 @@ import Frozen from "../Core/Frozen.js";
 
 /**
  * Represents a burst of {@link Particle}s from a {@link ParticleSystem} at a given time in the systems lifetime.
- *
+ * 定义一次粒子爆发（Burst）的行为参数。在粒子系统中，“爆发” 通常指在某个特定时间点一次性（或在极短时间内）发射大量粒子的效果，例如爆炸、烟花绽放、魔法效果触发等。
  * @alias ParticleBurst
  * @constructor
  *

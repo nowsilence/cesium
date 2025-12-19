@@ -1,7 +1,7 @@
 /**
  * @license
  * Copyright (c) 2014-2015, NVIDIA CORPORATION. All rights reserved.
- *
+ * 快速近似抗锯齿
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -356,8 +356,9 @@ FxaaFloat4 FxaaPixelShader(
     FxaaFloat rangeMaxClamped = max(fxaaQualityEdgeThresholdMin, rangeMaxScaled);
     FxaaBool earlyExit = range < rangeMaxClamped;
 /*--------------------------------------------------------------------------*/
-    if(earlyExit)
+    if(earlyExit) // 计算局部亮度范围（rangeMax - rangeMin），若对比度低于阈值（fxaaQualityEdgeThresholdMin）则提前退出（无需抗锯齿）。
         return rgbyM;
+    // 通过计算水平 / 垂直方向的亮度梯度（edgeHorz/edgeVert），判断边缘是水平还是垂直，确定后续采样方向。
 /*--------------------------------------------------------------------------*/
     FxaaFloat lumaNW = FxaaLuma(FxaaTexOff(tex, posM, FxaaInt2(-1,-1), fxaaQualityRcpFrame.xy));
     FxaaFloat lumaSE = FxaaLuma(FxaaTexOff(tex, posM, FxaaInt2( 1, 1), fxaaQualityRcpFrame.xy));

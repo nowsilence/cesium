@@ -171,7 +171,7 @@ void main()
 
 #endif
 
-    vec3 position3DWC = position + u_center3D;
+    vec3 position3DWC = position + u_center3D; // u_center3D为世界坐标
 
 #ifdef GEODETIC_SURFACE_NORMALS
     vec3 ellipsoidNormal = geodeticSurfaceNormal;

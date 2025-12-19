@@ -18,7 +18,7 @@ import BlendFunction from "./BlendFunction.js";
 
 /**
  * @private
- * @constructor
+ * @constructor Order-Independent Transparency
  * @param {Context} context
  */
 function OIT(context) {

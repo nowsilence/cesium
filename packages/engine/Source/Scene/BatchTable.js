@@ -88,7 +88,7 @@ function BatchTable(context, attributes, numberOfInstances) {
   // regardless of how many components it has.
   const pixelDatatype = getDatatype(attributes);
   const textureFloatSupported = context.floatingPointTexture;
-  const packFloats =
+  const packFloats = // 在数值有浮点数，但不支持浮点数纹理，需要把一个浮点数封装到4个UNSIGNED_BYTE
     pixelDatatype === PixelDatatype.FLOAT && !textureFloatSupported;
   const offsets = createOffsets(attributes, packFloats);
 
@@ -118,11 +118,11 @@ function BatchTable(context, attributes, numberOfInstances) {
   this._offsets = offsets;
   this._stride = stride;
   this._texture = undefined;
-
+  // 给每个attribute 4个宽度，单个像素点也是RGBA，尽管可能此attribute不是4个数值
   const batchLength = 4 * width * height;
   this._batchValues =
     pixelDatatype === PixelDatatype.FLOAT && !packFloats
-      ? new Float32Array(batchLength)
+      ? new Float32Array(batchLength) // 浮点数且支持浮点数纹理
       : new Uint8Array(batchLength);
   this._batchValuesDirty = false;
 }

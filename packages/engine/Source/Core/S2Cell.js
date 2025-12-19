@@ -261,7 +261,13 @@ S2Cell.getIdFromToken = function (token) {
 
 /**
  * Converts a 64-bit S2 cell ID to an S2 cell token.
- *
+ * Cell Token 是 ID 的精简十六进制字符串—— 规则是：
+ * 将 ID 转为完整 16 位十六进制（64 位 = 16×4 位）；
+ * 移除末尾所有连续的 0，直到包含 “哨兵位” 的 4 位组（nybble）；
+ * 最终保留的字符串即为 Token。
+ * 以上述 ID 为例：
+ * 完整十六进制：2c00000000000000
+ * 移除末尾零后：2c → 这就是 Token。
  * @param {bigint} [cellId] The S2 cell ID.
  * @returns {string} Returns hexadecimal representation of an S2CellId.
  * @private
@@ -274,6 +280,10 @@ S2Cell.getTokenFromId = function (cellId) {
   const trailingZeroHexChars = Math.floor(countTrailingZeroBits(cellId) / 4);
   const hexString = cellId.toString(16).replace(/0*$/, "");
 
+//   前导零完整（维持面标识的 3 位二进制对应十六进制的完整性）；
+// 「需补前导零数」 = 「总十六进制字符数（16）」 - 「去尾零后的字符数（hexString.length）」 - 「尾零字符数（trailingZeroHexChars）」
+// 17：因为 Array(n).join("0") 会生成 n-1 个零，目标是计算需要补的前导零个数；
+// 等价于const zeroString = '0'.repeat(16 - trailingZeroHexChars - hexString.length)
   const zeroString = Array(17 - trailingZeroHexChars - hexString.length).join(
     "0",
   );
@@ -294,7 +304,9 @@ S2Cell.getLevel = function (cellId) {
     throw new DeveloperError();
   }
   //>>includeEnd('debug');
-
+  // [3位面标识][60位位置+1哨兵位]
+  // 面 标识立方体 6 个面（0-5）
+  // 计算低位有几个0，知道第一个不为0的数为止（第一个不为的位是哨兵位）
   let lsbPosition = 0;
   // eslint-disable-next-line
   while (cellId !== BigInt(0)) {
@@ -328,9 +340,9 @@ S2Cell.prototype.getChild = function (index) {
   }
   //>>includeEnd('debug');
 
-  // Shift sentinel bit 2 positions to the right.
-  // eslint-disable-next-line no-undef
-  const newLsb = lsb(this._cellId) >> BigInt(2);
+  // Shift sentinel(哨兵) bit 2 positions to the right.
+  // eslint-disable-next-line no-undef 通过移动哨兵位（最低有效位）实现层级切换，插入 / 删除子索引位
+  const newLsb = lsb(this._cellId) >> BigInt(2); // 哨兵位右移2位
   // Insert child index before the sentinel bit.
   // eslint-disable-next-line no-undef
   const childCellId = this._cellId + BigInt(2 * index + 1 - 4) * newLsb;
@@ -484,7 +496,28 @@ function getS2Vertex(cellId, level, index) {
 }
 
 // S2 Coordinate Conversions
-
+// Cell ID → (Face, I, J) → (S, T) → (Si, Ti) → (U, V) → (X,Y,Z) → 经纬度
+/**
+ * I/J 是位面下4叉树某一层级单元格行列编号，左下角为(0,0)，
+ * 
+ * S/T 是立方体面的连续坐标（范围 [0,1]），转换公式
+ *
+ * S = I / S2_LIMIT_IJ; 
+ * T = J / S2_LIMIT_IJ;
+ * 
+ * Si/Ti 是 S/T 的整数化高精度版本（范围 [0, 2^31]），用于减少浮点误差：
+ * Si = I × 2 + correction; 
+ * Ti = J × 2 + correction;
+ * correction 是中心 / 顶点的偏移修正）
+ * 
+ * (Si, Ti) → (U, V)：非线性投影
+ * U/V 是立方体面的归一化连续坐标（范围 [-1,1]），通过二次非线性变换（convertSTtoUV）修正投影畸变，平衡球面与立方体的映射误差。
+ * 
+ *  (Face, U, V) → (X,Y,Z)：立方体 → 球面
+ * 根据面标识的不同，将 U/V 映射为单位球的笛卡尔坐标（convertFaceUVtoXYZ 函数），例如：
+ * 面 0：X=1, Y=U, Z=V；
+ * 面 1：X=-U, Y=1, Z=V。
+ */
 /**
  * @private
  */
@@ -631,7 +664,7 @@ function convertIJtoSTMinimum(i) {
 // Utility Functions
 
 /**
- * This function generates 4 variations of a Hilbert curve of level 4, based on the S2_POSITION_TO_IJ table, for fast lookups of (i, j)
+ * This function generates 4 variations of a Hilbert（希尔伯特） curve of level 4, based on the S2_POSITION_TO_IJ table, for fast lookups of (i, j)
  * to position along Hilbert curve. The reference C++ implementation uses an iterative approach, however, this function is implemented
  * recursively.
  *
