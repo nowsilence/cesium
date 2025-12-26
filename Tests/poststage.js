@@ -1,7 +1,7 @@
-import { Cesium, createView } from "./index.js";
+import { Cesium, getViewer } from "./index.js";
 
 
-const viewer = await createView();
+const viewer = await getViewer();
 //entities
 const box = viewer.entities.add({
    position: Cesium.Cartesian3.fromDegrees(106.647382019240, 26.620452464821, 50),
@@ -18,20 +18,20 @@ viewer.entities.add({
   }
 })
 
-// let ferrari = viewer.entities.add({
-//    position: Cesium.Cartesian3.fromDegrees(106.647382019240, 26.624152464821, 0),
-//    model: {
-//        uri: './ferrari.glb',
-//        scale: 50,
-//        runAnimations: true
-//   }
-// })
+let ferrari = viewer.entities.add({
+   position: Cesium.Cartesian3.fromDegrees(106.647382019240, 26.624152464821, 0),
+   model: {
+       uri: '../Apps/SampleData/models/GroundVehicle/GroundVehicle.glb',
+       scale: 50,
+       runAnimations: true
+  }
+})
 viewer.flyTo(box)
 
 
 let yellowEdge = Cesium.PostProcessStageLibrary.createEdgeDetectionStage();
 yellowEdge.uniforms.color = Cesium.Color.YELLOW;
-// yellowEdge.enabled = false;
+
 // yellowEdge.selected = [feature0]; // 如果不设置selected则对整个纹理进行边缘检测
 
 const greenEdge = Cesium.PostProcessStageLibrary.createEdgeDetectionStage();
@@ -41,9 +41,10 @@ greenEdge.enabled = false;
 
 {   // 参考[https://zhuanlan.zhihu.com/p/407871786]
     // createSilhouetteStage函数内部会自动创建createEdgeDetectionStage
-    // yellowEdge = Cesium.PostProcessStageLibrary.createSilhouetteStage();
-    // yellowEdge.uniforms.color = Cesium.Color.YELLOW;
-    // viewer.scene.postProcessStages.add(yellowEdge);
+    yellowEdge = Cesium.PostProcessStageLibrary.createSilhouetteStage();
+    yellowEdge.uniforms.color = Cesium.Color.YELLOW;
+    yellowEdge.enabled = false;
+    viewer.scene.postProcessStages.add(yellowEdge);
 }
 
 {
@@ -55,31 +56,31 @@ greenEdge.enabled = false;
 
 {
     // 高斯模糊，实现景深、bloom的基础组件
-    const poststage = Cesium.PostProcessStageLibrary.createBlurStage();
-    poststage.uniforms.delta = 1;
-    poststage.uniforms.sigma = 2,
-    poststage.uniforms.stepSize = 1;
-    viewer.scene.postProcessStages.add(poststage);
+    // const poststage = Cesium.PostProcessStageLibrary.createBlurStage();
+    // poststage.uniforms.delta = 1;
+    // poststage.uniforms.sigma = 2,
+    // poststage.uniforms.stepSize = 1;
+    // viewer.scene.postProcessStages.add(poststage);
 }
 
 {
-    const bloom = viewer.scene.postProcessStages.bloom;
+    // const bloom = viewer.scene.postProcessStages.bloom;
     // const bloom = Cesium.PostProcessStageLibrary.createBloomStage();
-    bloom.uniforms.contrast = 128;
-    bloom.uniforms.brightness = 1;//-0.3,
+    // bloom.uniforms.contrast = 128;
+    // bloom.uniforms.brightness = 1;//-0.3,
     // bloom.uniforms.glowOnly = true;
     // 
-    bloom.enabled = true;
-    bloom.uniforms.brightness = 0;//-0.5;
-    bloom.uniforms.stepSize = 1.0;
-    bloom.uniforms.sigma = 3.0;
-    bloom.uniforms.delta = 1.5;
+    // bloom.enabled = true;
+    // bloom.uniforms.brightness = 0;//-0.5;
+    // bloom.uniforms.stepSize = 1.0;
+    // bloom.uniforms.sigma = 3.0;
+    // bloom.uniforms.delta = 1.5;
     // scene.highDynamicRange = true;
     // viewer.scene.postProcessStages.exposure = 1.5;
 
     // viewer.scene.postProcessStages.add(poststage);
 
-    yellowEdge = bloom;
+    // yellowEdge = bloom;
 }
 
 // viewer.scene.postProcessStages.add(Cesium.PostProcessStageLibrary.createSilhouetteStage([yellowEdge]));//, greenEdge]));

@@ -732,6 +732,12 @@ function checkForTemplateErrors(material) {
   checkForValidProperties(uniforms, materialNames, duplicateNameError, false);
 }
 
+/**
+ * 如果定义的component在materials中则返回true
+ * @param {*} shaderComponent 
+ * @param {*} material 
+ * @returns 
+ */
 function isMaterialFused(shaderComponent, material) {
   const materials = material._template.materials;
   for (const subMaterialId in materials) {
@@ -749,7 +755,7 @@ function isMaterialFused(shaderComponent, material) {
 function createMethodDefinition(material) {
   const components = material._template.components;
   const source = material._template.source;
-  if (defined(source)) {
+  if (defined(source)) { // 如果自定义了czm_getMaterial方法
     material.shaderSource += `${source}\n`;
   } else {
     material.shaderSource +=
@@ -761,13 +767,13 @@ function createMethodDefinition(material) {
         Object.keys(material._template.materials).length > 0;
       for (const component in components) {
         if (components.hasOwnProperty(component)) {
-          if (component === "diffuse" || component === "emission") {
+          if (component === "diffuse" || component === "emission") { // 漫反射 自发光
             const isFusion =
               isMultiMaterial &&
               isMaterialFused(components[component], material);
             const componentSource = isFusion
               ? components[component]
-              : `czm_gammaCorrect(${components[component]})`;
+              : `czm_gammaCorrect(${components[component]})`; // 直接设置颜色需要gamma校正，将颜色转为线性颜色
             material.shaderSource += `material.${component} = ${componentSource}; \n`;
           } else if (component === "alpha") {
             material.shaderSource += `material.alpha = ${components.alpha}; \n`;

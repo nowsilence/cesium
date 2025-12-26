@@ -2,8 +2,16 @@ import * as Cesium from "../Build/CesiumUnminified/index.js"
 
 Cesium.Ion.defaultAccessToken='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwYjZkZTViOC0xN2E5LTRlMDctOTcxOS04YjU1N2NjMjljOTkiLCJpZCI6MTM0NzcsInNjb3BlcyI6WyJhc3IiLCJnYyJdLCJpYXQiOjE1NjMzNTM5ODB9.RGY9YEPoZFxqKWq-mUb5Yu8QWnRBlnqsvpC-eEKxGDc';
 
+let viewer;
+
+async function getViewer() {
+    if (viewer) { return viewer; }
+
+    return createView();
+}
+
 async function createView() {
-    const viewer = new Cesium.Viewer('cesiumContainer', {
+    viewer = new Cesium.Viewer('cesiumContainer', {
         atmosphere: false,
         // skyAtmosphere: false
         // terrainProviderViewModels: [
@@ -82,5 +90,6 @@ async function createView() {
 
 export {
     Cesium,
+    getViewer,
     createView
 }
