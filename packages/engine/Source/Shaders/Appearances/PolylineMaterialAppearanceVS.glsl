@@ -14,6 +14,7 @@ out float v_polylineAngle;
 
 /**
  * 默认使用的是 PolylineFS
+ * 和PolylineColorAppearanceVS类似，只是多传了v_width，v_st,v_polylineAngle
  */
 void main()
 {

@@ -146,7 +146,7 @@ function PolylineGeometry(options) {
 
 /**
  * Stores the provided instance into the provided array.
- *
+ * 传入到子线程的时候用来包装数据
  * @param {PolylineGeometry} value The value to pack.
  * @param {number[]} array The array to pack into.
  * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.

@@ -26,7 +26,7 @@ function removeDuplicates(ellipsoid, positions, topHeights, bottomHeights) {
   if (length < 2) {
     return;
   }
-
+  // 若未传入topHeights,bottomHeights，则最低点为0，最高点为当前点的高程
   const hasBottomHeights = defined(bottomHeights);
   const hasTopHeights = defined(topHeights);
 
@@ -119,6 +119,7 @@ WallGeometryLibrary.computePositions = function (
   granularity,
   duplicateCorners,
 ) {
+//   若未传入topHeights,bottomHeights，则最低点为0，最高点为当前点的高程，removeDuplicates方法处理
   const o = removeDuplicates(
     ellipsoid,
     wallPositions,

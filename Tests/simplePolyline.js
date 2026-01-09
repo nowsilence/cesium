@@ -3,6 +3,8 @@ import { Cesium, getViewer } from "./index.js";
 const viewer = await getViewer();
 
 const geometry = new Cesium.SimplePolylineGeometry({
+    // RHUMB不支持，估计是cesium的bug
+    arcType: Cesium.ArcType.GEODESIC, // 线段是测地线（GEODESIC，最短路径）还是恒向线（RHUMB,恒定方位角），或者是NONE（空间直线）
     positions: Cesium.Cartesian3.fromDegreesArray([-115.0, 37.0, -60.0, 10.0]),
 });
 
@@ -65,14 +67,11 @@ let appearance;
                 vec4 p = czm_computePosition();
 
                 v_color = color;
-                v_testFloat = czm_batchTable_testFloat(batchId);
 
                 gl_Position = czm_modelViewProjectionRelativeToEye * p;
             }`,
         fragmentShaderSource: `
             in vec4 v_color;
-            in float v_testFloat;
-            uniform vec4 tcolor;
 
             void main()
             {   

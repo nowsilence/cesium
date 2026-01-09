@@ -128,7 +128,7 @@ const appearance = new Cesium.MaterialAppearance({
         // #endif
             
             // 通过appearance.uniforms设置
-            //out_FragColor = tcolor; // czm_gammaCorrect(tcolor);
+            //out_FragColor = czm_gammaCorrect(tcolor);
             
             // 通过appearance.material设置颜色
             out_FragColor = vec4(material.diffuse, material.alpha);//vec4(1.0, 0.0, 0.0, v_testFloat);

@@ -17,9 +17,11 @@ async function getModule(moduleName, modulePath) {
     // ignore moduleName and use the path to import
     if (typeof exports === "object") {
       // Use CommonJS-style require.
+      // 环境是 CommonJS（Node.js），使用 require 加载
       module = require(modulePath);
     } else {
       // Use ESM-style dynamic import
+      // 环境是 ESM（浏览器/现代 Node.js），使用动态 import 加载
       const result = await import(modulePath);
       module = result.default;
     }

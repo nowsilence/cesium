@@ -36,6 +36,7 @@ void main()
     vec4 pickColor = batchTable_getPickColor(batchTableIndex);
     // 相对于PolylineMaterialAppearance，pre、next的计算要参考morphTime
     // 计算顶点位置，在Primitive里_modifyShaderPosition有处理，这个地方为什么没有替换？应该是PolylineCollection没有调用，是单独的渲染逻辑
+    // czm_computePosition也对czm_morphTime做了处理
     vec4 p, prev, next;
     if (czm_morphTime == 1.0)
     {

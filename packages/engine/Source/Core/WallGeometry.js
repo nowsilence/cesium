@@ -356,7 +356,7 @@ WallGeometry.createGeometry = function (wallGeometry) {
   const vertexFormat = wallGeometry._vertexFormat;
   const granularity = wallGeometry._granularity;
   const ellipsoid = wallGeometry._ellipsoid;
-
+  // 若未设置topHeights,bottomHeights，则最低点为0，最高点为当前点的高程
   const pos = WallGeometryLibrary.computePositions(
     ellipsoid,
     wallPositions,
