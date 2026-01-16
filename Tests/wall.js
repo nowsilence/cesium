@@ -44,7 +44,7 @@ if (type == 0) {
 
     const wall = new Cesium.WallGeometry({
         positions,
-        // granularity: CesiumMath.RADIANS_PER_DEGREE, // 粒度
+        // granularity: Cesium.Math.RADIANS_PER_DEGREE, // 粒度
         // minimumHeights: [], // 最低点数组 必须与positions数量相等，若为配置最低点高程为0
         // maximumHeights: [], // 最高点数组 必须与positions数量相等，若未配置最高点为传入点的高程
     });
@@ -83,7 +83,7 @@ if (type == 1)
                 // outline: false,
                 // outlineColor: Cesium.Color.BLACK,
                 // outlineWidth: 10
-                // granularity: CesiumMath.RADIANS_PER_DEGREE, // 粒度
+                // granularity: Cesium.Math.RADIANS_PER_DEGREE, // 粒度
                 // minimumHeights: [], // 最低点数组 必须与positions数量相等，若为配置最低点高程为0
                 // maximumHeights: [], // 最高点数组 必须与positions数量相等，若未配置最高点为传入点的高程
                 // distanceDisplayCondition: new Cesium.DistanceDisplayCondition(1, 10000000), //0.0

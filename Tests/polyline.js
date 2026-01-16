@@ -153,6 +153,12 @@ if (type == 3) {
      * PolylineDashMeterial-> PolylineDashMaterialProperty
      * PolylineOutlineMaterial-> PolylineOutlineMaterialProperty
      * 
+     * 内部使用的Apearance就两种：
+     * PolylineMaterialAppearance
+     * PolylineColorAppearance
+     * 
+     * PolylineCollection内部没有使用appearance，而是内置了shader，处理了顶点数据，没有构建Primitive
+     * 
      * @property {Property | boolean} [show=true] 是否显示
      * @property {Property | Cartesian3[]} [positions] Cartesian3 数组
      * @property {Property | number} [width=1.0] A numeric Property specifying the width in pixels.
