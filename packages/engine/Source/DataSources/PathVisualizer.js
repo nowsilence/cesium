@@ -664,7 +664,7 @@ function PathVisualizer(scene, entityCollection) {
   );
 
   this._scene = scene;
-  this._updaters = {};
+  this._updaters = {}; // key值为ReferenceFrame.FIXED、ReferenceFrame.INERTIAL，就这两种
   this._entityCollection = entityCollection;
   this._items = new AssociativeArray();
 

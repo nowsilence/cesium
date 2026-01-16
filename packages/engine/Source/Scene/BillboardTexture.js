@@ -192,6 +192,7 @@ BillboardTexture.prototype.loadImage = async function (id, image) {
   let index;
   const atlas = this._billboardCollection.textureAtlas;
   try {
+    // image 在TextureAtlas中的id
     index = await atlas.addImage(id, image);
   } catch (error) {
     // There was an error loading the image
@@ -227,6 +228,7 @@ BillboardTexture.prototype.loadImage = async function (id, image) {
   billboardTexture._index = index;
   billboardTexture._loadState = BillboardLoadState.LOADED;
 
+  // 拿到image的偏移宽高（x/y/width/height）
   const rectangle = atlas.rectangles[index];
   billboardTexture._width = rectangle.width;
   billboardTexture._height = rectangle.height;

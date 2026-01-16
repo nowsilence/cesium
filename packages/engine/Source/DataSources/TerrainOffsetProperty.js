@@ -183,11 +183,13 @@ TerrainOffsetProperty.prototype.getValue = function (time, result) {
     heightReference === HeightReference.NONE &&
     !isHeightReferenceRelative(extrudedHeightReference) // 如果不是相对高程，那么就是贴到地形或者3dtile上的
   ) { // 如果没有设置heightReference那么一定设置了extrudedHeightReference
+    // 如果没有设置高程参考且拉伸参考高程贴地，偏移量设置为0
     this._position = Cartesian3.clone(Cartesian3.ZERO, this._position);
     return Cartesian3.clone(Cartesian3.ZERO, result);
   }
 
   if (this._positionProperty.isConstant) {
+    // 向normal方向偏移this._terrainHeight
     return Cartesian3.multiplyByScalar(
       this._normal,
       this._terrainHeight,

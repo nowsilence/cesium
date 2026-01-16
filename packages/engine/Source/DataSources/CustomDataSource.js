@@ -34,6 +34,9 @@ function CustomDataSource(name) {
   this._loading = new Event();
   this._entityCollection = new EntityCollection(this);
   this._entityCluster = new EntityCluster();
+// 原始代码是未定义的，但会在DisplayDatasource添加数据源的时候赋值
+//   this._primitives = undefined;
+//   this._groundPrimitives = undefined;
 }
 
 Object.defineProperties(CustomDataSource.prototype, {

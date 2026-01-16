@@ -1043,7 +1043,7 @@ function computeRectangle(positions, ellipsoid, width, cornerType, result) {
 
 /**
  * A description of a corridor. Corridor geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.
- *
+ * 走廊
  * @alias CorridorGeometry
  * @constructor
  *

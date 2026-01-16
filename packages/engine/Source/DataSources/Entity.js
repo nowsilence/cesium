@@ -77,7 +77,7 @@ function createPropertyTypeDescriptor(name, Type) {
  * @property {TrackingReferenceFrame} [trackingReferenceFrame=TrackingReferenceFrame.AUTODETECT] The reference frame used when this entity is being tracked. <br/> If <code>undefined</code>, reference frame is determined based on entity velocity: near-surface slow moving entities are tracked using the local east-north-up reference frame, whereas fast moving entities such as satellites are tracked using VVLH (Vehicle Velocity, Local Horizontal).
  * @property {Property | string} [description] A string Property specifying an HTML description for this entity.
  * @property {PositionProperty | Cartesian3 | CallbackPositionProperty} [position] A Property specifying the entity position.
- * @property {Property | Quaternion} [orientation=Transforms.eastNorthUpToFixedFrame(position)] A Property specifying the entity orientation in respect to Earth-fixed-Earth-centered (ECEF). If undefined, east-north-up at entity position is used.
+ * @property {Property | Quaternion} [orientation=Transforms.eastNorthUpToFixedFrame(position)] 应该使用headingPitchRollQuaternion（Quaternion）而不是eastNorthUpToFixedFrame（返回Matrix4)
  * @property {Property | Cartesian3} [viewFrom] A suggested initial offset for viewing this object.
  * @property {Entity} [parent] A parent entity to associate with this entity.
  * @property {BillboardGraphics | BillboardGraphics.ConstructorOptions} [billboard] A billboard to associate with this entity.

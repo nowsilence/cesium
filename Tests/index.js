@@ -13,6 +13,8 @@ async function getViewer() {
 async function createView() {
     viewer = new Cesium.Viewer('cesiumContainer', {
         atmosphere: false,
+        timeline: false,
+        // animation: true,
         // skyAtmosphere: false
         // terrainProviderViewModels: [
         //     {
@@ -25,7 +27,7 @@ async function createView() {
         //         }
         //     }
         // ],
-        // animation: false,
+        
         // baseLayerPicker: false,
         // fullscreenButton: false,
         // geocoder: false,
@@ -33,7 +35,7 @@ async function createView() {
         // scene3DOnly: true, // 默认为false，场景仅渲染 3D 模式，可提供渲染性能
         // sceneModePicker: true,
         // selectionIndicator: false,
-        // timeline: false,
+        
         // navigationHelpButton: false,
         // infoBox: false,
         // navigationInstructionsInitiallyVisible: false,

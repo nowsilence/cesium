@@ -48,6 +48,7 @@ function EntityData(entity) {
 }
 
 /**
+ * 通过LabelVisualizer建立entityCluster和entityCollecton之间的关联
  * A {@link Visualizer} which maps the {@link LabelGraphics} instance
  * in {@link Entity#label} to a {@link Label}.
  * @alias LabelVisualizer
@@ -115,7 +116,7 @@ LabelVisualizer.prototype.update = function (time) {
       text = Property.getValueOrUndefined(labelGraphics._text, time);
       show = defined(position) && defined(text);
     }
-
+    
     if (!show) {
       //don't bother creating or updating anything else
       returnPrimitive(item, entity, cluster);
@@ -132,8 +133,9 @@ LabelVisualizer.prototype.update = function (time) {
       time,
       defaultHeightReference,
     );
-
+    // 负责创建Label，并更新Label参数，Label是EntityCluster创建的
     if (!defined(label)) {
+        // 添加到cluster
       label = cluster.getLabel(entity);
       label.id = entity;
       item.label = label;

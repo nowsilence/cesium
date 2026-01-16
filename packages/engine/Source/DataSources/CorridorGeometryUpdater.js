@@ -288,6 +288,7 @@ CorridorGeometryUpdater.prototype._setStaticOptions = function (
       extrudedHeightValue,
       extrudedHeightReferenceValue,
     );
+  // 如果不是贴在地形上，则原值返回,如果贴在地形上，高度置为0
   options.height = GroundGeometryUpdater.getGeometryHeight(
     heightValue,
     heightReferenceValue,

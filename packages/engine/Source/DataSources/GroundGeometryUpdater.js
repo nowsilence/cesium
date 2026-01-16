@@ -232,7 +232,7 @@ GroundGeometryUpdater.computeGeometryOffsetAttribute = function (
    * 1、同时设置height、heightReference
    * 2、设置了extrudedHeight，且extrudedHeightReference为HeightReference.RELATIVE_TO_GROUND
    * 
-   * 若条件1、2只满足了一项则为TOP，否则为ALL
+   * 若条件1、2只满足了一项则为TOP，都满足则为ALL，否则为undefined
    */
   if (n === 2) {
     return GeometryOffsetAttribute.ALL;

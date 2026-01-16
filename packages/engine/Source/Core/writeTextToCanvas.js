@@ -3,8 +3,21 @@ import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 
+/**
+ * 原生 Canvas context2D.measureText() 的致命缺陷
+ * 1) 只能获取文本的宽度，完全拿不到真实高度（比如j、y、g、p这些下沉字符，原生拿不到基线以下的高度）；
+ * 2) 没有文字基线（baseline） 相关信息，不知道文字「最高点到基线的距离 (ascent)」、「基线到最低点的距离 (descent)」；
+ * 3) 没有左侧偏移量 (minx)，比如字符j的绘制起点在基线左侧，原生无法获取这个偏移，会导致文字绘制被裁切；
+ * 4) 对于带描边 + 填充的文本，原生测量的宽度和实际绘制的宽度不一致，描边会让文字变宽但原生不计算。
+ * @param {*} context2D 
+ * @param {*} textString 
+ * @param {*} font 
+ * @param {*} stroke 
+ * @param {*} fill 
+ * @returns 
+ */
 function measureText(context2D, textString, font, stroke, fill) {
-  const metrics = context2D.measureText(textString);
+  const metrics = context2D.measureText(textString); // 主要计算宽度，还是很准确的
   const isSpace = !/\S/.test(textString);
 
   if (!isSpace) {
@@ -24,7 +37,7 @@ function measureText(context2D, textString, font, stroke, fill) {
     ctx.font = font;
     ctx.fillStyle = "white";
     ctx.fillRect(0, 0, canvas.width + 1, canvas.height + 1);
-
+    // textbaseline alphabetic	默认。 文本基线是正常的字母基线
     if (stroke) {
       ctx.strokeStyle = "black";
       ctx.lineWidth = context2D.lineWidth;
@@ -46,7 +59,7 @@ function measureText(context2D, textString, font, stroke, fill) {
     let ascent, descent;
     // Find the number of rows (from the top) until the first non-white pixel
     for (i = 0; i < length; ++i) {
-      if (pixelData[i] !== 255) {
+      if (pixelData[i] !== 255) { // 不等于255即为黑色，黑色是字体的颜色
         ascent = (i / width4) | 0;
         break;
       }
@@ -138,10 +151,10 @@ function writeTextToCanvas(text, options) {
   const canvas = document.createElement("canvas");
   canvas.width = 1;
   canvas.height = 1;
-  canvas.style.font = font;
+  canvas.style.font = font; // 给canvas DOM元素设置字体样式，配合 measureText 做精准的尺寸计算；
   // Since multiple read-back operations are expected for labels, use the willReadFrequently option – See https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently
   const context2D = canvas.getContext("2d", { willReadFrequently: true });
-
+  // Canvas 2D API 中的一个属性，用于控制绘制图像时是否应用平滑（抗锯齿）处理
   if (!defined(imageSmoothingEnabledName)) {
     if (defined(context2D.imageSmoothingEnabled)) {
       imageSmoothingEnabledName = "imageSmoothingEnabled";
@@ -153,20 +166,23 @@ function writeTextToCanvas(text, options) {
       imageSmoothingEnabledName = "msImageSmoothingEnabled";
     }
   }
-
-  context2D.font = font;
+  // 两处字体设置都必须有
+  context2D.font = font; // 给2D绘制上下文设置字体样式
   context2D.lineJoin = "round";
   context2D.lineWidth = strokeWidth;
-  context2D[imageSmoothingEnabledName] = false;
+  // 关闭平滑后，文本在 Cesium 3D 场景中缩放、旋转时，不会出现模糊的毛边，文字更清晰
+  context2D[imageSmoothingEnabledName] = false; // 让文本边缘更锐利，避免模糊；
 
   // in order for measureText to calculate style, the canvas has to be
   // (temporarily) added to the DOM.
+  // display:none 的 DOM 元素，浏览器不会解析它的样式！
   canvas.style.visibility = "hidden";
+  // 必须加入到dom内，不然计算的值是canvas默认字体（10px sans-serif）的大小，而不是自定义设置的font
   document.body.appendChild(canvas);
 
   const dimensions = measureText(context2D, text, font, stroke, fill);
   // Set canvas.dimensions to be accessed in LabelCollection
-  canvas.dimensions = dimensions;
+  canvas.dimensions = dimensions; // 本身没这个属性
 
   document.body.removeChild(canvas);
   canvas.style.visibility = "";

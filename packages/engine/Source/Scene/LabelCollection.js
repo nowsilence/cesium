@@ -122,6 +122,7 @@ function unbindGlyphBillboard(labelCollection, glyph) {
       billboard._removeCallbackFunc();
       billboard._removeCallbackFunc = undefined;
     }
+    // spare 空闲、备用
     labelCollection._spareBillboards.push(billboard);
     glyph.billboard = undefined;
   }
@@ -132,6 +133,7 @@ const whitespaceRegex = /\s/;
 
 function rebindAllGlyphs(labelCollection, label) {
   const text = label._renderedText;
+  // 有些字符有两个码元组成，故不能直接使用text.length
   const graphemes = splitter.splitGraphemes(text);
   const textLength = graphemes.length;
   const glyphs = label._glyphs;
@@ -146,7 +148,7 @@ function rebindAllGlyphs(labelCollection, label) {
       unbindGlyphBillboard(labelCollection, glyphs[glyphIndex]);
     }
   }
-
+  // Glyph数组，Glyph保存字符的billboardTexture，和dimension（width,height,ascent,descent）
   // presize glyphs to match the new text length
   glyphs.length = textLength;
 
@@ -210,13 +212,14 @@ function rebindAllGlyphs(labelCollection, label) {
     ]);
 
     let dimensions = textDimensionsCache[id];
+    // 每个字符对应一个BillboardTexture
     let glyphBillboardTexture = glyphTextureCache.get(id);
     if (!defined(glyphBillboardTexture) || !defined(dimensions)) {
       glyphBillboardTexture = new BillboardTexture(glyphBillboardCollection);
       glyphTextureCache.set(id, glyphBillboardTexture);
 
       const glyphFont = `${label._fontStyle} ${label._fontWeight} ${SDFSettings.FONT_SIZE}px ${label._fontFamily}`;
-
+      // 每个字符创建一个canvas
       const canvas = createGlyphCanvas(
         character,
         glyphFont,
@@ -269,6 +272,7 @@ function rebindAllGlyphs(labelCollection, label) {
     }
 
     if (glyph.billboardTexture.id !== id) {
+        // text/样式变了，更新纹理
       // This glyph has been mapped to a new texture. If we had one before, release
       // our reference to that texture and dimensions, but reuse the billboard.
       glyph.billboardTexture = glyphBillboardTexture;
@@ -367,7 +371,10 @@ function repositionAllGlyphs(label) {
   // We need to scale the background padding, which is specified in pixels by the inverse of the relative size so it is scaled properly.
   backgroundPadding.x /= label._relativeSize;
   backgroundPadding.y /= label._relativeSize;
-
+  /**
+   * 假设在y=0处绘制文字，文字的descent为2，文字的高度为10，那么文字的底部y坐标为-2，文字顶部y坐标为8
+   */
+  // 计算每行的宽度，以及最大行高、最大行宽
   for (let glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
     if (text.charAt(glyphIndex) === "\n") {
       lineWidths.push(lastLineWidth);
@@ -379,7 +386,9 @@ function repositionAllGlyphs(label) {
     const glyph = glyphs[glyphIndex];
     const dimensions = glyph.dimensions;
     if (defined(dimensions)) {
+      // 文字的最大上沿高度，
       maxGlyphY = Math.max(maxGlyphY, dimensions.height - dimensions.descent);
+      // 文字的最大下沉高度
       maxGlyphDescent = Math.max(maxGlyphDescent, dimensions.descent);
 
       // Computing the line width must also account for the kerning that occurs between letters.
@@ -440,8 +449,11 @@ function repositionAllGlyphs(label) {
 
     const glyph = glyphs[glyphIndex];
     const dimensions = glyph.dimensions;
+    // VerticalOrigin都是相对于label的position
     if (defined(dimensions)) {
+      // 先假定在第一行定位，然后通过lineOffsetY进行上下平移
       if (verticalOrigin === VerticalOrigin.TOP) {
+        dimensions.height - dimensions.descent
         glyphPixelOffset.y =
           dimensions.height - maxGlyphY - backgroundPadding.y;
         glyphPixelOffset.y += SDFSettings.PADDING;
@@ -551,6 +563,7 @@ function destroyLabel(labelCollection, label) {
 }
 
 /**
+ * 主要是用来生成文本的纹理，并计算每个文本的偏移，最终渲染是billboarCollection处理的
  * A renderable collection of labels.  Labels are viewport-aligned text positioned in the 3D scene.
  * Each label can have a different font, color, scale, etc.
  * <br /><br />
@@ -969,6 +982,8 @@ LabelCollection.prototype.update = function (frameState) {
   this._labelsToUpdate.length = 0;
   backgroundBillboardCollection.update(frameState);
   glyphBillboardCollection.update(frameState);
+
+  // glyphBillboardCollection并没有添加到scene.primitives里，而是通过labelCollection.update渲染
 };
 
 /**

@@ -17,7 +17,7 @@ import KDBush from "kdbush";
 
 /**
  * Defines how screen space objects (billboards, points, labels) are clustered.
- *
+ * 只处理billboards, points, labels这三类，是否进行聚合显示
  * @param {object} [options] An object with the following properties:
  * @param {boolean} [options.enabled=false] Whether or not to enable clustering.
  * @param {number} [options.pixelRange=80] The pixel range to extend the screen space bounding box.
@@ -42,6 +42,9 @@ function EntityCluster(options) {
   this._clusterLabels = options.clusterLabels ?? true;
   this._clusterPoints = options.clusterPoints ?? true;
 
+  /**
+   * 在EntityCluster.prototype.getLabel = createGetEntity(进行了初始化
+   */
   this._labelCollection = undefined;
   this._billboardCollection = undefined;
   this._pointCollection = undefined;
@@ -220,6 +223,11 @@ const pointBoundinRectangleScratch = new BoundingRectangle();
 const totalBoundingRectangleScratch = new BoundingRectangle();
 const neighborBoundingRectangleScratch = new BoundingRectangle();
 
+/**
+ * 聚合处理
+ * @param {*} entityCluster 
+ * @returns 
+ */
 function createDeclutterCallback(entityCluster) {
   return function (amount) {
     if ((defined(amount) && amount < 0.05) || !entityCluster.enabled) {
@@ -521,6 +529,10 @@ function createDeclutterCallback(entityCluster) {
   };
 }
 
+/**
+ * 在DataSourceDisplay调用，添加数据源的回调函数时调用
+ * @param {*} scene 
+ */
 EntityCluster.prototype._initialize = function (scene) {
   this._scene = scene;
 
@@ -647,6 +659,15 @@ Object.defineProperties(EntityCluster.prototype, {
   },
 });
 
+
+/**
+ * 参数("_labelCollection", LabelCollection, "_unusedLabelIndices", "labelIndex")
+ * @param {*} collectionProperty 
+ * @param {*} CollectionConstructor 
+ * @param {*} unusedIndicesProperty 
+ * @param {*} entityIndexProperty 
+ * @returns 
+ */
 function createGetEntity(
   collectionProperty,
   CollectionConstructor,
@@ -691,7 +712,8 @@ function createGetEntity(
       entityItem = collection.add();
       index = collection.length - 1;
     }
-
+    // 为什么用collection.length - 1作为index，不怕labelCollection.removeLabel()导致index变化吗？
+    // 在本文件中函数removeLabel，并没有从labelCollection，只是放到未使用数组里，置show为false
     entityIndices[entityIndexProperty] = index;
 
     const that = this;
@@ -716,6 +738,7 @@ function removeEntityIndicesIfUnused(entityCluster, entityId) {
 }
 
 /**
+ * 代码加载就执行了，createGetEntity里面初始化了_labelCollection
  * Returns a new {@link Label}.
  * @param {Entity} entity The entity that will use the returned {@link Label} for visualization.
  * @returns {Label} The label that will be used to visualize an entity.

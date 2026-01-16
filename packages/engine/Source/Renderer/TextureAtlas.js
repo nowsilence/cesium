@@ -16,6 +16,8 @@ import Texture from "./Texture.js";
 const defaultInitialDimensions = 16;
 
 /**
+ * 一个TextureAtlas包含很多图片，这些图片都会按偏移拷贝到texture中
+ * 偏移量是通过TexturePacker计算的
  * A TextureAtlas stores multiple images in one∂ texture and keeps
  * track of the texture coordinates for each image. A TextureAtlas is dynamic,
  * meaning new images can be added at any point in time.
