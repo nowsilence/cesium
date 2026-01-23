@@ -73,7 +73,14 @@ const attributeLocations = {
  * <br /><br />
  * Polylines are added and removed from the collection using {@link PolylineCollection#add}
  * and {@link PolylineCollection#remove}.
- *
+ * 如果线渲染属性可能会动态变化，使用PolylineCollection效果更好。
+ * 如果仅仅是position的位置变了只需要更新缓存即可，
+ * 若position数量变化或者材质变化则需要重新创建缓存
+ * show/width/distanceDisplayCondition改变不影响性能
+ * width PolylineGeometry是写入到了顶点数据中
+ * 使用ShowGeometryInstanceAttribute是没办法动态改的
+ * 
+ * 支持自定义材质shader，通过polyline对象
  * @alias PolylineCollection
  * @constructor
  *

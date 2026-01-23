@@ -14,7 +14,7 @@ const viewer = await getViewer();
 // 1和2： depthFailMaterial 通过primitive.depthFailAppearance来设置
 //       distanceDisplayCondition通过GeometryInstance.attribute.distanceDisplayCondition来设置，会再Primitive添加代码逻辑
 //       clampToGround和classificationType通过创建GroundPolylinePrimitive和GroundPolylineGeometry来设置达到目的
-const type = 4;
+const type = 5;
 let positions;
 let geometryInstance, geometry;
 let dashPattern, dashLength;
@@ -156,6 +156,9 @@ if (type == 3) {
      * 内部使用的Apearance就两种：
      * PolylineMaterialAppearance
      * PolylineColorAppearance
+     * 除了point、label、path、billboard外，其他的都是面的渲染，appearance也是两种：
+     * MaterialAppearance
+     * PerInstanceColorAppearance
      * 
      * PolylineCollection内部没有使用appearance，而是内置了shader，处理了顶点数据，没有构建Primitive
      * 
@@ -221,4 +224,14 @@ if (type == 4) {
 
         })
     }));
+}
+
+if (type == 5) {
+    const polylineCollection = new Cesium.PolylineCollection();
+    viewer.scene.primitives.add(polylineCollection);
+    polylineCollection.add({
+        positions,
+        width: 4,
+        material: Cesium.Material.fromType('Color')
+    })
 }

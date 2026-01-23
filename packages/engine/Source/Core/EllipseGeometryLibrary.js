@@ -10,6 +10,20 @@ const tempVec = new Cartesian3();
 const unitQuat = new Quaternion();
 const rotMtx = new Matrix3();
 
+/**
+ * 输入一个极角θ，返回该角度下，椭球面上椭圆的精准三维笛卡尔坐标
+ * @param {*} theta 极角（0~2π），椭圆的采样角度
+ * @param {*} rotation 椭圆的整体旋转角（比如椭圆逆时针旋转 30°）
+ * @param {*} northVec 椭圆中心点的局部北向 / 东向单位向量（构建局部坐标系
+ * @param {*} eastVec 
+ * @param {*} aSqr 椭圆半轴的平方 、 乘积
+ * @param {*} ab 
+ * @param {*} bSqr 
+ * @param {*} mag 椭圆中心点到地心的距离（地球半径
+ * @param {*} unitPos 椭圆中心点的地心单位法向量（垂直于椭球面）
+ * @param {*} result 
+ * @returns 
+ */
 function pointOnEllipsoid(
   theta,
   rotation,
@@ -108,6 +122,12 @@ const eastVecScratch = new Cartesian3();
 const northVecScratch = new Cartesian3();
 /**
  * Returns an array of positions that make up the ellipse.
+ * 
+ * 返回的是贴椭球面（WGS84）的椭圆，贴椭球面的椭圆≠平面椭圆
+ * c = b²cos²θ + a²sin²θ​ab​
+ * r(θ)= ab / √c;
+ * a = 半短轴 (semiMinorAxis)  b = 半长轴 (semiMajorAxis)
+ * ab = a*b  分子为定值，分母随 θ 变化，半径 r (θ) 也随 θ 变化，形成椭圆轮廓
  * @private
  */
 EllipseGeometryLibrary.computeEllipsePositions = function (
@@ -129,15 +149,15 @@ EllipseGeometryLibrary.computeEllipsePositions = function (
   const aSqr = semiMinorAxis * semiMinorAxis;
   const bSqr = semiMajorAxis * semiMajorAxis;
   const ab = semiMajorAxis * semiMinorAxis;
-
+  // 到地心的距离、单位法向量、东向/北向单位向量 → 构建局部ENU坐标系
   const mag = Cartesian3.magnitude(center);
-
+  
   const unitPos = Cartesian3.normalize(center, unitPosScratch);
   let eastVec = Cartesian3.cross(Cartesian3.UNIT_Z, center, eastVecScratch);
   eastVec = Cartesian3.normalize(eastVec, eastVec);
   const northVec = Cartesian3.cross(unitPos, eastVec, northVecScratch);
 
-  // The number of points in the first quadrant
+  // The number of points in the first quadrant(第一象限)
   let numPts = 1 + Math.ceil(CesiumMath.PI_OVER_TWO / granularity);
 
   const deltaTheta = CesiumMath.PI_OVER_TWO / (numPts - 1);

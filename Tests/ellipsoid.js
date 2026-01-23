@@ -8,11 +8,12 @@ const radii = new Cesium.Cartesian3(1000000.0, 500000.0, 500000.0);
 const innerRadii = radii; // 默认等于radii
 const minimumClock = 0;
 const maximumClock = 2 * Math.PI;
-const minimumCone = 0;
+const minimumCone = Math.PI / 6;
 const stackPartitions = 64; // 不能小于3
 const slicePartitions = 64; // 不能小于3
 
 if (type == 0) {
+    // 相比EllipsoidPrimitive，可以批量渲染，但顶点数据量大，且三角面少的话会不平滑
     const ellipsoid = new Cesium.EllipsoidGeometry({
     //   vertexFormat : Cesium.VertexFormat.POSITION_ONLY,
       radii,
@@ -40,6 +41,16 @@ if (type == 0) {
 }
 
 if (type == 1) {
+    // 一般单个球体的渲染使用此方法。且球面法线更精确，因为是在shader实时计算的，不需要把球体进行三角化
+    // 缺点是不能批量渲染
+    viewer.scene.primitives.add(new Cesium.EllipsoidPrimitive({
+        center: position,
+        radii,
+        material: Cesium.Material.fromType(Cesium.Material.ColorType)
+    }))
+}
+
+if (type == 2) {
     viewer.entities.add({
         position,
         // orientation: ,// 默认东北天姿态,类型为Quaternion而不是Matrix4

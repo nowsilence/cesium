@@ -210,9 +210,11 @@ vec4 sampleAndBlend(
     //    tileTextureCoordinates.t > textureCoordinateRectangle.q
     // In other words, the alpha is zero if the fragment is outside the rectangle
     // covered by this texture.  Would an actual 'if' yield better performance?
+    // step(edage, x) x > edage ? 1 : 0;
+    // 当前纹理坐标（tileTextureCoordinates）判断纹理坐标在不在纹理坐标范围内（textureCoordinateRectangle）
     vec2 alphaMultiplier = step(textureCoordinateRectangle.st, tileTextureCoordinates);
     textureAlpha = textureAlpha * alphaMultiplier.x * alphaMultiplier.y;
-
+    
     alphaMultiplier = step(vec2(0.0), textureCoordinateRectangle.pq - tileTextureCoordinates);
     textureAlpha = textureAlpha * alphaMultiplier.x * alphaMultiplier.y;
 

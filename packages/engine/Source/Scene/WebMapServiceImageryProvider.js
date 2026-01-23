@@ -9,8 +9,15 @@ import TimeDynamicImagery from "./TimeDynamicImagery.js";
 import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
 
 /**
+ * 核心概念：轴序反转（reverse axis orders）
+ * GIS 中坐标系的坐标通常是 (经度, 纬度) 或 (X, Y)（东 - 北，E-N），
+ * 但部分坐标系会反转成 (纬度, 经度) 或 (Y, X)（北 - 东，N-E），
+ * 这就是 “轴序反转”。如果解析时不处理，会导致地图点位偏移、渲染错误。
+ */
+/**
  * EPSG codes known to include reverse axis orders, but are not within 4000-5000.
- *
+ * EPSG 编码在 4000-5000 区间的坐标系通常是 “轴序反转” 的，不在这个区间的通常不反转；
+ * 以下是不在4000-5000但是需要轴序反转
  * @type {number[]}
  */
 const includesReverseAxis = [
@@ -23,7 +30,7 @@ const includesReverseAxis = [
 
 /**
  * EPSG codes known to not include reverse axis orders, and are within 4000-5000.
- *
+ * 以下是在4000-5000但是不需要需要轴序反转
  * @type {number[]}
  */
 const excludesReverseAxis = [
@@ -33,7 +40,8 @@ const excludesReverseAxis = [
 
 /**
  * @typedef {object} WebMapServiceImageryProvider.ConstructorOptions
- *
+ * WMS没有预先生成的瓦片文件，而是客户端（如 Cesium）发送包含 “地理范围、投影、图层名、图片格式” 等参数的请求后，服务端动态计算并生成一张对应范围的影像图片返回；
+ * 支持灵活的参数定制（比如只显示某一类地理要素：道路、水系、建筑），适合加载专题地图、动态更新的地理数据。
  * Initialization options for the WebMapServiceImageryProvider constructor
  *
  * @property {Resource|string} url The URL of the WMS service. The URL supports the same keywords as the {@link UrlTemplateImageryProvider}.
@@ -69,12 +77,13 @@ const excludesReverseAxis = [
  * @property {Clock} [clock] A Clock instance that is used when determining the value for the time dimension. Required when `times` is specified.
  * @property {TimeIntervalCollection} [times] TimeIntervalCollection with its data property being an object containing time dynamic dimension and their values.
  * @property {Resource|string} [getFeatureInfoUrl] The getFeatureInfo URL of the WMS service. If the property is not defined then we use the property value of url.
+ * 用于对接支持时间维度的 WMS 服务（WMS-T，Web Map Service-Time，向WMS服务端传递时间筛选条件，让服务端返回指定时间/时间区间的动态地理影像（而非静态影像），实现 “按时间播放 / 切换地图影像” 的效果
  */
 
 /**
  * Provides tiled imagery hosted by a Web Map Service (WMS) server.
- *
- * @alias WebMapServiceImageryProvider
+ * 
+ * @alias WebMapServiceImageryProvidertimes
  * @constructor
  *
  * @param {WebMapServiceImageryProvider.ConstructorOptions} options Object describing initialization options

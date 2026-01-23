@@ -16,6 +16,7 @@ import Resource from "../Core/Resource.js";
  */
 
 /**
+ * 基类，无法直接实例化，
  * Provides imagery to be displayed on the surface of an ellipsoid.  This type describes an
  * interface and is not intended to be instantiated directly.
  *

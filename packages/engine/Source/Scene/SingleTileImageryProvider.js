@@ -24,6 +24,10 @@ import ImageryProvider from "./ImageryProvider.js";
  */
 
 /**
+ * 加载一张完整的单张图片作为整个地理范围的影像图层，而非由多个分块瓦片（tile）拼接而成的影像。
+ * minimumLevel和maximumLevel均为0，所以只会加载一次瓦片
+ * rectangle定义的范围就是image的范围，如何实现呢？假定一个大的瓦片包含这个rectangle，
+ * 在生成TileImage的时候需要计算纹理坐标范围，只占SurfaceTile的一部分，在GlobeFS内会判断当前点的纹理坐标是否在范围内
  * Provides a single, top-level imagery tile.  The single image is assumed to be in
  * the Geographic projection (i.e. WGS84 / EPSG:4326),
  * and will be rendered using a {@link GeographicTilingScheme}.
@@ -147,6 +151,7 @@ Object.defineProperties(SingleTileImageryProvider.prototype, {
    * @type {number|undefined}
    * @readonly
    */
+  
   maximumLevel: {
     get: function () {
       return 0;

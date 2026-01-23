@@ -1,6 +1,6 @@
 import { Cesium, getViewer } from "./index.js";
 const viewer = await getViewer();
-const type = 1;
+const type = 0;
 
 
 const position = Cesium.Cartesian3.fromDegrees(19.0, 47);

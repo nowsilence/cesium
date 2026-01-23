@@ -106,7 +106,7 @@ function triangleFanToLines(triangles) {
  * <p>
  * This is commonly used to create a wireframe geometry for visual debugging.
  * </p>
- *
+ * 必须是Geometry类型，而不是***Geometry
  * @param {Geometry} geometry The geometry to modify.
  * @returns {Geometry} The modified <code>geometry</code> argument, with its triangle indices converted to lines.
  *

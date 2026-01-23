@@ -3497,6 +3497,7 @@ function load(dataSource, entityCollection, data, options) {
 */
 
 /**
+ * KML（Keyhole Markup Language）是一种基于 XML 的地理空间数据标记语言，专门用于描述和传输地理要素（如点、线、面、地标、模型等）及其样式信息
  * A {@link DataSource} which processes Keyhole Markup Language 2.2 (KML).
  * <p>
  * KML support in Cesium is incomplete, but a large amount of the standard,

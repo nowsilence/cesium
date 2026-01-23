@@ -32,6 +32,7 @@ const attributeLocations = {
  * This is only supported in 3D.  The ellipsoid is not shown in 2D or Columbus view.
  * </p>
  * 是一个可渲染对象，可以添加到PrimitiveCollection中
+ * 使用的是一个标准的BoxGeometry，椭球在shader内部根据半轴长会重新设置顶点位置，顶点数据量少
  * @alias EllipsoidPrimitive
  * @constructor
  *

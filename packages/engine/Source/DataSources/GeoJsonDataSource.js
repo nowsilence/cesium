@@ -567,6 +567,11 @@ function processTopology(dataSource, geoJson, geometry, crsFunction, options) {
  */
 
 /**
+ * 
+ * 分为两种：
+ * 一种是标准的geojson, 如simplestyles.geojson 解析入口函数为processFeatureCollection
+ * 一种是topojson, 如ne_10m_us_states.topojson，解析入口函数为processTopology
+ * topojson的arc索引可能为负数，原始索引 = |负数索引| - 1，负数需要反向使用对应弧，指点顺序翻转
  * A {@link DataSource} which processes both
  * {@link http://www.geojson.org/|GeoJSON} and {@link https://github.com/mbostock/topojson|TopoJSON} data.
  * {@link https://github.com/mapbox/simplestyle-spec|simplestyle-spec} properties will also be used if they

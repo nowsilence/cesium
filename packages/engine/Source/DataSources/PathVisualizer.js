@@ -641,6 +641,8 @@ PolylineUpdater.prototype.destroy = function () {
 };
 
 /**
+ * 没有单独的updater文件，updater已经写到本文件了，使用的是PolylineUpdater,
+ * 内部创建了一个PolylineCollection，使用它渲染polyline，entity.polyline也是用的polylinecollection
  * A {@link Visualizer} which maps {@link Entity#path} to a {@link Polyline}.
  * @alias PathVisualizer
  * @constructor

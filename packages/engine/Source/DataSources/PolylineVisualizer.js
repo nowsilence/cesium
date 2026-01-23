@@ -68,6 +68,8 @@ function insertUpdaterIntoBatch(that, time, updater) {
 }
 
 /**
+ * 动态的线渲染使用的是PolylineCollection，
+ * 静态线渲染用的是PolylineGeometry/GroundPolylineGeometry
  * A visualizer for polylines represented by {@link Primitive} instances.
  * @alias PolylineVisualizer
  * @constructor
