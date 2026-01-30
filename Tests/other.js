@@ -718,16 +718,6 @@ console.log(nn)
 //   })
 // );
 // }, 1000);
-createClosure()
-function createClosure() { 
-// 假设这是一个大型对象（如大量数据、DOM 元素集合）
-const bigObject = new Array(1000000).fill('占用内存的数据');
-
-// 闭包捕获了 bigObject 的引用
-globalFunc = () => {
-console.log(bigObject.length); // 仅使用了 bigObject 的一个属性
-};
-}
 
 const center = Cesium.Cartesian3.fromDegrees(115,39)
 const pitch =  Cesium.Math.toRadians(-90)

@@ -137,6 +137,7 @@ Event.prototype.raiseEvent = function () {
   for (i = 0; i < length; i++) {
     const listener = listeners[i];
     if (defined(listener)) {
+      // 有可能再整个回调里调用removeEventListener，
       listeners[i].apply(scopes[i], arguments);
     }
   }
@@ -145,6 +146,7 @@ Event.prototype.raiseEvent = function () {
   const toRemove = this._toRemove;
   length = toRemove.length;
   if (length > 0) {
+    // 由大到小排序，这样删除没问题
     toRemove.sort(compareNumber);
     for (i = 0; i < length; i++) {
       const index = toRemove[i];

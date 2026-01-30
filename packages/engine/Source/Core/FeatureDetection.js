@@ -201,6 +201,7 @@ function supportsImageRenderingPixelated() {
       "style",
       "image-rendering: -moz-crisp-edges;" + "image-rendering: pixelated;",
     );
+    // crisp-edges 调边缘锐利 pixelated 像素化，不做平滑
     //canvas.style.imageRendering will be undefined, null or an empty string on unsupported browsers.
     const tmp = canvas.style.imageRendering;
     supportsImageRenderingPixelatedResult = defined(tmp) && tmp !== "";

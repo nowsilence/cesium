@@ -20,6 +20,7 @@ if (type == 0) {
     // });
 
     const geometryInstance = new Cesium.GeometryInstance({
+        id: 'box_1',
         geometry: box,
         attributes: {
             color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED),

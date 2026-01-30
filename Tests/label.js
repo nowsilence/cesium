@@ -1,4 +1,3 @@
-import eyeOffset from '@cesium/engine/Source/Shaders/Builtin/Functions/eyeOffset.js';
 import { Cesium, getViewer } from "./index.js";
 const viewer = await getViewer();
 

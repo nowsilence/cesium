@@ -1979,11 +1979,13 @@ Viewer.prototype._onDataSourceRemoved = function (
  * The heading is the angle from y axis and increasing towards the x axis. Pitch is the rotation from the xy-plane. Positive pitch
  * angles are above the plane. Negative pitch angles are below the plane. The range is the distance from the center. If the range is
  * zero, a range will be computed such that the whole bounding sphere is visible.</p>
- *
+ * 
  * <p>In 2D, there must be a top down view. The camera will be placed above the target looking down. The height above the
  * target will be the range. The heading will be determined from the offset. If the heading cannot be
  * determined from the offset, the heading will be north.</p>
- *
+ * 
+ * 使用的是camera.setView(options)
+ * 
  * @param {Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|Promise<Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|VoxelPrimitive>} target The entity, array of entities, entity collection, data source, Cesium3DTileset, point cloud, or imagery layer to view. You can also pass a promise that resolves to one of the previously mentioned types.
  * @param {HeadingPitchRange} [offset] The offset from the center of the entity in the local east-north-up reference frame.
  * @returns {Promise<boolean>} A Promise that resolves to true if the zoom was successful or false if the target is not currently visualized in the scene or the zoom was cancelled.
@@ -2006,7 +2008,9 @@ Viewer.prototype.zoomTo = function (target, offset) {
  * <p>In 2D, there must be a top down view. The camera will be placed above the target looking down. The height above the
  * target will be the range. The heading will be determined from the offset. If the heading cannot be
  * determined from the offset, the heading will be north.</p>
- *
+ * 
+ * 使用的是camera.flyTo()
+ *  
  * @param {Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|Promise<Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|VoxelPrimitive>} target The entity, array of entities, entity collection, data source, Cesium3DTileset, point cloud, or imagery layer to view. You can also pass a promise that resolves to one of the previously mentioned types.
  * @param {object} [options] Object with the following properties:
  * @param {number} [options.duration=3.0] The duration of the flight in seconds.

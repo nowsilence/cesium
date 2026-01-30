@@ -321,6 +321,9 @@ PerspectiveFrustum.prototype.computeCullingVolume = function (
 /**
  * Returns the pixel's width and height in meters.
  *
+ * 返回是在距离相机近裁剪面distance处，一个像素代表多少米
+ * distance：这个距离是延相机方向的距离，并不是任意点到相机的距离，如果点不在相机方向上，distance需要投影到相机方向上
+ * 
  * @param {number} drawingBufferWidth The width of the drawing buffer.
  * @param {number} drawingBufferHeight The height of the drawing buffer.
  * @param {number} distance The distance to the near plane in meters.

@@ -2201,7 +2201,7 @@ Matrix4.multiplyByUniformScale = function (matrix, scale, result) {
 
 /**
  * Computes the product of a matrix and a column vector.
- *
+ * cartesian.w若为1，可以认为是点的转换乘法
  * @param {Matrix4} matrix The matrix.
  * @param {Cartesian4} cartesian The vector.
  * @param {Cartesian4} result The object onto which to store the result.
@@ -2246,6 +2246,12 @@ Matrix4.multiplyByVector = function (matrix, cartesian, result) {
  * // A shortcut for
  * //   Cartesian3 p = ...
  * //   Cesium.Matrix4.multiplyByVector(matrix, new Cesium.Cartesian4(p.x, p.y, p.z, 0.0), result);
+ * 将3D点（Cartesian3）按照“向量”的规则进行4x4矩阵的线性变换（旋转、缩放、剪切等），完全忽略矩阵中的平移分量，
+ * 传入点作为向量处理的，那返回的还是向量
+ * 应用场景：
+ * 1、变换方向 / 法向量，比如处理3D模型的法线、视线方向、光照方向时，模型旋转后，法线方向需要同步旋转，但不需要跟着模型的平移而改变
+ * 2：计算相对位置 / 位移，
+ * 3：忽略平移的点变换，比如你想让一个 3D 点只跟随矩阵做旋转 / 缩放，却不跟随矩阵的平移分量移动：
  */
 Matrix4.multiplyByPointAsVector = function (matrix, cartesian, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -2276,7 +2282,8 @@ Matrix4.multiplyByPointAsVector = function (matrix, cartesian, result) {
  * @param {Cartesian3} cartesian The point.
  * @param {Cartesian3} result The object onto which to store the result.
  * @returns {Cartesian3} The modified result parameter.
- *
+ * 将点转到矩阵所代表的坐标系下，相当于three.js的Vector3.applyMatrix4();
+ * 如果cartesian4.w = 1; 效果与multiplyByVector相同
  * @example
  * const p = new Cesium.Cartesian3(1.0, 2.0, 3.0);
  * const result = Cesium.Matrix4.multiplyByPoint(matrix, p, new Cesium.Cartesian3());

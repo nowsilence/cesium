@@ -243,7 +243,13 @@ function CesiumWidget(container, options) {
   // For this case, the `blurActiveElementOnCanvasFocus` can be passed with false to avoid blurring
   // the active element after interacting with the canvas.
   function blurActiveElement() {
+    // 仅当Canvas本身不是当前焦点元素时，才模糊当前激活的元素
+    // canvas为不可聚焦元素，如果焦点在输入框上，然后点击地图，焦点不会自动的转移到canva上
+    // Canvas 加了canvas.tabindex = 0; canvas.style.outline = 'none'; 即可获取焦点
+    // 1 canvas不可聚焦，那么点击canvas，就其他元素的焦点blur掉
+    // 2 canva可聚焦，点击canvas就获得了焦点，那么以下条件就是不成立的，就不会blur
     if (canvas !== canvas.ownerDocument.activeElement) {
+        // 强制之前聚焦的元素失去焦点，以免误操作
       canvas.ownerDocument.activeElement.blur();
     }
   }
@@ -1242,7 +1248,7 @@ CesiumWidget.prototype._onDataSourceRemoved = function (
  * <p>In 2D, there must be a top down view. The camera will be placed above the target looking down. The height above the
  * target will be the range. The heading will be determined from the offset. If the heading cannot be
  * determined from the offset, the heading will be north.</p>
- *
+ * 使用的是camera.setView
  * @param {Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|Promise<Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|VoxelPrimitive>} target The entity, array of entities, entity collection, data source, Cesium3DTileset, point cloud, or imagery layer to view. You can also pass a promise that resolves to one of the previously mentioned types.
  * @param {HeadingPitchRange} [offset] The offset from the center of the entity in the local east-north-up reference frame.
  * @returns {Promise<boolean>} A Promise that resolves to true if the zoom was successful or false if the target is not currently visualized in the scene or the zoom was cancelled.
@@ -1268,7 +1274,7 @@ CesiumWidget.prototype.zoomTo = function (target, offset) {
  * <p>In 2D, there must be a top down view. The camera will be placed above the target looking down. The height above the
  * target will be the range. The heading will be determined from the offset. If the heading cannot be
  * determined from the offset, the heading will be north.</p>
- *
+ * 使用的是camera.flyTo
  * @param {Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|Promise<Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|VoxelPrimitive>} target The entity, array of entities, entity collection, data source, Cesium3DTileset, point cloud, or imagery layer to view. You can also pass a promise that resolves to one of the previously mentioned types.
  * @param {object} [options] Object with the following properties:
  * @param {number} [options.duration=3.0] The duration of the flight in seconds.

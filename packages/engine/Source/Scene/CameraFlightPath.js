@@ -254,7 +254,7 @@ function createUpdate3D(
 
     const lonMin = Math.min(startCart.longitude, destCart.longitude);
     const lonMax = Math.max(startCart.longitude, destCart.longitude);
-
+    // 飞越经度是否在起始-目标经度区间内
     const hitInside = hitLon >= lonMin && hitLon <= lonMax;
 
     if (defined(optionFlyOverLongitudeWeight)) {
@@ -265,7 +265,7 @@ function createUpdate3D(
 
       const hitDistance = hitInside ? din : dot;
       const offDistance = hitInside ? dot : din;
-
+      // 若经过飞越经度的路径更短（按权重）且飞越经度不在区间内，绕远路
       if (
         hitDistance < offDistance * optionFlyOverLongitudeWeight &&
         !hitInside
@@ -276,7 +276,7 @@ function createUpdate3D(
       useLongFlight = true;
     }
   }
-
+// 选择长路径/短路径插值经纬度
   if (useLongFlight) {
     useLongestFlight(startCart, destCart);
   } else {
@@ -290,6 +290,7 @@ function createUpdate3D(
     destCart.height,
     optionAltitude,
   );
+  // 生成俯仰角变化曲线（结合高度调整，比如高度低时俯仰角更大，更贴近地面）
   const pitchFunction = createPitchFunction(
     startPitch,
     pitch,

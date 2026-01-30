@@ -1,3 +1,7 @@
+import { Cesium, getViewer } from "./index.js";
+const viewer = await getViewer();
+let type = 0;
+
 /**
  * KML（Keyhole Markup Language）是一种基于 XML 的地理空间数据标记语言，
  * 专门用于描述和传输地理要素（如点、线、面、地标、模型等）及其样式信息，
@@ -67,3 +71,79 @@
   </Document>
 </kml>
  */
+
+if (type == 0) {
+    // const url = './Tests/data/kml/facilities/facilities.kml';
+    const url = './Tests/data/kml/gdpPerCapita2008.kmz';
+    viewer.dataSources.add(Cesium.KmlDataSource.load(url,
+        {
+            camera: viewer.scene.camera,
+            canvas: viewer.scene.canvas
+        })
+    );
+}
+
+
+if (type == 1){
+    const options = {
+        camera: viewer.scene.camera,
+        canvas: viewer.scene.canvas,
+    };
+    const url = './Tests/data/kml/bikeRide.kml';
+    
+    viewer.dataSources
+          .add(
+            Cesium.KmlDataSource.load(
+              url,
+              options,
+            ),
+          )
+          .then(function (dataSource) {
+            viewer.clock.shouldAnimate = false;
+            const rider = dataSource.entities.getById("tour");
+            viewer.flyTo(rider).then(function () {
+              viewer.trackedEntity = rider;
+              viewer.selectedEntity = viewer.trackedEntity;
+              viewer.clock.multiplier = 30;
+              viewer.clock.shouldAnimate = true; // 动起来的关键
+            });
+          });
+}
+
+if (type == 2) {
+    const options = {
+        camera: viewer.scene.camera,
+        canvas: viewer.scene.canvas,
+    };
+    const url = './Tests/data/kml/eiffel-tower-flyto.kml';
+    let tour = null;
+    viewer.dataSources
+    .add(
+        Cesium.KmlDataSource.load(
+        url,
+        options,
+        ),
+    )
+    .then(function (dataSource) {
+        tour = dataSource.kmlTours[0];
+        tour.tourStart.addEventListener(function () {
+            console.log("Start tour");
+        });
+        tour.tourEnd.addEventListener(function (terminated) {
+            console.log(`${terminated ? "Terminate" : "End"} tour`);
+        });
+        tour.entryStart.addEventListener(function (entry) {
+            console.log(`Play ${entry.type} (${entry.duration})`);
+        });
+        tour.entryEnd.addEventListener(function (entry, terminated) {
+            console.log(`${terminated ? "Terminate" : "End"} ${entry.type}`);
+        });
+    });
+
+    // viewer.clock.clockRange = Cesium.ClockRange.UNBOUNDED;
+    // viewer.clock.clockStep = Cesium.ClockStep.SYSTEM_CLOCK;
+
+    setTimeout(() => {
+        tour.play(viewer.cesiumWidget);
+    }, 2000);
+}

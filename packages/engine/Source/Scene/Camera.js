@@ -94,12 +94,14 @@ function Camera(scene) {
 
   /**
    * The position of the camera.
-   *
+   * position设置后，并不会立刻更新_position的值，
+   * 在获取positionWC或者其他调用updateMemeber的时候，会判断position和_position是否相等，
+   * 不相等则更新_position,_positionWC
    * @type {Cartesian3}
    */
-  this.position = new Cartesian3();
-  this._position = new Cartesian3();
-  this._positionWC = new Cartesian3();
+  this.position = new Cartesian3(); // transform下的局部坐标，过渡性的，构建视图矩阵的时候并不会用到
+  this._position = new Cartesian3(); // transform下的局部坐标 
+  this._positionWC = new Cartesian3(); // 世界坐标
   this._positionCartographic = new Cartographic();
   this._oldPositionWC = undefined;
 
@@ -244,7 +246,7 @@ function Camera(scene) {
     this,
     Camera.DEFAULT_VIEW_RECTANGLE,
     this.position,
-    true,
+    true, // 表示更新相机的姿态
   );
 
   let mag = Cartesian3.magnitude(this.position);
@@ -313,7 +315,8 @@ Camera.DEFAULT_OFFSET = new HeadingPitchRange(
 );
 
 function updateViewMatrix(camera) {
-  Matrix4.computeView(
+  // _**是相机在transform下的位置姿态信息
+  Matrix4.computeView( // 计算相机的局部视图矩阵
     camera._position,
     camera._direction,
     camera._up,
@@ -325,6 +328,7 @@ function updateViewMatrix(camera) {
     camera._actualInvTransform,
     camera._viewMatrix,
   );
+  // 将矩阵转换到世界坐标系视图矩阵
   Matrix4.inverseTransformation(camera._viewMatrix, camera._invViewMatrix);
 }
 
@@ -1185,11 +1189,13 @@ Camera.prototype._setTransform = function (transform) {
   updateMembers(this);
   const inverse = this._actualInvTransform;
 
+  // 将世界坐标系下的position、direction、up、right转到transfomr下的位置、朝向上方向、x轴
   Matrix4.multiplyByPoint(inverse, position, this.position);
   Matrix4.multiplyByPointAsVector(inverse, direction, this.direction);
   Matrix4.multiplyByPointAsVector(inverse, up, this.up);
   Cartesian3.cross(this.direction, this.up, this.right);
-
+  // this.position/this.direction/this.up/this.right copy到 this._position/this._direction/this._up/this._right
+  // 更新视图矩阵
   updateMembers(this);
 };
 
@@ -1441,8 +1447,8 @@ const scratchHpr = new HeadingPitchRoll();
  * @param {HeadingPitchRollValues|DirectionUp} [options.orientation] An object that contains either direction and up properties or heading, pitch and roll properties. By default, the direction will point
  * towards the center of the frame in 3D and in the negative z direction in Columbus view. The up direction will point towards local north in 3D and in the positive
  * y direction in Columbus view. Orientation is not used in 2D when in infinite scrolling mode.
- * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame of the camera.
- * @param {boolean} [options.convert] Whether to convert the destination from world coordinates to scene coordinates (only relevant when not using 3D). Defaults to <code>true</code>.
+ * @param {Matrix4} [options.endTransform] 相机所在的坐标系 Transform matrix representing the reference frame of the camera.
+ * @param {boolean} [options.convert] 当在2.5D、2D模式下，传入的坐标如果是ECEF坐标，convert用来把ECEF坐标转换到对应模式下的世界坐标 Whether to convert the destination from world coordinates to scene coordinates (only relevant when not using 3D). Defaults to <code>true</code>.
  *
  * @example
  * // 1. Set position with a top-down view
@@ -1502,6 +1508,7 @@ Camera.prototype.setView = function (options) {
     options.destination ??
     Cartesian3.clone(this.positionWC, scratchSetViewCartesian);
   if (defined(destination) && defined(destination.west)) {
+    //类型为Rectangle
     destination = this.getRectangleCameraCoordinates(
       destination,
       scratchSetViewCartesian,
@@ -1512,10 +1519,12 @@ Camera.prototype.setView = function (options) {
       throw new DeveloperError(`destination has a NaN component`);
     }
     //>>includeEnd('debug');
+    // 已经是对应坐标系下的世界坐标了
     convert = false;
   }
 
   if (defined(orientation.direction)) {
+    // DirectionUp类型，包含direction、up，转成HeadingPitchRollValues类型，包含heading/pitch、roll
     orientation = directionUpToHeadingPitchRoll(
       this,
       destination,
@@ -1597,7 +1606,8 @@ Camera.prototype.flyHome = function (duration) {
 
 /**
  * Transform a vector or point from world coordinates to the camera's reference frame.
- *
+ * 将向量或者点转换到局部坐标系中
+ * 若cartesian.w=1，则相当于worldToCameraCoordinatesPoint
  * @param {Cartesian4} cartesian The vector or point to transform.
  * @param {Cartesian4} [result] The object onto which to store the result.
  * @returns {Cartesian4} The transformed vector or point.
@@ -1618,7 +1628,7 @@ Camera.prototype.worldToCameraCoordinates = function (cartesian, result) {
 
 /**
  * Transform a point from world coordinates to the camera's reference frame.
- *
+ * 把世界坐标系下的点转换到局部坐标系下
  * @param {Cartesian3} cartesian The point to transform.
  * @param {Cartesian3} [result] The object onto which to store the result.
  * @returns {Cartesian3} The transformed point.
@@ -1639,7 +1649,9 @@ Camera.prototype.worldToCameraCoordinatesPoint = function (cartesian, result) {
 
 /**
  * Transform a vector from world coordinates to the camera's reference frame.
- *
+ * 将向量cartesian从世界坐标系中转到局部坐标系（transform所在的坐标系）中
+ * 
+ * 向量不是点，向量是没有位置的，一般法线、方向从世界坐标转换到局部坐标系中
  * @param {Cartesian3} cartesian The vector to transform.
  * @param {Cartesian3} [result] The object onto which to store the result.
  * @returns {Cartesian3} The transformed vector.
@@ -1664,7 +1676,8 @@ Camera.prototype.worldToCameraCoordinatesVector = function (cartesian, result) {
 
 /**
  * Transform a vector or point from the camera's reference frame to world coordinates.
- *
+ * 将局部坐标系下的向量或者点转到世界坐标系下
+ * 若cartesian.w-1，则和cameraToWorldCoordinatesPoint结果一样
  * @param {Cartesian4} cartesian The vector or point to transform.
  * @param {Cartesian4} [result] The object onto which to store the result.
  * @returns {Cartesian4} The transformed vector or point.
@@ -1685,7 +1698,7 @@ Camera.prototype.cameraToWorldCoordinates = function (cartesian, result) {
 
 /**
  * Transform a point from the camera's reference frame to world coordinates.
- *
+ * 将局部坐标下的点转到世界坐标系下。
  * @param {Cartesian3} cartesian The point to transform.
  * @param {Cartesian3} [result] The object onto which to store the result.
  * @returns {Cartesian3} The transformed point.
@@ -1706,7 +1719,7 @@ Camera.prototype.cameraToWorldCoordinatesPoint = function (cartesian, result) {
 
 /**
  * Transform a vector from the camera's reference frame to world coordinates.
- *
+ * 将局部坐标系下的向量cartesian转到世界坐标系下，注意是向量不是点，向量没有位置
  * @param {Cartesian3} cartesian The vector to transform.
  * @param {Cartesian3} [result] The object onto which to store the result.
  * @returns {Cartesian3} The transformed vector.
@@ -2309,7 +2322,7 @@ const scratchLookAtMatrix4 = new Matrix4();
  * In 2D, there must be a top down view. The camera will be placed above the target looking down. The height above the
  * target will be the magnitude of the offset. The heading will be determined from the offset. If the heading cannot be
  * determined from the offset, the heading will be north.
- *
+ * 和lookAtTransform类似，只不过默认是target处东北天坐标系
  * @param {Cartesian3} target The target position in world coordinates.
  * @param {Cartesian3|HeadingPitchRange} offset The offset from the target in the local east-north-up reference frame centered at the target.
  *
@@ -2400,7 +2413,9 @@ function offsetFromHeadingPitchRange(heading, pitch, range) {
  * In 2D, there must be a top down view. The camera will be placed above the center of the reference frame. The height above the
  * target will be the magnitude of the offset. The heading will be determined from the offset. If the heading cannot be
  * determined from the offset, the heading will be north.
- *
+ * transform 参考坐标系。
+ * offset 定义了相机的位置，相对于transform坐标系的原点
+ *        若offset是HeadingPitchRange， head和pitch都是在参考坐标系下的值
  * @param {Matrix4} transform The transformation matrix defining the reference frame.
  * @param {Cartesian3|HeadingPitchRange} [offset] The offset from the target in a reference frame centered at the target.
  *
@@ -2806,7 +2821,8 @@ function rectangleCameraPosition2D(camera, rectangle, result) {
 
 /**
  * Get the camera position needed to view a rectangle on an ellipsoid or map
- *
+ * 计算一个相机的位置，在这个位置上可以看到rectangle全部的范围
+ * 返回的是对应地图模式下的世界坐标
  * @param {Rectangle} rectangle The rectangle to view.
  * @param {Cartesian3} [result] The camera position needed to view the rectangle
  * @returns {Cartesian3} The camera position needed to view the rectangle
@@ -2886,7 +2902,11 @@ function pickMapColumbusView(camera, windowPosition, projection, result) {
 
 /**
  * Pick an ellipsoid or map.
- *
+ * 3D拾取的是椭球点
+ * 2D、2.5D拾取的是地图
+ * 最终返回是基于椭球的ECEF坐标，不带高程
+ * 
+ * 返回的不一定是个Cartesian3，如果result为Cartesian4也是可以的，只不过不修改他的w值
  * @param {Cartesian2} windowPosition The x and y coordinates of a pixel.
  * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid to pick.
  * @param {Cartesian3} [result] The object onto which to store the result.
@@ -3049,7 +3069,7 @@ const scratchProj = new Cartesian3();
 
 /**
  * Return the distance from the camera to the front of the bounding sphere.
- *
+ * 计算相机近裁剪面到球表面的距离（并不是相机到球面的距离）
  * @param {BoundingSphere} boundingSphere The bounding sphere in world coordinates.
  * @returns {number} The distance to the bounding sphere.
  */
@@ -3077,7 +3097,7 @@ const scratchPixelSize = new Cartesian2();
 
 /**
  * Return the pixel size in meters.
- *
+ * boundingSphere球面，到near平面最近点处，一个像素代表多少米，单位米/像素
  * @param {BoundingSphere} boundingSphere The bounding sphere in world coordinates.
  * @param {number} drawingBufferWidth The drawing buffer width.
  * @param {number} drawingBufferHeight The drawing buffer height.
@@ -3315,7 +3335,8 @@ Camera.prototype.completeFlight = function () {
  * @param {EasingFunction.Callback} [options.easingFunction] Controls how the time is interpolated over the duration of the flight.
  *
  * @exception {DeveloperError} If either direction or up is given, then both are required.
- *
+ * flyOverLongitude 必须飞越的经线
+ * 实现 “从北京飞纽约，强制飞经 180° 经线，且飞行过程中先抬升高度再缓慢下降，俯仰角随高度调整” 的定制化飞行；
  * @example
  * // 1. Fly to a position with a top-down view
  * viewer.camera.flyTo({
@@ -3825,8 +3846,12 @@ Camera.prototype.computeViewRectangle = function (ellipsoid, result) {
 
   let successfulPickCount = 0;
 
+  /**
+   * 地平线四边形，用视口4个角点做射线，计算射线与椭球角点
+   * 若无交点，则计算这条射线到椭球的切线，切线、角点射线，相机位置点、椭球中心点在同一平面内
+   */
   const computedHorizonQuad = computeHorizonQuad(this, ellipsoid);
-
+//   统计能成功与地球相交的有效角点数量
   successfulPickCount += addToResult(
     0,
     0,

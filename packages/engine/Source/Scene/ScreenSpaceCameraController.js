@@ -53,6 +53,7 @@ function ScreenSpaceCameraController(scene) {
    */
   this.enableInputs = true;
   /**
+   * 这个参数只是针对2D、2.5D地图有效
    * If true, allows the user to pan around the map.  If false, the camera stays locked at the current position.
    * This flag only applies in 2D and Columbus view modes.
    * @type {boolean}
@@ -66,13 +67,19 @@ function ScreenSpaceCameraController(scene) {
    */
   this.enableZoom = true;
   /**
+   * 这个参数只针对3D/2D, 对2.5D无效，
+   * 3D: 设置为false，相机不能绕球运动，效果上就是地图无法移动
    * If true, allows the user to rotate the world which translates the user's position.
-   * This flag only applies in 2D and 3D.
+   * This flag only applies in 3D/2D.
+   * 2D: 要想起作用，scene.mapMode2D必须为MapMode.ROTATE
    * @type {boolean}
    * @default true
    */
   this.enableRotate = true;
   /**
+   * 只针对3D和2.5D
+   * 3D: 设置为false，则无法旋转和俯仰
+   * 2.5： 设置为false则无法旋转
    * If true, allows the user to tilt the camera.  If false, the camera is locked to the current heading.
    * This flag only applies in 3D and Columbus view.
    * @type {boolean}
@@ -80,6 +87,8 @@ function ScreenSpaceCameraController(scene) {
    */
   this.enableTilt = true;
   /**
+   * 如果设置为true，则按住shift，拖动鼠标左键，可以自由调整相机方向
+   * 只针对3D、2.5D
    * If true, allows the user to use free-look. If false, the camera view direction can only be changed through translating
    * or rotating. This flag only applies in 3D and Columbus view modes.
    * @type {boolean}
@@ -111,6 +120,8 @@ function ScreenSpaceCameraController(scene) {
    */
   this.inertiaZoom = 0.8;
   /**
+   * 限制单帧相机运动幅度,通过移动的距离与宽或高的百分比约束用户输入（平移、旋转、缩放、倾斜等）触发的相机行为，
+   * 避免低帧率场景下相机失控（地图瞬间移动一大段距离）。
    * A parameter in the range <code>[0, 1)</code> used to limit the range
    * of various user inputs to a percentage of the window width/height per animation frame.
    * This helps keep the camera under control in low-frame-rate situations.
@@ -119,6 +130,8 @@ function ScreenSpaceCameraController(scene) {
    */
   this.maximumMovementRatio = 0.1;
   /**
+   * 回弹动画时间设置
+   * 在2.5D模式下，当地图一半以上除以屏幕外，松手会回弹回来
    * Sets the duration, in seconds, of the bounce back animations in 2D and Columbus view.
    * @type {number}
    * @default 3.0
@@ -265,6 +278,7 @@ function ScreenSpaceCameraController(scene) {
     : ellipsoid.minimumRadius * 1.175;
   this._minimumTrackBallHeight = this.minimumTrackBallHeight;
   /**
+   * 是否开启相机碰撞检测（避免相机钻入地形 / 模型内部）
    * When disabled, the values of <code>maximumZoomDistance</code> and <code>minimumZoomDistance</code> are ignored.
    * Also used in conjunction with {@link Cesium3DTileset#enableCollision} to prevent the camera from moving through or below a 3D Tileset surface.
    * This may also affect clamping behavior when using {@link HeightReference.CLAMP_TO_GROUND} on 3D Tiles.
@@ -561,7 +575,7 @@ function handleZoom(
   startPosition,
   movement,
   zoomFactor,
-  distanceMeasure,
+  distanceMeasure, // 相机到椭球中心距离？
   unitPositionDotDirection,
 ) {
   let percentage = 1.0;
@@ -573,6 +587,7 @@ function handleZoom(
     );
   }
 
+//   diff>0 表示相机向地表靠近（放大操作）
   const diff = movement.endPosition.y - movement.startPosition.y;
 
   // distanceMeasure should be the height above the ellipsoid.
@@ -590,10 +605,10 @@ function handleZoom(
     object._minimumZoomRate,
     object._maximumZoomRate,
   );
-
+  // 缩放是用的垂直方向差值计算缩放，所以除以canvas的高度
   let rangeWindowRatio = diff / object._scene.canvas.clientHeight;
   rangeWindowRatio = Math.min(rangeWindowRatio, object.maximumMovementRatio);
-  let distance = zoomRate * rangeWindowRatio;
+  let distance = zoomRate * rangeWindowRatio; // 缩放距离
 
   if (
     object.enableCollisionDetection ||

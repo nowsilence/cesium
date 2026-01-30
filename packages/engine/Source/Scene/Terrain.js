@@ -5,7 +5,7 @@ import createWorldTerrainAsync from "../Core/createWorldTerrainAsync.js";
 
 /**
  * A helper to manage async operations of a terrain provider.
- *
+ * TerrainProvider的生成器，加载器
  * @alias Terrain
  * @constructor
  *

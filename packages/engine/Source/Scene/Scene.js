@@ -4590,7 +4590,7 @@ Scene.prototype.pickMetadataSchema = function (windowPosition) {
  * </p>
  *
  * @private
- *
+ * 返回的是所在场景的世界坐标，2D和3D世界坐标系不同
  * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
  * @param {Cartesian3} [result] The object on which to restore the result.
  * @returns {Cartesian3} The cartesian position in world coordinates.
@@ -4619,7 +4619,7 @@ Scene.prototype.pickPositionWorldCoordinates = function (
  * Set {@link Scene#pickTranslucentDepth} to <code>true</code> to include the depth of
  * translucent primitives; otherwise, this essentially picks through translucent primitives.
  * </p>
- *
+ * 返回的是ECEF坐标系下的世界坐标，如果是2D地图，会先转成经纬度坐标，再转回ECEF
  * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
  * @param {Cartesian3} [result] The object on which to restore the result.
  * @returns {Cartesian3} The cartesian position.

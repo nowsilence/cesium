@@ -25,7 +25,12 @@ import JulianDate from "./JulianDate.js";
  *
  * @exception {DeveloperError} startTime must come before stopTime.
  *
- *
+ * 若未设置currentTime:
+ *   若设置了startTime，currentTime设置为startTime
+ *   若设置了stopTime，则currentTime设置为stopTime减去一天
+ *   否则设置为当前时间
+ * 若未设置startTime，startTime设置为currentTime
+ * 若未设置stopTime，stopTime设置为startTime加一天
  * @example
  * // Create a clock that loops on Christmas day 2013 and runs in real-time.
  * const clock = new Cesium.Clock({
@@ -101,7 +106,7 @@ function Clock(options) {
    * {@link Clock#startTime} or {@link Clock#stopTime}
    * is reached.
    * @type {ClockRange}
-   * @default {@link ClockRange.UNBOUNDED}
+   * @default {@link ClockRange.UNBOUNDED} 时间会一直延伸下去
    */
   this.clockRange = options.clockRange ?? ClockRange.UNBOUNDED;
 

@@ -318,6 +318,7 @@ function getSilhouetteEdgeDetection(edgeDetectionStages) {
 }
 
 /**
+ * 剪影轮廓
  * Creates a post-process stage that applies a silhouette effect.
  * <p>
  * A silhouette effect composites the color from the edge detection pass with input color texture.
