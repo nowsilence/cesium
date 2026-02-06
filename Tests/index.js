@@ -91,43 +91,13 @@ async function createView() {
 
     viewer.scene.screenSpaceCameraController.enableCollisionDetection = false;
     viewer.scene.globe.depthTestAgainstTerrain = false;
-    // viewer.scene.screenSpaceCameraController.enableLook = false;
-    // viewer.scene.screenSpaceCameraController.enableRotate = true; // 禁用拖拽旋转（避免干扰 Free Look）
-    // viewer.scene.screenSpaceCameraController.enableZoom = false;
-    // viewer.scene.screenSpaceCameraController.enableTranslate = false;
-    // viewer.scene.screenSpaceCameraController.enableTilt = false;
-
-    const center = Cesium.Cartesian3.fromDegrees(116.4038, 39.9151, 100);
-
-    // 设置相机为第一人称视角（指向轨迹方向）
-// viewer.camera.lookAt(
-//   center, // 相机位置（贴近轨迹）
-//   new Cesium.Cartesian3(0, -1000, 50) // 相机朝向（向后1000米、向上50米，指向轨迹）
-// );
-// 切换到第一人称控制器模式（关键）
-// viewer.camera.mode = Cesium.CameraMode.LOCAL;
-    /**
-     * 设置TerrainProvider的4种方式。
-     * 1、在构建Viewer的时候输入参数：terrain: Cesium.Terrain.fromWorldTerrain()
-     * 2、在构建Viewer的时候输入参数：terrainProvider: terrainProvider
-     * 3、viewer.terrainProvider = terrainProvider; // await Cesium.createWorldTerrainAsync();
-     * 4、viewer.scene.setTerrain(Cesium.Terrain.fromWorldTerrain({
-     *       requestWaterMask: true,
-     *       requestVertexNormals: true
-     *   }));
-     * 
-     * Terrain和TerrainProvider相比，Terrain可以使用异步的方式，不必等待Provider创建完成
-     */
-
-    /**
-     * 设置ImageryProvider的方式2种
-     * 1、在构建Viewer的时候输入参数：baseLayer: Cesium.ImageryLayer.fromWorldImagery()构建一个layer
-     * 2、viewer.imageryLayers.addImageryProvider(new Cesium.TileCoordinatesImageryProvider());
-     */
-   
-    // viewer.imageryLayers.removeAll();
-    // viewer.scene.camera.switchToOrthographicFrustum()
-    // viewer.scene.fog.enabled = false;
+    // Fog只针对地形、Model有效，其他无效
+    // enabled、renderable同时为true才会渲染雾效，
+    // enabled为true用来计算屏幕误差过滤无效瓦片
+    // enabled=true,renderable=false,不会渲染雾效，但会辅助过滤瓦片
+    // enabled=false,renderable=true,什么效果也没有
+    viewer.scene.fog.enabled = false;
+    viewer.scene.fog.renderable = true;
 
     return viewer;
 }

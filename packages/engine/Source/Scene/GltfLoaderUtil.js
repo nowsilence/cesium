@@ -145,6 +145,8 @@ GltfLoaderUtil.createModelTextureReader = function (options) {
   const textureTransform = textureInfo.extensions?.KHR_texture_transform;
 
   if (defined(textureTransform)) {
+    // GLTF 中 UV 坐标的 (0,0) 在纹理左上角（y 轴向下）；
+    // WebGL 中 UV 坐标的 (0,0) 在纹理左下角（y 轴向上）
     texCoord = textureTransform.texCoord ?? texCoord;
 
     const offset = defined(textureTransform.offset)

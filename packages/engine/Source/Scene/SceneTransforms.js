@@ -319,7 +319,7 @@ SceneTransforms.computeActualEllipsoidPosition = function (
   }
 
   projection.project(cartographic, projectedPosition);
-
+  // 2d世界坐标轴 猜测x轴垂直地面向上、y轴向东、z轴向北
   if (mode === SceneMode.COLUMBUS_VIEW) {
     return Cartesian3.fromElements(
       projectedPosition.z,

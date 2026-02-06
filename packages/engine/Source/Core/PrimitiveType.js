@@ -33,7 +33,7 @@ const PrimitiveType = {
 
   /**
    * Line strip primitive where each vertex (or index) after the first connects a line to the previous vertex.
-   *
+   * 和LINE_LOOP的区别是，LINE_LOOP会自动闭合，即第一个点连接最后一个点
    * @type {number}
    * @constant
    */

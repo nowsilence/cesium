@@ -63,7 +63,7 @@ Cesium3DTilesetMostDetailedTraversal.selectTiles = function (
     if (traverse) {
       updateAndPushChildren(tile, stack, frameState);
     }
-
+    // 如果不是叶子节点，他的refine为replace，说明他不是最精细的对象，这个瓦片就舍弃，需要加载他的子瓦片
     if (add || (replace && !traverse)) {
       loadTile(tileset, tile);
       touchTile(tile, frameState);

@@ -237,7 +237,7 @@ function createPositionsTypedArrayFor2D(
     ) {
       continue;
     }
-
+    // 计算世界坐标
     const transformedPosition = Matrix4.multiplyByPoint(
       modelMatrix,
       initialPosition,

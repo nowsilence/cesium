@@ -307,6 +307,7 @@ OrthographicOffCenterFrustum.prototype.computeCullingVolume = function (
  * @example
  * // Example 1
  * // Get the width and height of a pixel.
+ * 单位：米/像素
  * const pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, 0.0, scene.pixelRatio, new Cesium.Cartesian2());
  */
 OrthographicOffCenterFrustum.prototype.getPixelDimensions = function (

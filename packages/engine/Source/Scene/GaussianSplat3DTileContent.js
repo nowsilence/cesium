@@ -336,16 +336,17 @@ GaussianSplat3DTileContent.fromGltf = async function (
     upAxis: Axis.Y,
     forwardAxis: Axis.Z,
   };
-
+  // 说明传入的 gltf 参数是一个完整的 GLTF JSON 对象
   if (defined(gltf.asset)) {
     loaderOptions.gltfJson = gltf;
     loaderOptions.baseResource = baseResource;
     loaderOptions.gltfResource = baseResource;
-  } else if (gltf instanceof Uint8Array) {
+  } else if (gltf instanceof Uint8Array) { // 二进制格式的GLTF,即.glb文件
     loaderOptions.typedArray = gltf;
     loaderOptions.baseResource = baseResource;
     loaderOptions.gltfResource = baseResource;
   } else {
+    // 说明传入的是 GLTF 文件的资源路径（字符串 / Resource 对象），需要先通过路径读取 GLTF 内容。
     loaderOptions.gltfResource = Resource.createIfNeeded(gltf);
   }
 

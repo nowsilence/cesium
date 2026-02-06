@@ -1070,16 +1070,18 @@ const scratchSemanticInfo = {
 };
 
 function getSemanticInfo(loader, semanticType, gltfSemantic) {
+  // 针对 .b3dm（3D Tiles 批量模型格式）做特殊的语义重命名：将旧的 _BATCHID/BATCHID 语义重命名为 _FEATURE_ID_0，以兼容 GLTF 的 EXT_mesh_features 扩展（要素 ID 标准化扩展）；
+  // 将 GLTF 原始语义字符串转换为 Cesium 模型内部可识别的语义类型；
   // For .b3dm, rename _BATCHID (or the legacy BATCHID) to _FEATURE_ID_0
   // in the generated model components for compatibility with EXT_mesh_features
-  let renamedSemantic = gltfSemantic;
+  let renamedSemantic = gltfSemantic; // 原始语义
   if (
     loader._renameBatchIdSemantic &&
     (gltfSemantic === "_BATCHID" || gltfSemantic === "BATCHID")
   ) {
     renamedSemantic = "_FEATURE_ID_0";
   }
-
+  // 顶点属性语义转换，如POSITION->VertexAttributeSemantic.POSITION
   const modelSemantic = semanticType.fromGltfSemantic(renamedSemantic);
 
   const semanticInfo = scratchSemanticInfo;
@@ -1090,6 +1092,7 @@ function getSemanticInfo(loader, semanticType, gltfSemantic) {
   return semanticInfo;
 }
 
+// 是不是分类模型的一个属性，分类模型的属性有position, texcoord, and feature ID attributes
 function isClassificationAttribute(attributeSemantic) {
   // Classification models only use the position, texcoord, and feature ID attributes.
   const isPositionAttribute =
@@ -2425,7 +2428,10 @@ function loadNode(loader, gltfNode, frameState) {
     }
     node.instances = loadInstances(loader, nodeExtensions, frameState);
   }
-
+  /**
+   * articulationName 指的是glTF模型中定义的‌关节名称‌（Joint Name），用于控制模型的可动部分（如火箭的喷口、机械臂的关节等）。
+   * 这些关节是模型动画和交互控制的基础单元
+   */
   if (defined(articulationsExtension)) {
     node.articulationName = articulationsExtension.articulationName;
   }

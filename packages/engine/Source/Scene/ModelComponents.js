@@ -740,7 +740,8 @@ function Node() {
 
   /**
    * The mesh primitives.
-   *
+   * gltfJson.node.mesh mesh索引 i
+   * gltfJson.meshes[i].primitives构建Cesium.Primitive
    * @type {ModelComponents.Primitive[]}
    * @private
    */

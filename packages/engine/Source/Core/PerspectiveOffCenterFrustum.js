@@ -12,7 +12,11 @@ import Matrix4 from "./Matrix4.js";
  * Each plane is represented by a {@link Cartesian4} object, where the x, y, and z components
  * define the unit vector normal to the plane, and the w component is the distance of the
  * plane from the origin/camera position.
- *
+ * OffCenterFrustum离轴视锥体，中心轴不与相机视线轴重合
+ * 
+ * 相机只是定义了观察点 + 朝向参考，具体的渲染范围要看视景体定义的范围
+ * 正常情况下是不能渲染相机后面的物体，那是因为视椎体刚好定义了相机的前方。
+ * 当视椎体定义的范围包括了相机的后方就可以渲染
  * @alias PerspectiveOffCenterFrustum
  * @constructor
  *

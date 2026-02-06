@@ -51,6 +51,7 @@ Cesium3DTilesetBaseTraversal.selectTiles = function (tileset, frameState) {
     return;
   }
 
+  // 判断由tileset的几何误差计算出来的屏幕误差是否满足tileset的最大几何误差
   if (
     root.getScreenSpaceError(frameState, true) <=
     tileset.memoryAdjustedScreenSpaceError
@@ -100,6 +101,15 @@ function updateAndPushChildren(tile, stack, frameState) {
     updateTile(children[i], frameState);
   }
 
+  /**
+   * 判断tile是否可进行细化
+   * 1、tile本身的优化策略是replace，且是有渲染内容的（hasRenderableContent=true)
+   * 2、若子瓦片都不可见（可能是几何误差还没有到达显示的阈值）则不可细化
+   * 3、相机不在子瓦片的请求范围内，则不可细化
+   * 4、子瓦片没有渲染内容，则不可细化
+   * 5、子瓦片内容不可用，则不可细化（内容还没加载，或者过期了）
+   */
+
   // Sort by distance to take advantage of early Z and reduce artifacts for skipLevelOfDetail
   children.sort(Cesium3DTilesetTraversal.sortChildrenByDistanceToCamera);
 
@@ -135,6 +145,7 @@ function updateAndPushChildren(tile, stack, frameState) {
     }
     if (checkRefines) {
       let childRefines;
+      // 判断相机是否在请求的范围内，有些瓦片可以定义相机在进入哪个范围内才去请求瓦片
       if (!child._inRequestVolume) {
         childRefines = false;
       } else if (!child.hasRenderableContent) {
@@ -203,9 +214,9 @@ function executeTraversal(root, frameState) {
     const tile = stack.pop();
 
     const parent = tile.parent;
-    const parentRefines = !defined(parent) || parent._refines;
+    const parentRefines = !defined(parent) || parent._refines; // 跟节点为true
 
-    tile._refines = canTraverse(tile)
+    tile._refines = canTraverse(tile) // 有子瓦片
       ? updateAndPushChildren(tile, stack, frameState) && parentRefines
       : false;
 
@@ -225,7 +236,7 @@ function executeTraversal(root, frameState) {
       loadTile(tile, frameState);
     } else if (tile.refine === Cesium3DTileRefine.REPLACE) {
       loadTile(tile, frameState);
-      if (stoppedRefining) {
+      if (stoppedRefining) { // 子瓦片还没准备好
         selectDesiredTile(tile, frameState);
       }
     }

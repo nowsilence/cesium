@@ -946,6 +946,8 @@ Cesium3DTile.prototype.getScreenSpaceError = function (
     // Avoid divide by zero when viewer is inside the tile
     const distance = Math.max(this._distanceToCamera, CesiumMath.EPSILON7);
     const sseDenominator = frustum.sseDenominator;
+    // geometricError单位是 米/像素，一个像素代表多少米，
+    // 正常情况下是要计算瓦片的包围球的直径，tileset直接写死，可以缩放大小来控制屏幕误差
     error = (geometricError * height) / (distance * sseDenominator);
     if (tileset.dynamicScreenSpaceError) {
       const density = tileset._dynamicScreenSpaceErrorComputedDensity;

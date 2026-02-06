@@ -261,6 +261,9 @@ function initialize(sceneGraph) {
   // the model file. This is so the node indices remain the same. However,
   // only nodes reachable from the scene's root node will be populated, the
   // rest will be undefined
+  // 场景中的所有node转换为ModelRuntimeNode，放入_runtimeNodes
+  // ModelRuntimeNode管理node.primitives的一个primitive
+  // ModelRuntimeNode都设置了transform，且设置了父node的transform，构造函数内，子node乘父node,值存在ModelRuntimeNode._computedTransform，点可以直接转为世界坐标
   sceneGraph._runtimeNodes = new Array(nodesLength);
 
   const rootNodes = scene.nodes;
@@ -993,7 +996,7 @@ const scratchPushDrawCommandOptions = {
 /**
  * Traverses through the scene graph and pushes the draw commands associated
  * with each primitive to the frame state's command list.
- *
+ * 将drawCommand塞到frameState.commandList中
  * @param {FrameState} frameState The frame state.
  *
  * @private

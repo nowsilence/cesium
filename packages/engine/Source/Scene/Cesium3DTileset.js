@@ -74,7 +74,7 @@ import ImageryLayerCollection from "./ImageryLayerCollection.js";
  * @property {Axis} [modelUpAxis=Axis.Y] Which axis is considered up when loading models for tile contents.
  * @property {Axis} [modelForwardAxis=Axis.X] Which axis is considered forward when loading models for tile contents.
  * @property {ShadowMode} [shadows=ShadowMode.ENABLED] Determines whether the tileset casts or receives shadows from light sources.
- * @property {number} [maximumScreenSpaceError=16] The maximum screen space error used to drive level of detail refinement.
+ * @property {number} [maximumScreenSpaceError=16] 屏幕误差 单位：像素/米 The maximum screen space error used to drive level of detail refinement.
  * @property {number} [cacheBytes=536870912] The size (in bytes) to which the tile cache will be trimmed, if the cache contains tiles not needed for the current view.
  * @property {number} [maximumCacheOverflowBytes=536870912] The maximum additional memory (in bytes) to allow for cache headroom, if more than {@link Cesium3DTileset#cacheBytes} are needed for the current view.
  * @property {boolean} [cullWithChildrenBounds=true] Optimization option. Whether to cull tiles using the union of their children bounding volumes.
@@ -209,7 +209,9 @@ function Cesium3DTileset(options) {
   this._resource = undefined;
   this._asset = undefined; // Metadata for the entire tileset
   this._properties = undefined; // Metadata for per-model/point/etc properties
-  this._geometricError = undefined; // Geometric error when the tree is not rendered at all
+  // 一般情况下如果要获取父类的屏幕误差，那么就用父Tile的geometricError，若没有父Tile就是用tileset._scaledGeometricError,
+  this._geometricError = undefined; // 几何误差 单位 米/像素 Geometric error when the tree is not rendered at all
+  // 默认值为：geometricError，后续会根据rootTile的缩放矩阵进行缩放
   this._scaledGeometricError = undefined; // Geometric error scaled by root tile scale
   this._extensionsUsed = undefined;
   this._extensions = undefined;
@@ -2369,7 +2371,7 @@ Cesium3DTileset.prototype.loadTileset = function (
  *
  * @param {Cesium3DTileset} tileset The tileset
  * @param {Resource} baseResource The base resource for the tileset
- * @param {object} tileHeader The JSON header for the tile
+ * @param {object} tileHeader The JSON header for the tile 就是对应tileset里的json
  * @param {Cesium3DTile} [parentTile] The parent tile of the new tile
  * @returns {Cesium3DTile} The newly created tile
  *
@@ -2882,9 +2884,9 @@ function processTiles(tileset, frameState) {
       handleTileFailure(error, tileset, tile);
     }
   }
-
+  // 动态调整tileset的memoryAdjustedScreenSpaceError
   if (tileset.totalMemoryUsageInBytes < cacheBytes) {
-    decreaseScreenSpaceError(tileset);
+    decreaseScreenSpaceError(tileset); // 变小的话，级别比较小的时候就会加载
   } else if (memoryExceeded && tiles.length > 0) {
     increaseScreenSpaceError(tileset);
   }

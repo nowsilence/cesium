@@ -444,7 +444,7 @@ function makeAttribute(loader, attributeInfo, context) {
     attribute.semantic === VertexAttributeSemantic.POSITION &&
     loadAttributesFor2D
   ) {
-    attribute.typedArray = typedArray;
+    attribute.typedArray = typedArray; // 后续用来生成2d/cv场景下的顶点数据
   }
 
   return attribute;

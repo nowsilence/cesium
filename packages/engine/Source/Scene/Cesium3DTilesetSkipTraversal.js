@@ -58,7 +58,7 @@ Cesium3DTilesetSkipTraversal.selectTiles = function (tileset, frameState) {
   if (!root.isVisible) {
     return;
   }
-
+  // 由几何误差计算屏幕误差
   if (
     root.getScreenSpaceError(frameState, true) <=
     tileset.memoryAdjustedScreenSpaceError

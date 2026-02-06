@@ -6,6 +6,13 @@ import WebGLConstants from "../Core/WebGLConstants.js";
 /**
  * Get an array of primitives for a given mesh. If the EXT_mesh_primitive_restart extension is present, use it to combine groups of primitives.
  * If the extension is not present or its spec is violated, return the original mesh.primitives.
+ * EXT_mesh_primitive_restart图元重启，如在绘制LINE_STRIP的时候，必须是前一个点连接后一个点，
+ * 若两个断开的线使用LINE_STRIP的时候，必须分两个Primitive，使用图元重启在渲染的时候碰到图元重启标志会重启图元绘制
+ * 
+ * 这个函数的作用是如果支持图元重启，能合并渲染的primitive进行合并
+ * 
+ * meshPrimitives内的primitives并不是所有的都支持合并，group里面记录了这个group合并了哪些primitive，并将索引记录在了group.primitives，group.indices就是这些primitives的顶点索引
+ * 可以合并的合并，和不能合并的一块返回
  * @param {object} mesh A mesh from the glTF meshes array
  * @returns {object[]} An array of mesh primitives
  * @private
@@ -28,14 +35,14 @@ function getMeshPrimitives(mesh) {
   addAllToArray(primitives, meshPrimitives);
   for (const group of primitiveRestartExtension.primitiveGroups) {
     // Spec: the group must not be empty and all indices must be valid array indices into mesh.primitives.
-    const firstPrimitiveIndex = group.primitives[0];
+    const firstPrimitiveIndex = group.primitives[0]; // 里面存的是索引值，是meshPrimitives的索引
     if (!defined(firstPrimitiveIndex) || !meshPrimitives[firstPrimitiveIndex]) {
       return meshPrimitives;
     }
 
     const primitive = {
       ...meshPrimitives[firstPrimitiveIndex],
-      indices: group.indices,
+      indices: group.indices, // 合并后的统一索引数组，包含重启索引值
     };
 
     // Spec: primitive restart only supported for these topologies.

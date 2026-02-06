@@ -165,7 +165,7 @@ import ModelImagery from "./ModelImagery.js";
  * @privateParam {Credit|string} [options.credit] A credit for the data source, which is displayed on the canvas.
  * @privateParam {boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
  * @privateParam {SplitDirection} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this model.
- * @privateParam {boolean} [options.projectTo2D=false] Whether to accurately project the model's positions in 2D. If this is true, the model will be projected accurately to 2D, but it will use more memory to do so. If this is false, the model will use less memory and will still render in 2D / CV mode, but its positions may be inaccurate. This disables minimumPixelSize and prevents future modification to the model matrix. This also cannot be set after the model has loaded.
+ * @privateParam {boolean} [options.projectTo2D=false] 会提前生成一份2d/CV数据放到内存，故会增加内存的使用 Whether to accurately project the model's positions in 2D. If this is true, the model will be projected accurately to 2D, but it will use more memory to do so. If this is false, the model will use less memory and will still render in 2D / CV mode, but its positions may be inaccurate. This disables minimumPixelSize and prevents future modification to the model matrix. This also cannot be set after the model has loaded.
  * @privateParam {boolean} [options.enablePick=false] Whether to allow CPU picking with <code>pick</code> when not using WebGL 2 or above. If using WebGL 2 or above, this option will be ignored. If using WebGL 1 and this is true, the <code>pick</code> operation will work correctly, but it will use more memory to do so. If running with WebGL 1 and this is false, the model will use less memory, but <code>pick</code> will always return <code>undefined</code>. This cannot be set after the model has loaded.
  * @privateParam {string|number} [options.featureIdLabel="featureId_0"] Label of the feature ID set to use for picking and styling. For EXT_mesh_features, this is the feature ID's label property, or "featureId_N" (where N is the index in the featureIds array) when not specified. EXT_feature_metadata did not have a label field, so such feature ID sets are always labeled "featureId_N" where N is the index in the list of all feature Ids, where feature ID attributes are listed before feature ID textures. If featureIdLabel is an integer N, it is converted to the string "featureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @privateParam {string|number} [options.instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
@@ -580,7 +580,7 @@ function selectFeatureTableId(components, model) {
 /**
  *  Returns whether the alpha state has changed between invisible,
  *  translucent, or opaque.
- *
+ *  半透明、不可见、不透明，这三种状态发生改变则返回true
  *  @private
  */
 function isColorAlphaDirty(currentColor, previousColor) {
@@ -594,6 +594,7 @@ function isColorAlphaDirty(currentColor, previousColor) {
 
   const currentAlpha = currentColor.alpha;
   const previousAlpha = previousColor.alpha;
+
   return (
     Math.floor(currentAlpha) !== Math.floor(previousAlpha) ||
     Math.ceil(currentAlpha) !== Math.ceil(previousAlpha)
@@ -1974,9 +1975,9 @@ Model.prototype.update = function (frameState) {
   updateFeatureTables(this, frameState);
   updatePointCloudShading(this);
   updateSilhouette(this, frameState);
-  updateSkipLevelOfDetail(this, frameState);
-  updateClippingPlanes(this, frameState);
-  updateClippingPolygons(this, frameState);
+  updateSkipLevelOfDetail(this, frameState); // 3dtileset 可能有skipLevelDetail
+  updateClippingPlanes(this, frameState); // 在构建Model的时候设置，
+  updateClippingPolygons(this, frameState);// 和clipPlanes一样
   updateSceneMode(this, frameState);
   updateFog(this, frameState);
   updateVerticalExaggeration(this, frameState);
@@ -2257,6 +2258,7 @@ function updateModelMatrix(model, frameState) {
 const scratchPosition = new Cartesian3();
 const scratchCartographic = new Cartographic();
 
+// 更新贴地矩阵
 function updateClamping(model) {
   if (
     !model._updateModelMatrix &&
@@ -2556,6 +2558,7 @@ function submitDrawCommands(model, frameState) {
 
   if (showModel && !model._ignoreCommands && submitCommandsForPass) {
     addCreditsToCreditDisplay(model, frameState);
+    // 将drawCommand塞到frameState.commandList中
     model._sceneGraph.pushDrawCommands(frameState);
   }
 }

@@ -96,8 +96,9 @@ function getPickOrthographicCullingVolume(
   if (defined(offCenterFrustum)) {
     frustum = offCenterFrustum;
   }
-
+  // ndc 坐标
   let x = (2.0 * (drawingBufferPosition.x - viewport.x)) / viewport.width - 1.0;
+  // NDC 坐标→相机局部空间近裁剪面的实际偏移量
   x *= (frustum.right - frustum.left) * 0.5;
   let y =
     (2.0 * (viewport.height - drawingBufferPosition.y - viewport.y)) /
@@ -138,7 +139,7 @@ function getPickOrthographicCullingVolume(
   ortho.bottom = -ortho.top;
   ortho.near = frustum.near;
   ortho.far = frustum.far;
-
+  // 假如一个像素表示宽a米、高b米，那么返回宽高为a、b的视椎体
   return ortho.computeCullingVolume(origin, camera.directionWC, camera.upWC);
 }
 
@@ -262,6 +263,7 @@ function computePickingDrawingBufferRectangle(
 }
 
 /**
+ * 只能拾取一个对象
  * Returns an object with a <code>primitive</code> property that contains the first (top) primitive in the scene
  * at a particular window coordinate or undefined if nothing is at the location. Other properties may
  * potentially be set depending on the type of primitive and may be used to further identify the picked object.
@@ -308,6 +310,7 @@ Picking.prototype.pick = function (scene, windowPosition, width, height) {
   scene.jobScheduler.disableThisFrame();
 
   scene.updateFrameState();
+  // 如果是正交获取的是1x1的volume，若我透视大小为widthxheight
   frameState.cullingVolume = getPickCullingVolume(
     scene,
     drawingBufferPosition,
@@ -942,6 +945,7 @@ function launchMostDetailedRayPick(
   callback,
 ) {
   const tilesets = [];
+  // 收集所有tileset
   getTilesets(scene.primitives, objectsToExclude, tilesets);
   if (tilesets.length === 0) {
     return Promise.resolve(callback());
@@ -1042,6 +1046,11 @@ function getRayIntersection(
 
   scene.view = scene.defaultView;
   context.endFrame();
+  // 拾取到object，却没有position，可能是深度未写入、深度纹理未开启或不支持深度纹理
+  // 深度未写入：
+  // 1）用户设置未写入
+  // 2）半透明对象渲染，一般远近排序后渲染，会关闭深度写入、打开深度监测
+  // 3) 内置对象：Label、Billboard等不会写入深度值
 
   if (defined(object) || defined(position)) {
     return {
@@ -1142,6 +1151,16 @@ function deferPromiseUntilPostRender(scene, promise) {
   });
 }
 
+/**
+ * 拾取对象、点，区别于pick方法：
+ * 1）传入参数不同，可以穿透objectsToExclude进行选择，即排除objectsToExclude
+ * 2）返回值不同，返回对象和位置
+ * @param {*} scene 
+ * @param {*} ray 
+ * @param {array} objectsToExclude [{ id: [可选], primitive: [可选], object: [可选] }]
+ * @param {*} [width= 3] 拾取的范围，单位米，widthxwidth的大小
+ * @returns {object} 返回 { object, position, exclude: true|false }
+ */
 Picking.prototype.pickFromRay = function (scene, ray, objectsToExclude, width) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("ray", ray);
@@ -1155,6 +1174,15 @@ Picking.prototype.pickFromRay = function (scene, ray, objectsToExclude, width) {
   return pickFromRay(this, scene, ray, objectsToExclude, width, false, false);
 };
 
+/**
+ * 穿透拾取对象，和射线相交的对象都会返回，和pickFromRay类似，只不过是穿透，还可以定义返回几个选中对象
+ * @param {*} scene 
+ * @param {*} ray 
+ * @param {*} [limit=Number.MAX_VALUE] 
+ * @param {*} objectsToExclude 
+ * @param {*} [width=3] 
+ * @returns 
+ */
 Picking.prototype.drillPickFromRay = function (
   scene,
   ray,
