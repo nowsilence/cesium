@@ -96,7 +96,7 @@ import ImageryLayerCollection from "./ImageryLayerCollection.js";
  * @property {boolean} [skipLevelOfDetail=false] Optimization option. Determines if level of detail skipping should be applied during the traversal.
  * @property {number} [baseScreenSpaceError=1024] When <code>skipLevelOfDetail</code> is <code>true</code>, the screen space error that must be reached before skipping levels of detail.
  * @property {number} [skipScreenSpaceErrorFactor=16] When <code>skipLevelOfDetail</code> is <code>true</code>, a multiplier defining the minimum screen space error to skip. Used in conjunction with <code>skipLevels</code> to determine which tiles to load.
- * @property {number} [skipLevels=1] When <code>skipLevelOfDetail</code> is <code>true</code>, a constant defining the minimum number of levels to skip when loading tiles. When it is 0, no levels are skipped. Used in conjunction with <code>skipScreenSpaceErrorFactor</code> to determine which tiles to load.
+ * @property {number} [skipLevels=1] 跳过的最小级别数，小于此级别就不跳过 When <code>skipLevelOfDetail</code> is <code>true</code>, a constant defining the minimum number of levels to skip when loading tiles. When it is 0, no levels are skipped. Used in conjunction with <code>skipScreenSpaceErrorFactor</code> to determine which tiles to load.
  * @property {boolean} [immediatelyLoadDesiredLevelOfDetail=false] When <code>skipLevelOfDetail</code> is <code>true</code>, only tiles that meet the maximum screen space error will ever be downloaded. Skipping factors are ignored and just the desired tiles are loaded.
  * @property {boolean} [loadSiblings=false] When <code>skipLevelOfDetail</code> is <code>true</code>, determines whether siblings of visible tiles are always downloaded during traversal.
  * @property {ClippingPlaneCollection} [clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the tileset.
@@ -2328,6 +2328,7 @@ Cesium3DTileset.prototype.loadTileset = function (
 
   // A tileset JSON file referenced from a tile may exist in a different directory than the root tileset.
   // Get the basePath relative to the external tileset.
+  // 创建一个Cesium3DTile
   const rootTile = makeTile(this, resource, tilesetJson.root, parentTile);
 
   // If there is a parentTile, add the root of the currently loading tileset
@@ -3505,14 +3506,14 @@ Cesium3DTileset.prototype.updateForPass = function (
   const pass = tilesetPassState.pass;
   if (
     (pass === Cesium3DTilePass.PRELOAD &&
-      (!this.preloadWhenHidden || this.show)) ||
+      (!this.preloadWhenHidden || this.show)) || // 在可见的时候，且PRELOAD PASS，不执行，
     (pass === Cesium3DTilePass.PRELOAD_FLIGHT &&
       (!this.preloadFlightDestinations ||
         (!this.show && !this.preloadWhenHidden))) ||
     (pass === Cesium3DTilePass.REQUEST_RENDER_MODE_DEFER_CHECK &&
       ((!this._cullRequestsWhileMoving && this.foveatedTimeDelay <= 0) ||
         !this.show))
-  ) {
+  ) { // Scene.updatePreloadPass会设置pass
     return;
   }
 

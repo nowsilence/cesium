@@ -24,6 +24,12 @@ const scratchAxis = new Cartesian3();
  * waste CPU cycles. Bounding spheres are not supported for the reason that the child bounds can very often be
  * partially outside of the parent bounds.
  *
+ * 该优化仅支持「有向包围盒（OBB）」相关类型（TileOrientedBoundingBox 或 TileBoundingRegion，
+ * 后者本质也是基于 OBB 实现）；如果父瓦片用的是包围球（BoundingSphere），直接跳过优化校验。
+ * 
+ * 该方法仅对「父 / 子瓦片都使用有向包围盒（OBB）」的场景，通过计算父子包围盒在「父→子」方向轴上的投影长度，
+ * 判断子瓦片是否超出父瓦片范围，最终决定是否启用裁剪优化。
+ * 
  * @param {Cesium3DTile} tile The tile to check.
  * @returns {boolean} Whether the childrenWithinParent optimization is supported.
  */

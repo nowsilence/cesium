@@ -239,7 +239,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
 
   if (hasMultipleContents) {
     contentState = Cesium3DTileContentState.UNLOADED;
-    // Each content may have its own URI, but they all need to be resolved
+    // Each content may have its own URI, but they all need to be resolved relative to the tileset, so the base resource is used.
     // relative to the tileset, so the base resource is used.
     contentResource = baseResource.clone();
   } else if (defined(contentHeader)) {
@@ -328,7 +328,8 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    * and turns out to be a single content that points to an external
    * tileset or implicit content
    * </p>
-   *
+   * 一开始只要不是空的content（uri不为空）那么就假定有content，设置为true
+   * 加载uri之后如果content指向的是外部tileset或者implicit content则置为false
    * @type {boolean}
    * @readonly
    *
@@ -686,7 +687,7 @@ Object.defineProperties(Cesium3DTile.prototype, {
     get: function () {
       return (
         (this.contentReady && this.hasRenderableContent) ||
-        (defined(this._expiredContent) && !this.contentFailed)
+        (defined(this._expiredContent) && !this.contentFailed) // 若有过期content且新的content还没下载下来
       );
     },
   },
@@ -948,6 +949,7 @@ Cesium3DTile.prototype.getScreenSpaceError = function (
     const sseDenominator = frustum.sseDenominator;
     // geometricError单位是 米/像素，一个像素代表多少米，
     // 正常情况下是要计算瓦片的包围球的直径，tileset直接写死，可以缩放大小来控制屏幕误差
+    // (geometricError) / (distance * sseDenominator / height);
     error = (geometricError * height) / (distance * sseDenominator);
     if (tileset.dynamicScreenSpaceError) {
       const density = tileset._dynamicScreenSpaceErrorComputedDensity;
@@ -977,20 +979,25 @@ function isPriorityProgressiveResolution(tileset, tile) {
   }
 
   const maximumScreenSpaceError = tileset.memoryAdjustedScreenSpaceError;
+  // 表示需要加载本瓦片或者子瓦片
   let isProgressiveResolutionTile =
-    tile._screenSpaceErrorProgressiveResolution > maximumScreenSpaceError; // Mark non-SSE leaves
+    tile._screenSpaceErrorProgressiveResolution > maximumScreenSpaceError; // Mark non-SSE leaves 
   tile._priorityProgressiveResolutionScreenSpaceErrorLeaf = false; // Needed for skipLOD
   const parent = tile.parent;
   const tilePasses =
     tile._screenSpaceErrorProgressiveResolution <= maximumScreenSpaceError;
-  const parentFails =
+  const parentFails = // 表示需要加载子瓦片
     defined(parent) &&
     parent._screenSpaceErrorProgressiveResolution > maximumScreenSpaceError;
-  if (tilePasses && parentFails) {
+  if (tilePasses && parentFails) { 
+    // 虽然子瓦片没到达要求（不应该加载），但父瓦片的屏幕误差很大了，需要加载子瓦片
     // A progressive resolution SSE leaf, promote its priority as well
     tile._priorityProgressiveResolutionScreenSpaceErrorLeaf = true;
     isProgressiveResolutionTile = true;
   }
+// 1 本瓦片满足且父瓦片不满足，返回true
+// 2、父瓦片满足、子瓦片满足，返回false，说明子瓦片是可以跳过的
+// 3、父瓦片不满足，
   return isProgressiveResolutionTile;
 }
 
@@ -1016,7 +1023,7 @@ function getPriorityReverseScreenSpaceError(tileset, tile) {
 
 /**
  * Update the tile's visibility.
- *
+ * 这主要是判断是不是在cullVolume内，貌似没有用到SSE
  * @private
  * @param {FrameState} frameState
  */
@@ -1265,6 +1272,19 @@ async function processArrayBuffer(
       tile.expireDate = undefined;
     }
 
+    /**
+     * 一个tile对应一个content
+     * Model3DTileContent: 对应一个Model， b3dm pnts i3dm gltf glb geoJson 渲染gltf类型、点云
+     * Tileset3DTileContent：externalTileset
+     * Geometry3DTileContent： geom ._geometries = Vector3DTileGeometry ._primitive-> Vector3DTilePrimitive，批量渲染box, cylinder, ellipsoid and/or sphere（只有这些）
+     * Vector3DTileContent: vctr 只能渲染点线面 ._polygons Vector3DTilePolygons 面 ._primitive-> Vector3DTilePrimitive
+     *                                        ._points Vector3DTilePoints 点 ._primitive-> Vector3DTilePrimitive
+     *                                        ._polylines Vector3DTilePolylines vector3DTileClampedPolylines ._primitive-> Vector3DTilePrimitive
+     * Implicit3DTileContent： subt subtreeJson
+     * GaussianSplat3DTileContent：glb gltf
+     * Composite3DTileContent：cmpt
+     */
+    // 一个tile对应一个content（大部分是Model3DTileContent， 参考Cesium3DTileContentFactory），一个content对应一个Model
     tile._content = content;
     tile._contentState = Cesium3DTileContentState.PROCESSING;
 

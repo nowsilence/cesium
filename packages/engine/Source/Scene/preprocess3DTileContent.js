@@ -34,7 +34,7 @@ function preprocess3DTileContent(arrayBuffer) {
     contentType = "glb";
   }
 
-  if (Cesium3DTileContentType.isBinaryFormat(contentType)) {
+  if (Cesium3DTileContentType.isBinaryFormat(contentType)) { // 是不是数据文件
     return {
       // For binary files, the enum value is the magic number
       contentType: contentType,
@@ -62,6 +62,7 @@ function preprocess3DTileContent(arrayBuffer) {
 
   if (defined(json.tileAvailability)) {
     // Most likely a subtree JSON.
+    // JSON 包含tileAvailability（3D Tiles Next 隐式瓦片的 Subtree JSON 核心字段），判定为隐式瓦片的子树配置文件
     return {
       contentType: Cesium3DTileContentType.IMPLICIT_SUBTREE_JSON,
       jsonPayload: json,

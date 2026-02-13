@@ -3881,6 +3881,7 @@ function getMaxPrimitiveHeight(primitive, cartographic, scene) {
     primitive.show &&
     primitive.enableCollision
   ) {
+    // 3DTileset只有ModelContent实现了getHeight方法
     // If it's an individual primitive, check its height
     const result = primitive.getHeight(cartographic, scene);
     if (defined(result) && result > maxHeight) {

@@ -36,7 +36,7 @@ function findNode(level, x, y, nodes) {
 /**
  * Marks a rectangular range of tiles in a particular level as being available.  For best performance,
  * add your ranges in order of increasing level.
- *
+ * 把 level、startX、startY、endX、endY转化成RectangleWithLevel放到与之相交的根节点下
  * @param {number} level The level.
  * @param {number} startX The X coordinate of the first available tiles at the level.
  * @param {number} startY The Y coordinate of the first available tiles at the level.
@@ -82,6 +82,7 @@ TileAvailability.prototype.addAvailableTileRange = function (
   for (let i = 0; i < rootNodes.length; ++i) {
     const rootNode = rootNodes[i];
     if (rectanglesOverlap(rootNode.extent, rectangleWithLevel)) {
+      // 把所有和rootNode相交的rectangleWithLevel都放到rootNode.rectangles下，索引即level 
       putRectangleInQuadtree(this._maximumLevel, rootNode, rectangleWithLevel);
     }
   }
@@ -326,6 +327,12 @@ function RectangleWithLevel(level, west, south, east, north) {
   this.north = north;
 }
 
+/**
+ * 判断两个矩形有没有重叠区域
+ * @param {*} rectangle1 
+ * @param {*} rectangle2 
+ * @returns 
+ */
 function rectanglesOverlap(rectangle1, rectangle2) {
   const west = Math.max(rectangle1.west, rectangle2.west);
   const south = Math.max(rectangle1.south, rectangle2.south);
@@ -334,6 +341,12 @@ function rectanglesOverlap(rectangle1, rectangle2) {
   return south < north && west < east;
 }
 
+/**
+ * 把rectangle放到node.rectangles下面
+ * @param {*} maxDepth 
+ * @param {*} node 
+ * @param {*} rectangle 
+ */
 function putRectangleInQuadtree(maxDepth, node, rectangle) {
   while (node.level < maxDepth) {
     if (rectangleFullyContainsRectangle(node.nw.extent, rectangle)) {

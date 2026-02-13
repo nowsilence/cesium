@@ -107,14 +107,14 @@ function Camera(scene) {
 
   /**
    * The position delta magnitude.
-   *
+   * 上一帧和这一帧的位置差
    * @private
    */
   this.positionWCDeltaMagnitude = 0.0;
 
   /**
    * The position delta magnitude last frame.
-   *
+   * 上一帧的positionWCDeltaMagnitude
    * @private
    */
   this.positionWCDeltaMagnitudeLastFrame = 0.0;

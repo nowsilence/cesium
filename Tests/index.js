@@ -99,6 +99,13 @@ async function createView() {
     viewer.scene.fog.enabled = false;
     viewer.scene.fog.renderable = true;
 
+    /**
+     * 范围0-1
+     * 将屏幕分成左右两部分
+     * 渲染对象具体渲染到哪一侧要配合对象的splitDirection使用
+     */
+    // viewer.scene.splitPosition = 0.5;
+
     return viewer;
 }
 

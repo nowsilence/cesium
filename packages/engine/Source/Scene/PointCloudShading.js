@@ -54,6 +54,7 @@ function PointCloudShading(options) {
    * Requires support for EXT_frag_depth, OES_texture_float, and WEBGL_draw_buffers extensions in WebGL 1.0,
    * otherwise eye dome lighting is ignored.
    * 是否开启眼穹照明（EDL）
+   * 简单半球：上亮下暗
    * @type {boolean}
    * @default true
    */

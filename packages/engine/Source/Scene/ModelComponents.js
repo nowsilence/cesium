@@ -6,7 +6,7 @@ import Matrix4 from "../Core/Matrix4.js";
 
 /**
  * Components for building models.
- *
+ * 将gltfJSON，转成ModelComponents对象。每一个一级属性都创建ModelComponents内定义的对象
  * @namespace ModelComponents
  *
  * @private

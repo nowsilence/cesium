@@ -34,7 +34,7 @@ import addAllToArray from "../../Core/addAllToArray.js";
  * @param {object} options An object containing the following options
  * @param {Model} options.model The model this scene graph belongs to
  * @param {ModelComponents} options.modelComponents The model components describing the model
- *
+ * ModelComponents对象，将gltfJSON，转成ModelComponents对象。每一个一级属性都创建ModelComponents内定义的对象
  * @alias ModelSceneGraph
  * @constructor
  *

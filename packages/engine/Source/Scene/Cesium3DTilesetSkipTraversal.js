@@ -183,7 +183,13 @@ function updateTileAncestorContentLinks(tile, frameState) {
  * @returns {boolean} true if this tile should not be skipped
  */
 function reachedSkippingThreshold(tileset, tile) {
+  // 当前瓦片向上遍历瓦片树，第一个包含可渲染内容的祖先（空瓦片会跳过，只找有实际内容的）
   const ancestor = tile._ancestorWithContent;
+  /**
+   * tileset.skipScreenSpaceErrorFactor SSE缩放因子，屏幕误差瓦片层级越高值越小
+   * 当前瓦片的SSE要远小于ancestor的SSE，ancestor._screenSpaceError / tileset.skipScreenSpaceErrorFactor 
+   * 当前瓦片至少要跳过skipLevels级别，tile._depth > ancestor._depth + tileset.skipLevels
+   */
   return (
     !tileset.immediatelyLoadDesiredLevelOfDetail &&
     (tile._priorityProgressiveResolutionScreenSpaceErrorLeaf ||
@@ -264,6 +270,13 @@ function inBaseTraversal(tile, baseScreenSpaceError) {
  * @param {FrameState} frameState
  */
 function executeTraversal(root, frameState) {
+    /**
+     * baseScreenSpaceError
+     * 若开启 immediatelyLoadDesiredLevelOfDetail（立即加载目标LOD），设为 Number.MAX_VALUE（所有瓦片都进入基础遍历）；
+     * 否则取tileset.baseScreenSpaceError和memoryAdjustedScreenSpaceError的最大值，作为基础遍历的 SSE临界值。
+     * 瓦片的 SSE ≥ baseScreenSpaceError → 属于基础遍历范围，这类瓦片必须优先加载（无论是否能细化），保证画面基础清晰度
+     * 瓦片的 SSE < baseScreenSpaceError → 属于跳过遍历范围，这类瓦片会触发 skipLOD 逻辑，仅加载关键层（达到跳过阈值的才加载，否则不加载中间层）；
+     */
   const { tileset } = root;
   const baseScreenSpaceError = tileset.immediatelyLoadDesiredLevelOfDetail
     ? Number.MAX_VALUE
@@ -287,7 +300,7 @@ function executeTraversal(root, frameState) {
     updateTileAncestorContentLinks(tile, frameState);
     const parent = tile.parent;
     const parentRefines = !defined(parent) || parent._refines;
-
+    // 当前瓦片的_refines参数表示：当前瓦片有子节点，且至少一个子瓦片是可见的
     tile._refines = canTraverse(tile)
       ? updateAndPushChildren(tile, stack, frameState) && parentRefines
       : false;
@@ -308,6 +321,7 @@ function executeTraversal(root, frameState) {
       selectDesiredTile(tile, frameState);
       loadTile(tile, frameState);
     } else if (tile.refine === Cesium3DTileRefine.REPLACE) {
+      // 判断瓦片是否属于「基础遍历」，
       if (inBaseTraversal(tile, baseScreenSpaceError)) {
         // Always load tiles in the base traversal
         // Select tiles that can't refine further
@@ -315,11 +329,12 @@ function executeTraversal(root, frameState) {
         if (stoppedRefining) {
           selectDesiredTile(tile, frameState);
         }
-      } else if (stoppedRefining) {
+      } else if (stoppedRefining) { // 不可再细化就显示渲染
         // In skip traversal, load and select tiles that can't refine further
         selectDesiredTile(tile, frameState);
         loadTile(tile, frameState);
       } else if (reachedSkippingThreshold(tileset, tile)) {
+        // stoppedRefining为false，说明可细化，再看下可以细化到哪个层级，是否到达了要调到的级别，到达了就加载
         // In skip traversal, load tiles that aren't skipped
         loadTile(tile, frameState);
       }

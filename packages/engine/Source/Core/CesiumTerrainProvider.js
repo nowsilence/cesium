@@ -252,11 +252,18 @@ async function parseMetadataSuccess(terrainProviderBuilder, data, provider) {
   if (defined(data.extensions) && data.extensions.indexOf("metadata") !== -1) {
     hasMetadata = true;
   }
-
+  /**
+   * extensions.metadata 声明该地形服务支持返回 METADATA 扩展（瓦片二进制数据中会携带元数据，如子级可用性、自定义信息）
+   * 有metadataAvailability → 必然有 extensions.metadata（业务强制，非语法强制）
+   */
   const availabilityLevels = data.metadataAvailability;
   const availableTiles = data.available;
+  
   let availability;
   if (defined(availableTiles) && !defined(availabilityLevels)) {
+    /**
+     * 地形范围小、层级少（如局部城市地形），可以一次性声明所有可用范围
+     */
     availability = new TileAvailability(
       terrainProviderBuilder.tilingScheme,
       availableTiles.length,
@@ -293,6 +300,8 @@ async function parseMetadataSuccess(terrainProviderBuilder, data, provider) {
       }
     }
   } else if (defined(availabilityLevels)) {
+    // metadataAvailability 元数据可用性的层级步长
+    // 地形范围大、层级多（如全球地形），无法一次性声明所有可用范围，而是通过瓦片的 metadata 扩展动态获取子级可用性
     availabilityTilesLoaded = new TileAvailability(
       terrainProviderBuilder.tilingScheme,
       maxZoom,
@@ -302,6 +311,7 @@ async function parseMetadataSuccess(terrainProviderBuilder, data, provider) {
       maxZoom,
     );
     terrainProviderBuilder.overallAvailability[0] = [[0, 0, 1, 0]];
+    // 这个感觉默认就是GeographicTilingScheme，如果是墨卡托0级瓦片只有1个
     availability.addAvailableTileRange(0, 0, 0, 1, 0);
   }
 
@@ -318,7 +328,7 @@ async function parseMetadataSuccess(terrainProviderBuilder, data, provider) {
     }
     terrainProviderBuilder.attribution += data.attribution;
   }
-
+  // 可能会有多个图层，每个图层可能是availableTiles或者是availabilityLevels
   terrainProviderBuilder.layers.push(
     new LayerInformation({
       resource: terrainProviderBuilder.lastResource,
@@ -391,6 +401,7 @@ async function metadataSuccess(terrainProviderBuilder, data, provider) {
         terrainProviderBuilder.tilingScheme,
         terrainProviderBuilder.overallMaxZoom,
       ));
+    // overallAvailability 是存放了所有图层的Availability
     for (let level = 0; level < length; ++level) {
       const levelRanges = terrainProviderBuilder.overallAvailability[level];
       for (let i = 0; i < levelRanges.length; ++i) {
@@ -420,6 +431,7 @@ async function requestLayerJson(terrainProviderBuilder, provider) {
     return metadataSuccess(terrainProviderBuilder, data, provider);
   } catch (error) {
     // If the metadata is not found, assume this is a pre-metadata heightmap tileset.
+    // 如果没有元数据，那么就认为是高度图地形
     if (defined(error) && error.statusCode === 404) {
       await parseMetadataSuccess(
         terrainProviderBuilder,
@@ -756,6 +768,7 @@ function createQuantizedMeshTerrainData(provider, buffer, level, x, y, layer) {
           pos + Uint32Array.BYTES_PER_ELEMENT,
           stringLength,
         );
+        // 更新子瓦片的可用性
         const availableTiles = metadata.available;
         if (defined(availableTiles)) {
           for (let offset = 0; offset < availableTiles.length; ++offset) {
@@ -790,6 +803,11 @@ function createQuantizedMeshTerrainData(provider, buffer, level, x, y, layer) {
           }
         }
       }
+      /**
+       * layer若无metadataAvailability，即使请求元数据，也不会返回id为QuantizedMeshExtensionIds.METADATA的扩展数据
+       * 请求的前提是_requestMetadata为true，且layer.hasMetaData为true， hasMetaData为true即metadata也为true，metadataAvailability也为true，则availabilityTilesLoaded有值
+       * QuantizedMeshExtensionIds.METADATA
+       */
       layer.availabilityTilesLoaded.addAvailableTileRange(level, x, y, x, y);
     }
     pos += extensionLength;
@@ -868,12 +886,14 @@ CesiumTerrainProvider.prototype.requestTileGeometry = function (
       const layer = layers[i];
       if (
         !defined(layer.availability) ||
-        layer.availability.isTileAvailable(level, x, y)
+        layer.availability.isTileAvailable(level, x, y) 
       ) {
+        // 选定此图层
         layerToUse = layer;
         break;
       }
-
+      // 若没找到layerToUse，则每个图层都需要检查
+      // availability判断不了则检查图层（图层使用的是metadataAvailability而不是available）
       const availabilityUnloaded = checkLayer(
         this,
         x,
@@ -885,6 +905,7 @@ CesiumTerrainProvider.prototype.requestTileGeometry = function (
       if (availabilityUnloaded.result) {
         // We can't know yet since the availability is not yet loaded
         unknownAvailability = true;
+        // 链式累加，不是简单覆盖
         availabilityPromise = availabilityPromise.then(
           () => availabilityUnloaded.promise,
         );
@@ -906,6 +927,7 @@ CesiumTerrainProvider.prototype.requestTileGeometry = function (
     });
   }
   // call overridden function below
+  // 走到这个地方layerToUse分为有值或者无赋值，requestTileGeometry会针对layerToUse进行处理决定是否加载
   return requestTileGeometry(this, x, y, level, layerToUse, request);
 };
 
@@ -1239,17 +1261,21 @@ CesiumTerrainProvider.fromUrl = async function (url, options) {
       url: "layer.json",
     });
 
+  /**
+   * 图层加载这里是自下而上的，加载下来的图层会判断有没有parentUrl(每个parentUrl请求下来都作为一个图层)，有的话则会递归加载父图层,layers数组索引越小优先级越高、地形精度越高
+   */
   await requestLayerJson(terrainProviderBuilder);
 
   const provider = new CesiumTerrainProvider(options);
+  // 主要作用是赋值
   terrainProviderBuilder.build(provider);
-
+  // terrainProviderBuilder 离开这个函数会被释放掉
   return provider;
 };
 
 /**
  * Determines whether data for a tile is available to be loaded.
- *
+ * 检查瓦片的可用性 返回undefined 表示当前unknown false 不可用 true 可用
  * @param {number} x The X coordinate of the tile for which to request geometry.
  * @param {number} y The Y coordinate of the tile for which to request geometry.
  * @param {number} level The level of the tile for which to request geometry.
@@ -1287,7 +1313,7 @@ CesiumTerrainProvider.prototype.getTileDataAvailable = function (x, y, level) {
 
 /**
  * Makes sure we load availability data for a tile
- *
+ * 判断是否需要加载目标瓦片的可用性元数据，若需要则返回加载 Promise，否则直接返回 undefined
  * @param {number} x The X coordinate of the tile for which to request geometry.
  * @param {number} y The Y coordinate of the tile for which to request geometry.
  * @param {number} level The level of the tile for which to request geometry.
@@ -1318,6 +1344,15 @@ CesiumTerrainProvider.prototype.loadTileDataAvailability = function (
   }
 };
 
+/**
+ * availabilityLevels存的是元数据可用性的层级步长，
+ * 所以函数作用是找到有元数据的瓦片
+ * @param {*} layer 
+ * @param {*} x 
+ * @param {*} y 
+ * @param {*} level 
+ * @returns 
+ */
 function getAvailabilityTile(layer, x, y, level) {
   if (level === 0) {
     return;
@@ -1342,6 +1377,13 @@ function getAvailabilityTile(layer, x, y, level) {
 function checkLayer(provider, x, y, level, layer, topLayer) {
   if (!defined(layer.availabilityLevels)) {
     // It's definitely not in this layer
+    // 若availabilityLevels有值，则availabilityTilesLoaded也有赋值
+    /**
+     * 调用此函数的前提在layer.availability内不可用，故看下这个图层有没有availabilityLevels，
+     * 若没有此属性，那么所有可用瓦片范围已经包含在layer.availability中了。
+     * 瓦片在layer.availability中不可用，那就真不可用，
+     * 若有此属性，瓦片可用信息可能没有加载下来，需要加载才能判断
+     */
     return {
       result: false,
     };
@@ -1353,10 +1395,12 @@ function checkLayer(provider, x, y, level, layer, topLayer) {
   };
   const availabilityTilesLoaded = layer.availabilityTilesLoaded;
   const availability = layer.availability;
-
+  // 找到有元数据的祖先级瓦片（不一定的是直接父级）
   let tile = getAvailabilityTile(layer, x, y, level);
-  while (defined(tile)) {
-    if (
+  // 一直向上递归加载，所有的步长层级瓦片都加载完了，那while循环就进不去会返回false，即瓦片不可用
+
+  while (defined(tile)) { // 若
+    if ( // 这个祖先级瓦片可用，但是它未下载，其子瓦片可用性未知
       availability.isTileAvailable(tile.level, tile.x, tile.y) &&
       !availabilityTilesLoaded.isTileAvailable(tile.level, tile.x, tile.y)
     ) {
@@ -1364,14 +1408,17 @@ function checkLayer(provider, x, y, level, layer, topLayer) {
       if (!topLayer) {
         cacheKey = `${tile.level}-${tile.x}-${tile.y}`;
         requestPromise = layer.availabilityPromiseCache[cacheKey];
+        // 未正在请求，则发出请求
         if (!defined(requestPromise)) {
           // For cutout terrain, if this isn't the top layer the availability tiles
           //  may never get loaded, so request it here.
+          // 需要请求这个瓦片的地形数据，里面有元数据，元数据里面有子瓦片的可用性
           const request = new Request({
             throttle: false,
             throttleByServer: true,
             type: RequestType.TERRAIN,
           });
+          
           requestPromise = requestTileGeometry(
             provider,
             tile.x,
@@ -1387,6 +1434,7 @@ function checkLayer(provider, x, y, level, layer, topLayer) {
         }
       }
 
+      
       // The availability tile is available, but not loaded, so there
       //  is still a chance that it may become available at some point
       return {
@@ -1394,7 +1442,7 @@ function checkLayer(provider, x, y, level, layer, topLayer) {
         promise: requestPromise,
       };
     }
-
+    // 如果此祖先级瓦片可用性不知道，则再往上找祖先级瓦片
     tile = getAvailabilityTile(layer, tile.x, tile.y, tile.level);
   }
 

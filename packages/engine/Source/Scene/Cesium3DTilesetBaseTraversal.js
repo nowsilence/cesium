@@ -149,8 +149,10 @@ function updateAndPushChildren(tile, stack, frameState) {
       if (!child._inRequestVolume) {
         childRefines = false;
       } else if (!child.hasRenderableContent) {
+        // 子节点的 的最近子节点都已加载完成
         childRefines = executeEmptyTraversal(child, frameState);
       } else {
+        // 子节点有content
         childRefines = child.contentAvailable;
       }
       refines = refines && childRefines;
@@ -216,13 +218,14 @@ function executeTraversal(root, frameState) {
     const parent = tile.parent;
     const parentRefines = !defined(parent) || parent._refines; // 跟节点为true
 
-    tile._refines = canTraverse(tile) // 有子瓦片
+    tile._refines = canTraverse(tile) // 有子瓦片，且当前瓦片满足SSE，或者有tileset内容（也为true，这个时候子为空，_refines为false）
       ? updateAndPushChildren(tile, stack, frameState) && parentRefines
       : false;
 
     const stoppedRefining = !tile._refines && parentRefines;
 
     if (!tile.hasRenderableContent) {
+      // 通常是瓦片的emptyContent为true即没有content，或者content指向tilset或者implicit content
       // Add empty tile just to show its debug bounding volume
       // If the tile has tileset content load the external tileset
       tileset._emptyTiles.push(tile);
@@ -231,12 +234,13 @@ function executeTraversal(root, frameState) {
         selectDesiredTile(tile, frameState);
       }
     } else if (tile.refine === Cesium3DTileRefine.ADD) {
+        // 当父瓦片满足SSE，才会遍历到这个子瓦片，子瓦片一旦是ADD就加入渲染
       // Additive tiles are always loaded and selected
       selectDesiredTile(tile, frameState);
       loadTile(tile, frameState);
     } else if (tile.refine === Cesium3DTileRefine.REPLACE) {
       loadTile(tile, frameState);
-      if (stoppedRefining) { // 子瓦片还没准备好
+      if (stoppedRefining) { // 本瓦片不能refine，因为子瓦片还没准备好，所以就渲染本瓦片
         selectDesiredTile(tile, frameState);
       }
     }
@@ -249,7 +253,7 @@ function executeTraversal(root, frameState) {
 /**
  * Depth-first traversal that checks if all nearest descendants with content are loaded.
  * Ignores visibility.
- *
+ * 所有的子节点都均下载完成，且有content，如果子节点也是空节点，会再遍历孙子节点，一直遍历下去
  * @private
  * @param {Cesium3DTile} root
  * @param {FrameState} frameState
